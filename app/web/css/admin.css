@@ -1,0 +1,415 @@
+@CHARSET "UTF-8";
+/* jqueryui fix */
+.ui-widget {
+    font-family: inherit;
+    font-size: inherit;
+}
+.ui-widget input, .ui-widget select, .ui-widget textarea, .ui-widget button {
+    font-family: inherit;
+    font-size: inherit;
+}
+img.ui-datepicker-trigger {
+    cursor: pointer;
+}
+.ui-tabs .ui-tabs-panel {
+	padding: 10px 0;
+	overflow: hidden;
+}
+#content div.ui-tabs{
+	padding: 0;
+}
+#content div.ui-widget-content{
+	background: none;
+	border: none;
+}
+.ui-tabs .ui-tabs-nav li a{
+	padding: 7px 8px;
+	float: left;
+}
+/* paginator */
+.paginator{
+	overflow: hidden;
+	margin: 10px 0 0 0;
+}
+.paginator li{
+	display: inline-block;
+}
+.paginator li a:link, .paginator li a:visited{
+	background-color: #CCCCCC;
+	color: #000;
+	display: block;
+	float: left;
+	margin: 0 2px 0 0;
+	padding: 1px 4px;
+	border-radius: 2px;
+	text-decoration: none;
+	-moz-border-radius: 2px;
+	-webkit-border-radius: 2px;
+	-khtml-border-radius: 2px;
+}
+.paginator li a:hover{
+	background-color: #EAEAEA;
+}
+.paginator li a.focus{
+	background-color: #072B4F;
+	color: #fff;
+}
+/* fieldset */
+.fieldset{
+	margin: 0 0 10px;
+	padding: 10px;
+	border-radius: 5px;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	position: relative;
+}
+.fieldset legend{
+	background-color: #003366;
+	color: #fff;
+	padding: 2px 5px;
+	border-radius: 3px;
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	width: 250px;
+}
+/* Colors */
+.white{background-color: #fff; border: solid 1px #ccc; color: #000 !important}
+.sky{background-color: #EAFBFB; border: solid 1px #ccc;}
+.light{background-color: #f5f5f5; border: solid 1px #ccc;}
+
+.tipsy-listing .tipsy-inner{
+	text-align: left;
+	max-width: 400px;
+}
+.pj-loader-outer{
+	position: relative;
+}
+.pj-loader{
+	display: none;
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	z-index: 9999;
+	background: url("../img/backend/pj-preloader.gif") no-repeat scroll center center rgba(153, 153, 153, 0.3);
+    left: 0;
+    position: absolute;
+    top: 0px;
+}
+.panel.ibox-content{padding: 0;}
+
+.select2-container .select2-selection--multiple{
+	height: auto !important;
+	min-height: 34px !important;
+}
+.pjSbClearBoth{
+	clear: both;
+}
+.pjSbOrders{
+	max-height: 600px;
+	overflow: auto;
+	min-height: 500px;
+	min-width: 250px;
+}
+.pjSbOrder{
+	margin-bottom: 10px;
+	min-width: 250px;
+	position: relative;
+}
+.pjSbOrder .alert-warning{
+	color: #8a6d3b;
+	background-color: #FDD6D6;
+	border-color: #FDD6D6;
+	margin-bottom: 0;
+	border-radius: 0;
+	color: #F40F15;
+    padding: 5px;
+}
+.pjSbOrder .pjSbNotesFromDriver,
+.pjSbOrder .pjSbNotesForDriver{
+	margin-top: 5px;
+}
+.pjSbOrder .pjSbNotesFromDriver .alert-warning{
+	background-color: #fff3cd;
+	border-color: #ffeeba;
+}
+.pjSbOrder .pjSbNotesFromDriver .alert-warning,
+.pjSbOrder .pjSbNotesForDriver .alert-warning{
+	color: #676a6c;
+}
+.pjSbOrder .alert-warning .pjSbPickupTime{
+	float: left;
+	padding-left: 5px;
+	font-weight: 600;
+}
+.pjSbOrder .alert-warning i{
+	font-size: 35px;
+	float: left;
+}
+.pjSbOrder .pjSbOrderInner{
+	border-left: 10px solid #D1B336;
+	padding: 5px;
+	background: #E5E5E5;
+}
+.pjSbOrder .pjSbOrderInner.pjSbOrderInnerAirport{
+	border-left: 10px solid #D1B336;
+}
+.pjSbOrder .pjSbOrderInner.pjSbOrderInnerLocation{
+	border-left: 10px solid #D14936;
+}
+.pjSbOrder .pjSbOrderInner.pjSbOrderCancelled{
+	border-left: 10px solid #FF7F50 !important;
+	background: #DC8888;
+}
+.pjSbOrder .pjSbOrderInner i{
+	font-size: 30px;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderCancelledInner{
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	background: #000;
+	opacity: 0.3;
+	left: 0;
+	top: 0;
+	z-index: 1;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderCancelledInner .pjSbBtnRemoveBooking{
+	color: #fff;	
+	position: absolute;
+	font-size: 22px;	
+	text-decoration: underline;	
+	text-align: center;	
+	top: 40%;	
+	width: 100%;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDriverStatus{
+	position: absolute;
+	right: 0;
+	top: 0;
+	color: #000;
+	padding: 2px;
+	font-size: 11px;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDriverStatus.pjSbOrderDriverStatus1{
+	background: #9BE59C;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDriverStatus.pjSbOrderDriverStatus2{
+	background: #E2A071;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDriverStatus.pjSbOrderDriverStatus3{
+	background: #E2A071;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDriverStatus.pjSbOrderDriverStatus4{
+	background: #EAAE98;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDriverStatus.pjSbOrderDriverStatus5{
+	background: #FDD6D6;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderSign{
+	width: 10%;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDetails{
+	width: 90%;
+	padding-top: 10px;
+	position: relative;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDetails .img-responsive{
+	display: inline-block;
+	max-width: 30px;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDetails span{
+	font-size: 15px;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDetails span.driver-status{
+	color: #676a6c;
+  	font-weight: 700;
+  	font-size: 10px;
+  	padding: 0 3px;
+	background-color: #f9ce67;
+}
+.pjSbOrder .pjSbOrderInner{
+	cursor: move;
+}
+.disabled .pjSbOrder .pjSbOrderInner{
+	cursor: default;
+}
+.pjSbDriverSchedule .pjSbOrder .pjSbOrderInner{
+	cursor: default;
+}
+body.dragging, body.dragging * {
+  cursor: move !important;
+}
+
+.dragged {
+  position: absolute;
+  opacity: 0.5;
+  z-index: 2000;
+}
+.pjTblVehicles tr td{
+    vertical-align: top !important;
+}
+.pjTblVehicles tr td .pjSbOrders {
+	max-height: unset;
+	overflow: unset;
+}
+.pjSbSendSmsToDriver{
+	margin-top: 5px;
+}
+.pjSbLastUpdate{
+	background: #BCE0FD;
+	color: #2699FB;
+	font-size: 16px;
+	padding: 10px;
+}
+
+/* Driver */
+.pjSbDriverSchedule .pjSbDriverSchedueTitle{
+	color: #2699FB;
+	font-size: 20px;
+	font-weight: 600;
+}
+.pjSbDriverSchedule .pjSbOrdersList{
+	margin-top: 10px;
+}
+.pjSbDriverSchedule .pjSbOrdersList .pjSbOrder{
+	min-width: unset;
+}
+.pjSbDriverSchedule .pjSbOrdersList .pjSbOrder .pjSbOrderInner{
+	border-right: 30px solid #BCE0FD;
+	position: relative;
+}
+.pjSbDriverSchedule .pjSbOrdersList .pjSbOrder .pjSbOrderInner .pjSbOrderDetails{
+	padding-right: 30px;
+}
+.pjSbDriverSchedule .pjSbOrdersList .pjSbOrder .pjSbOrderInner .pjSbLinkViewOrder{
+	position: absolute;
+    right: -27px;
+    top: 0;
+    height: 100%;
+}
+.pjSbDriverSchedule .pjSbOrdersList .pjSbOrder .pjSbOrderInner .pjSbLinkViewOrder{
+	cursor: pointer;
+}
+.pjSbDriverSchedule .pjSbOrdersList .pjSbOrder .pjSbOrderInner .pjSbLinkViewOrder a{
+    position: relative;
+    top: 46%;
+}
+.pjSbDriverSchedule .pjSbOrdersList .pjSbOrder .pjSbOrderInner .pjSbLinkViewOrder i{
+	color: #fff;
+   	font-size: 27px;
+}
+.pjSbDriverViewSchedule i{
+	font-size: 35px;
+	color: #2699FB;
+}
+.pjSbTransfersDetailsTitle{
+	color: #2699FB;
+    font-size: 25px;
+}
+.pjSbDriverInterNotes{
+	background: #FEEDA5;
+	padding: 15px 30px;
+	margin-bottom: 15px;
+}
+.pjSbDriverSchedule .pjSbBlock{
+	background: #E5E5E5;
+	margin-bottom: 15px;
+	font-size: 15px;
+}
+.pjSbDriverSchedule .pjSbBlock h3{
+	font-size: 22px;
+}
+.pjSbDriverSchedule .pjSbBlock .alert-warning{
+	color: #8a6d3b;
+	background-color: #FDD6D6;
+	border-color: #FDD6D6;
+	margin-bottom: 0;
+	border-radius: 0;
+	color: #F40F15;
+    padding: 5px;
+}
+.pjSbDriverSchedule .pjSbBlock .alert-warning .pjSbPickupTime{
+	float: left;
+	padding-left: 5px;
+	font-weight: 600;
+}
+.pjSbDriverSchedule .pjSbBlock .alert-warning i{
+	font-size: 35px;
+	float: left;
+}
+.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner{
+	padding: 15px;
+}
+.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbSign{
+	width: 6%;
+}
+.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbSign i{
+	font-size: 30px;
+}
+.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbOrderInfo{
+	width: 94%;
+}
+.pjSbDriverSchedule .pjSbViewOrderDetails{
+	font-size: 15px;
+}
+.pjSbDriverSchedule .pjSbViewOrderDetails .pjSbOrderInfo .img-responsive{
+	display: inline-block;
+	max-width: 25px;
+}
+a.pjSbOrderRemoveDriverStatus{
+    vertical-align: middle;
+}
+.pjSbOrder .pjSbOrderInner .pjSbOrderDetails a.pjSbOrderRemoveDriverStatus span{
+	font-size: 20px;
+}
+
+.pjCntOrders{
+	font-size: 20px;
+}
+.pjSbViewOrder{
+	display: block;
+	margin-top: 50px;
+}
+.pjSbOrder .pjSbOrderInner .pjSbViewOrder i{
+	font-size: 25px;
+}
+#modalViewOrder .modal-header{
+	padding: 10px 15px;
+}
+.pjSbOrder .pjSbOrderExtras img,
+.pjSbDriverSchedule .pjSbViewOrderDetails .pjSbOrderInfo img{
+	max-width: 30px;
+  	display: inline-block;
+	height: auto;
+	vertical-align: middle;
+}
+
+.pjSbVehicleServiceRepair .pjSbVehicleServiceRepairItem{
+	background-color: #f3f3f4;
+	padding: 5px 10px 10px 10px;
+	margin-bottom: 10px;
+	border-radius: 5px;
+}
+.navUpcomingBookings{
+	padding-left: 5px;
+}
+.navUpcomingBookings i.fa{
+	font-size: 25px;
+}
+.pjTblVehicles h3.driverName{
+	margin: 0;
+}
+
+/* Đặt z-index đủ cao (ví dụ: 99999) để nó hiển thị trên tất cả các lớp phủ khác */
+.popover.clockpicker-popover {
+    z-index: 99999 !important; 
+}
+
+@media (max-width: 479px){
+	.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbSign{
+		width: 10%;
+	}
+	.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbOrderInfo{
+		width: 90%;
+	}
+}

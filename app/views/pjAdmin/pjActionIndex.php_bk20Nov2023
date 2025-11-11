@@ -1,0 +1,122 @@
+<?php
+$today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_date_format']);
+?>
+<div class="wrapper wrapper-content animated fadeInRight">
+    <div class="row">
+         <div class="col-lg-3 col-sm-6">
+         	<div class="ibox float-e-margins">
+         		<div class="ibox-content">
+         			<p class="clearfix"><span class="pull-left"><?php __('dash_total_bookings_today'); ?></span><span class="pull-right"><?php echo (int) $tpl['cnt_bookings_today'];?></span></p>
+         			<p class="clearfix"><span class="pull-left"><?php __('dash_total_bookings_tomorrow'); ?></span><span class="pull-right"><?php echo (int) $tpl['cnt_bookings_tomorrow'];?></span></p>
+         			<hr />         			
+         			<p class="h4"><?php __('dash_total_amount_today'); ?></p>         			
+         			<p class="clearfix"><span class="pull-left"><?php __('dash_total_bookings_today'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_amount_today']);?></span></p>
+         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_total_bookings_own_vehicles'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_own_amount_today']);?></span></p>
+         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_total_bookings_partner_vehicles'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_partner_amount_today']);?></span></p>
+         			<hr />   
+         			<p class="clearfix"><span class="pull-left"><?php __('dash_paid'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_paid_toay']);?></span></p>
+         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_credit_card'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_cc_toay']);?></span></p>
+         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_cash'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_cash_toay']);?></span></p>
+         			
+         		</div><!-- /.ibox-content -->
+         	</div><!-- /.ibox float-e-margins -->
+         </div><!-- /.col-lg-3 col-sm-6 -->
+         <div class="col-lg-5 col-sm-6">
+         	<div class="tabs-container tabs-reservations m-b-lg">
+             	<ul class="nav nav-tabs" role="tablist">
+             		<li role="presentation" class="active"><a class="nav-tab-sms" href="#tab-sms" aria-controls="sms" role="tab" data-toggle="tab"><?php __('dash_sms');?></a></li>
+    				<li role="presentation"><a class="nav-tab-popup" href="#tab-popup" aria-controls="popup" role="tab" data-toggle="tab"><?php __('dash_popup');?></a></li>
+    			</ul>
+    			<div class="tab-content">
+    				<div role="tabpanel" class="tab-pane active" id="tabsms">
+    					<div class="panel-body">
+    						<h3 class="text-center"><?php __('dash_send_sms');?></h3>
+    						<form action="" method="post" id="frmSendSms">
+    							<input type="hidden" name="send_sms" value="1" />
+    							<div class="form-group">
+                    				<label class="control-label"><?php __('dash_choose_driver');?>:</label>			
+                    				<select name="driver_id" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+                    					<option value="">-- <?php __('lblChoose');?> --</option>
+                    					<option value="own_drivers_today"><?php __('dash_sms_own_drivers_today');?></option>
+                    					<option value="own_drivers_tomorrow"><?php __('dash_sms_own_drivers_tomorrow');?></option>
+                    					<?php foreach ($tpl['driver_arr'] as $val) { ?>
+                    						<option value="<?php echo $val['id'];?>"><?php echo pjSanitize::html($val['name']);?></option>
+                    					<?php } ?>
+                    				</select>
+                    			</div>
+                    			<div class="form-group">
+                    				<label class="control-label"><?php __('dash_message');?>:</label>			
+                    				<textarea rows="5" name="message" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>"></textarea>
+                    			</div>
+                    			
+                    			<div class="pjSbSendSmsMsg" style="display: none;">
+                    				<div class="alert"></div>
+                    			</div>
+                    			
+                    			<div class="m-t-lg">
+                    				<button type="submit" class="ladda-button btn btn-primary btn-lg btn-phpjabbers-loader pull-left" data-style="zoom-in">
+                    					<span class="ladda-label"><?php __('btnSend', false, true); ?></span>
+                    					<?php include $controller->getConstant('pjBase', 'PLUGIN_VIEWS_PATH') . 'pjLayouts/elements/button-animation.php'; ?>
+                    				</button>
+                    			</div><!-- /.m-b-lg -->
+    						</form>
+    					</div>
+    				</div>
+    				<div role="tabpanel" class="tab-pane" id="tab-popup">
+    					<div class="panel-body">
+    						<h3 class="text-center"><?php __('dash_send_popup');?></h3>
+    						<form action="" method="post" id="frmSendPopup">
+    							<input type="hidden" name="send_popup" value="1" />
+    							<div class="form-group">
+                    				<label class="control-label"><?php __('dash_choose_driver');?>:</label>			
+                    				<select name="driver_id" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+                    					<option value="">-- <?php __('lblChoose');?> --</option>
+                    					<option value="own_drivers_today"><?php __('dash_sms_own_drivers_today');?></option>
+                    					<option value="own_drivers_tomorrow"><?php __('dash_sms_own_drivers_tomorrow');?></option>
+                    					<?php foreach ($tpl['driver_arr'] as $val) { ?>
+                    						<option value="<?php echo $val['id'];?>"><?php echo pjSanitize::html($val['name']);?></option>
+                    					<?php } ?>
+                    				</select>
+                    			</div>
+                    			<div class="form-group">
+                    				<label class="control-label"><?php __('dash_message');?>:</label>			
+                    				<textarea rows="5" name="message" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>"></textarea>
+                    			</div>
+                    			<div class="pjSbSendSmsPopUp" style="display: none;">
+                    				<div class="alert"></div>
+                    			</div>
+                    			<div class="m-t-lg">
+                    				<button type="submit" class="ladda-button btn btn-primary btn-lg btn-phpjabbers-loader pull-left" data-style="zoom-in">
+                    					<span class="ladda-label"><?php __('btnSend', false, true); ?></span>
+                    					<?php include $controller->getConstant('pjBase', 'PLUGIN_VIEWS_PATH') . 'pjLayouts/elements/button-animation.php'; ?>
+                    				</button>
+                    			</div><!-- /.m-b-lg -->
+    						</form>
+    					</div>
+    				</div>
+    			</div><!-- /.tab-content -->
+    		</div><!-- /.tabs-container tabs-reservations m-b-lg -->
+         </div><!-- /.col-lg-3 col-sm-6 -->
+         <div class="col-lg-4 col-sm-12">
+         	<div class="tabs-container tabs-reservations m-b-lg">
+             	<ul class="nav nav-tabs" role="tablist">
+             		<li role="presentation" class="active"><a class="nav-tab-charts-1" href="#tab-charts-1" aria-controls="charts-1" role="tab" data-toggle="tab"><?php __('dash_tab_upcoming');?></a></li>
+    			</ul>
+    			<div class="tab-content">
+    				<div role="tabpanel" class="tab-pane active" id="tab-charts-1">
+    					<div class="panel-body">
+    						<div id="chart-1" style="height: 450px">
+        						
+        					</div>
+    					</div>
+    				</div>
+    			</div><!-- /.tab-content -->
+    		</div><!-- /.tabs-container tabs-reservations m-b-lg -->
+         </div><!-- /.col-lg-6 col-sm-12 -->
+    </div><!-- /.row -->
+</div><!-- /.wrapper wrapper-content -->
+
+<script type="text/javascript">
+var myLabel = myLabel || {};
+
+</script>

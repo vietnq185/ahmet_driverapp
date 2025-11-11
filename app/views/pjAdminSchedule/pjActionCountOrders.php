@@ -1,0 +1,1 @@
+<?php echo $tpl['cnt'] > 1 ? sprintf(__('lblScheduleNumberOfOrders', true), $tpl['cnt']) : sprintf(__('lblScheduleNumberOfOrder', true), $tpl['cnt']);?>
