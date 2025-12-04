@@ -623,64 +623,65 @@ class pjAdminSchedule extends pjAdmin
                 } else {
                     $data['driver_payment_status'] = ':NULL';
                 }
+                $data['is_enter_hale_cash_register'] = $this->_post->check('is_enter_hale_cash_register') ? $this->_post->toInt('is_enter_hale_cash_register') : 0; 
                 $pjBookingModel->set('id', $this->_post->toInt('id'))->modify($data);
                 if (in_array($this->_post->toInt('payment_status'), array(3,4,5,6))) {
                     $arr = $pjBookingModel->reset()
                     ->select("t1.*, t2.content as fleet, IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address) AS dropoff,
-							t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2, t5.c_address AS c_address2, t5.c_destination_address AS c_destination_address2, t5.c_hotel as c_hotel2,
-							IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address) AS location2, IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
-							t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
-							t6.title, t6.fname, t6.lname, t6.email, t6.phone, t10.content AS c_country_title, t11.price AS duplicate_price")
-							->join('pjMultiLang', "t2.model='pjFleet' AND t2.foreign_id=t1.fleet_id AND t2.field='fleet' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
-							->join('pjMultiLang', "t3.model='pjLocation' AND t3.foreign_id=t1.location_id AND t3.field='pickup_location' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
-							->join('pjMultiLang', "t4.model='pjDropoff' AND t4.foreign_id=t1.dropoff_id AND t4.field='location' AND t4.locale='".$this->getLocaleId()."'", 'left outer')
-							->join('pjBooking', "t5.id=t1.return_id", 'left outer')
-							->join('pjClient', "t6.id=t1.client_id", 'left')
-							->join('pjMultiLang', "t7.model='pjAreaCoord' AND t7.foreign_id=t1.dropoff_place_id AND t7.field='place_name' AND t7.locale='".$this->getLocaleId()."'", 'left outer')
-							->join('pjAreaCoord', "t8.id=t1.dropoff_place_id", 'left')
-							->join('pjMultiLang', "t9.model='pjArea' AND t9.foreign_id=t8.area_id AND t9.field='name' AND t9.locale='".$this->getLocaleId()."'", 'left outer')
-							->join('pjMultiLang', "t10.model='pjBaseCountry' AND t10.foreign_id=t1.c_country AND t10.field='name' AND t10.locale='".$this->getLocaleId()."'", 'left outer')
-							->join('pjBooking', "t11.external_id=t1.external_id", 'left outer')
-							->find($this->_post->toInt('id'))
-							->getData();
-							$driver_arr = pjMainDriverModel::factory()->find($this->getUserId())->getData();
-							
-							$pjNotificationModel = pjNotificationModel::factory();
-							$Email = self::getMailer($this->option_arr);
-							$admin_emails = pjAppController::getAllAdminEmails();
-							
-							$notification = $pjNotificationModel->reset()->where('recipient', 'admin')->where('transport', 'email')->where('variant', 'change_payment_status')->limit(1)->findAll()->getDataIndex(0);
-							if((int) $notification['id'] > 0 && $notification['is_active'] == 1)
-							{
-							    $_driver_payment_status = __('_driver_payment_status', true);
-							    $driver_payment_status = sprintf(@$_driver_payment_status[$arr['driver_payment_status']], pjCurrency::formatPrice($arr['price'] + $arr['duplicate_price']));
-							    $resp = pjAppController::pjActionGetSubjectMessage($notification, $this->getLocaleId(), $this->getForeignId());
-							    $lang_message = $resp['lang_message'];
-							    $lang_subject = $resp['lang_subject'];
-							    if (count($lang_message) === 1 && count($lang_subject) === 1 && !empty($lang_subject[0]['content'])) {
-							        $search = array('{DriverName}','{CustomerName}','{Date}','{PaymentStatus}','{ReferenceID}');
-							        $replace = array(
-							            $driver_arr['name'],
-							            $arr['fname'].' '.$arr['lname'],
-							            date($this->option_arr['o_date_format'], strtotime($arr['booking_date'])).', '.date($this->option_arr['o_time_format'], strtotime($arr['booking_date'])),
-							            $driver_payment_status,
-							            !empty($arr['uuid2']) ? $arr['uuid2'] : $arr['uuid']
-							        );
-							        $subject = str_replace($search, $replace, $lang_subject[0]['content']);
-							        $message = str_replace($search, $replace, $lang_message[0]['content']);
-							        if (!empty($subject) && !empty($message))
-							        {
-							            $message = pjUtil::textToHtml($message);
-							            foreach($admin_emails as $email)
-							            {
-							                $Email
-							                ->setTo($email)
-							                ->setSubject($subject)
-							                ->send($message);
-							            }
-							        }
-							    }
-							}
+					t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2, t5.c_address AS c_address2, t5.c_destination_address AS c_destination_address2, t5.c_hotel as c_hotel2,
+					IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address) AS location2, IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
+					t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
+					t6.title, t6.fname, t6.lname, t6.email, t6.phone, t10.content AS c_country_title, t11.price AS duplicate_price")
+					->join('pjMultiLang', "t2.model='pjFleet' AND t2.foreign_id=t1.fleet_id AND t2.field='fleet' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+					->join('pjMultiLang', "t3.model='pjLocation' AND t3.foreign_id=t1.location_id AND t3.field='pickup_location' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
+					->join('pjMultiLang', "t4.model='pjDropoff' AND t4.foreign_id=t1.dropoff_id AND t4.field='location' AND t4.locale='".$this->getLocaleId()."'", 'left outer')
+					->join('pjBooking', "t5.id=t1.return_id", 'left outer')
+					->join('pjClient', "t6.id=t1.client_id", 'left')
+					->join('pjMultiLang', "t7.model='pjAreaCoord' AND t7.foreign_id=t1.dropoff_place_id AND t7.field='place_name' AND t7.locale='".$this->getLocaleId()."'", 'left outer')
+					->join('pjAreaCoord', "t8.id=t1.dropoff_place_id", 'left')
+					->join('pjMultiLang', "t9.model='pjArea' AND t9.foreign_id=t8.area_id AND t9.field='name' AND t9.locale='".$this->getLocaleId()."'", 'left outer')
+					->join('pjMultiLang', "t10.model='pjBaseCountry' AND t10.foreign_id=t1.c_country AND t10.field='name' AND t10.locale='".$this->getLocaleId()."'", 'left outer')
+					->join('pjBooking', "t11.external_id=t1.external_id", 'left outer')
+					->find($this->_post->toInt('id'))
+					->getData();
+					$driver_arr = pjMainDriverModel::factory()->find($this->getUserId())->getData();
+					
+					$pjNotificationModel = pjNotificationModel::factory();
+					$Email = self::getMailer($this->option_arr);
+					$admin_emails = pjAppController::getAllAdminEmails();
+					
+					$notification = $pjNotificationModel->reset()->where('recipient', 'admin')->where('transport', 'email')->where('variant', 'change_payment_status')->limit(1)->findAll()->getDataIndex(0);
+					if((int) $notification['id'] > 0 && $notification['is_active'] == 1)
+					{
+					    $_driver_payment_status = __('_driver_payment_status', true);
+					    $driver_payment_status = sprintf(@$_driver_payment_status[$arr['driver_payment_status']], pjCurrency::formatPrice($arr['price'] + $arr['duplicate_price']));
+					    $resp = pjAppController::pjActionGetSubjectMessage($notification, $this->getLocaleId(), $this->getForeignId());
+					    $lang_message = $resp['lang_message'];
+					    $lang_subject = $resp['lang_subject'];
+					    if (count($lang_message) === 1 && count($lang_subject) === 1 && !empty($lang_subject[0]['content'])) {
+					        $search = array('{DriverName}','{CustomerName}','{Date}','{PaymentStatus}','{ReferenceID}');
+					        $replace = array(
+					            $driver_arr['name'],
+					            $arr['fname'].' '.$arr['lname'],
+					            date($this->option_arr['o_date_format'], strtotime($arr['booking_date'])).', '.date($this->option_arr['o_time_format'], strtotime($arr['booking_date'])),
+					            $driver_payment_status,
+					            !empty($arr['uuid2']) ? $arr['uuid2'] : $arr['uuid']
+					        );
+					        $subject = str_replace($search, $replace, $lang_subject[0]['content']);
+					        $message = str_replace($search, $replace, $lang_message[0]['content']);
+					        if (!empty($subject) && !empty($message))
+					        {
+					            $message = pjUtil::textToHtml($message);
+					            foreach($admin_emails as $email)
+					            {
+					                $Email
+					                ->setTo($email)
+					                ->setSubject($subject)
+					                ->send($message);
+					            }
+					        }
+					    }
+					}
                 }
             }
         }

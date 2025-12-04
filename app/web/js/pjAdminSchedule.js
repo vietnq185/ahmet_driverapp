@@ -85,8 +85,8 @@ var jQuery = jQuery || $.noConflict();
 	        	var selectedDate = $('.assign_sel_date').val();
 	        	
 	        	swal({
-					title: 'Reset',
-					text: 'Are you sure you want to reset the bookings?',
+					title: myLabel.alert_unassign_order_with_ai_title,
+					text: myLabel.alert_unassign_order_with_ai_text,
 					type: "warning",
 					showCancelButton: true,
 					confirmButtonColor: "#DD6B55",
@@ -345,9 +345,33 @@ var jQuery = jQuery || $.noConflict();
 			}
 			var $payment_status = $(this).val(),
 				$booking_id = $('option:selected', this).attr('data-booking_id');
-			$.post("index.php?controller=pjAdminSchedule&action=pjActionUpdatePaymentStatus", {update_payment_status: 1, id: $booking_id, payment_status: $payment_status}).done(function (data) {
-				/* TO DO */
-			});
+			if ($payment_status == 2) {
+				swal({
+					title: myLabel.alert_driver_payment_cc_title,
+					text: myLabel.alert_driver_payment_cc_text,
+					type: "warning",
+					showCancelButton: true,
+					confirmButtonColor: "#DD6B55",
+					confirmButtonText: myLabel.btn_yes,
+					cancelButtonText: myLabel.btn_no,
+					closeOnConfirm: true,
+					showLoaderOnConfirm: true
+				}, function (res) {
+					console.log(res)
+					if (res) {
+						var $is_enter_hale_cash_register = 1;
+					} else {
+						var $is_enter_hale_cash_register = 0;
+					}
+					$.post("index.php?controller=pjAdminSchedule&action=pjActionUpdatePaymentStatus", {update_payment_status: 1, id: $booking_id, payment_status: $payment_status, is_enter_hale_cash_register: $is_enter_hale_cash_register}).done(function (data) {
+						/* TO DO */
+					});
+				});
+			} else {
+				$.post("index.php?controller=pjAdminSchedule&action=pjActionUpdatePaymentStatus", {update_payment_status: 1, id: $booking_id, payment_status: $payment_status}).done(function (data) {
+					/* TO DO */
+				});
+			}
 			return false;
 		}).on("change", ".pjSbDriverSelectBookingStatus", function (e) {
 			if (e && e.preventDefault) {

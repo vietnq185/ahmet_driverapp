@@ -415,6 +415,20 @@ a.pjSbOrderRemoveDriverStatus{
 .pjTblVehicles tr td.pjSbOrdersVehicleInactive{
 	border-top: 5px solid #FF0000 !important;
 }
+.pjSbOrderDetails .pjSbOrderPaymentStatus{
+	position: relative;
+}
+.pjSbOrderDetails .pjSbOrderPaymentStatus .pjSbOrderPaymentHaleCash{
+	display: block;
+  	position: absolute;
+  	left: -23px;
+}
+.pjSbOrderDetails .pjSbOrderPaymentStatus .pjSbOrderPaymentHaleCash.pjSbOrderPaymentHaleCashRegister1{
+	color: green;
+}
+.pjSbOrderDetails .pjSbOrderPaymentStatus .pjSbOrderPaymentHaleCash.pjSbOrderPaymentHaleCashRegister0{
+	color: red;
+}
 
 #modalAssignOrders.modal .ibox-content{
 	padding: 10px 5px 5px 5px;

@@ -119,7 +119,10 @@
 													<div><?php __('lblOrderExtras');?>: <span><?php echo implode(', ', $extra_arr);?></span></div>
 												<?php } ?>
 												
-												<div>
+												<div class="pjSbOrderPaymentStatus">
+													<?php if ((int)$order['driver_payment_status'] == 2) { ?>
+                            							<span class="pjSbOrderPaymentHaleCash pjSbOrderPaymentHaleCashRegister<?php echo (int)$order['is_enter_hale_cash_register'];?>"><i class="fa fa-tablet"></i></span>
+                            						<?php } ?>
                         							<?php echo $tpl['option_arr']['o_currency'];?>: <span><?php echo pjCurrency::formatPriceOnly($order['price']);?> <?php echo @$_schedule_pm[$order['payment_method']];?></span>
                             						<?php if (in_array($order['payment_method'], array('creditcard','bank','saferpay'))) { ?>
                             							<span class="driver-status"><?php __('lblPaid');?></span>

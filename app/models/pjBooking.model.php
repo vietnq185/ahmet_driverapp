@@ -114,7 +114,8 @@ class pjBookingModel extends pjAppModel
 	    array('name' => 'is_manual', 'type' => 'tinyint', 'default' => '0'),
 	    
 	    array('name' => 'empty_travel_start_time', 'type' => 'datetime', 'default' => ':NULL'),
-	    array('name' => 'empty_travel_arrival_time', 'type' => 'datetime', 'default' => ':NULL')
+	    array('name' => 'empty_travel_arrival_time', 'type' => 'datetime', 'default' => ':NULL'),
+	    array('name' => 'is_enter_hale_cash_register', 'type' => 'tinyint', 'default' => '0'),
 	);
 	
 	public static function factory($attr=array())

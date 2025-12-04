@@ -193,6 +193,12 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	myLabel.alert_assign_order_with_ai_title = <?php x__encode('infoAssignOrdersWithAITitle');?>;
 	myLabel.alert_assign_order_with_ai_text = <?php x__encode('infoAssignOrdersWithAIDesc');?>;
 
+	myLabel.alert_driver_payment_cc_title = <?php x__encode('infoDriverPaymentCreditCardTitle');?>;
+	myLabel.alert_driver_payment_cc_text = <?php x__encode('infoDriverPaymentCreditCardBody');?>;
+
+	myLabel.alert_unassign_order_with_ai_title = <?php x__encode('infoUnassignOrdersTitle');?>;
+	myLabel.alert_unassign_order_with_ai_text = <?php x__encode('infoUnassignOrdersDesc');?>;
+
 	myLabel.btn_yes = "<?php __('btnYes');?>";
 	myLabel.btn_no = "<?php __('btnNo');?>";
 	</script>
