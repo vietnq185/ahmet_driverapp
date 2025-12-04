@@ -399,12 +399,39 @@ a.pjSbOrderRemoveDriverStatus{
 .pjTblVehicles h3.driverName{
 	margin: 0;
 }
+.pjSbScheduleForm .btn-outline{
+	padding: 6px;
+}
 
 /* Đặt z-index đủ cao (ví dụ: 99999) để nó hiển thị trên tất cả các lớp phủ khác */
 .popover.clockpicker-popover {
     z-index: 99999 !important; 
 }
 
+
+.pjTblVehicles tr td.pjSbOrdersVehicleActive{
+	border-top: 5px solid #90EE90 !important;
+}
+.pjTblVehicles tr td.pjSbOrdersVehicleInactive{
+	border-top: 5px solid #FF0000 !important;
+}
+
+#modalAssignOrders.modal .ibox-content{
+	padding: 10px 5px 5px 5px;
+}
+#modalAssignOrders.modal .selecCarsContainer{
+	padding: 35px 10px 10px 0;
+}
+#modalAssignOrders.modal .modal-header{
+	padding: 15px;
+}
+.select2-container--open {
+    z-index: 99999; /* Tăng rất cao để đảm bảo nó nằm trên modal */
+}
+/* Đảm bảo dropdown cũng có z-index cao */
+.select2-dropdown {
+    z-index: 99999; 
+}
 @media (max-width: 479px){
 	.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbSign{
 		width: 10%;

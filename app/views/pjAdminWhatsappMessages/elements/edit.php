@@ -7,6 +7,7 @@ $jqDateFormat = pjUtil::momentJsDateFormat($tpl['option_arr']['o_date_format']);
 	</div><!-- /.panel-heading -->
  
 	<div class="panel-body">
+		<div class="alert alert-info"><?php __('infoAddUpdateWhatsappMessageToken');?></div>
 		<form action="" method="post" id="frmUpdate">
 			<input type="hidden" name="update_wm" value="1" />
 			<input type="hidden" name="id" value="<?php echo $tpl['arr']['id'];?>" />
@@ -52,6 +53,11 @@ $jqDateFormat = pjUtil::momentJsDateFormat($tpl['option_arr']['o_date_format']);
 						<option value="<?php echo $k;?>" <?php echo $tpl['arr']['available_for'] == $k ? 'selected="selected"' : '';?>><?php echo $v;?></option>
 					<?php } ?>
 				</select>
+			</div>
+			
+			<div class="form-group">
+				<label class="control-label"><?php __('lblVehicleOrder');?>:</label>			
+				<input type="text" class="form-control touchspin3" name="order" value="<?php echo pjSanitize::html($tpl['arr']['order']);?>" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
 			</div>
 			
 			<div class="form-group">

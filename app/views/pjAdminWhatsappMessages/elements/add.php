@@ -53,6 +53,11 @@
 			</div>
 			
 			<div class="form-group">
+				<label class="control-label"><?php __('lblVehicleOrder');?>:</label>			
+				<input type="text" class="form-control touchspin3" name="order" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+			</div>
+			
+			<div class="form-group">
 				<label class="control-label"><?php __('lblWMStatus');?>:</label>			
 				<div class="clearfix">
 					<div class="switch onoffswitch-data pull-left">

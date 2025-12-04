@@ -324,8 +324,8 @@ var jQuery = jQuery || $.noConflict();
 				
 				if (multilang && myLabel.isFlagReady == 1) {
 					$(".multilang").multilang({
-						langs: pjLocale.langs,
-						flagPath: pjLocale.flagPath,
+						langs: pjCmsLocale.langs,
+						flagPath: pjCmsLocale.flagPath,
 						tooltip: "",
 						select: function (event, ui) {
 							$("input[name='locale_id']").val(ui.index);					
@@ -359,8 +359,8 @@ var jQuery = jQuery || $.noConflict();
 				
 				if (multilang && myLabel.isFlagReady == 1) {
 					$(".multilang").multilang({
-						langs: pjLocale.langs,
-						flagPath: pjLocale.flagPath,
+						langs: pjCmsLocale.langs,
+						flagPath: pjCmsLocale.flagPath,
 						tooltip: "",
 						select: function (event, ui) {
 							$("input[name='locale_id']").val(ui.index);					
@@ -423,5 +423,14 @@ var jQuery = jQuery || $.noConflict();
 				$('.pjSbVehicleServiceRepair').html(data);
 			});
 		}
+		
+		$("#modalAddServiceRepair").on('hide.bs.modal', function(){
+			$('.ibox-content').removeClass('sk-loading');
+		});
+		
+		$("#modalUpdateServiceRepair").on('hide.bs.modal', function(){
+			$('.ibox-content').removeClass('sk-loading');
+		});
+		
 	});
 })(jQuery);

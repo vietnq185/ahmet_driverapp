@@ -84,11 +84,12 @@ var jQuery = jQuery || $.noConflict();
 		          columns: [
 							{text: myLabel.subject, type: "text", sortable: true, editable: pjGrid.hasAccessUpdate},
 							{text: myLabel.available_for, type: "text", sortable: true, editable: false, renderer: formatAvailableFor},
+							{text: myLabel.msg_order, type: "text", sortable: true, editable: pjGrid.hasAccessUpdate},
 							{text: myLabel.status, type: "toggle", sortable: true, editable: pjGrid.hasAccessUpdate, positiveLabel: myLabel.active, positiveValue: "T", negativeLabel: myLabel.inactive, negativeValue: "F"}
 				          ],
 				dataUrl: "index.php?controller=pjAdminWhatsappMessages&action=pjActionGet" + pjGrid.queryString,
 				dataType: "json",
-				fields: ['subject', 'available_for', 'status'],
+				fields: ['subject', 'available_for', 'order', 'status'],
 				paginator: {
 					actions: actions,
 					gotoPage: true,

@@ -21,6 +21,7 @@ class pjLocationModel extends pjAppModel
 		array('name' => 'lat', 'type' => 'float', 'default' => ':NULL'),
 		array('name' => 'lng', 'type' => 'float', 'default' => ':NULL'),
 	    array('name' => 'color', 'type' => 'varchar', 'default' => ':NULL'),
+	    array('name' => 'region', 'type' => 'varchar', 'default' => ':NULL'),
 		array('name' => 'domain', 'type' => 'varchar', 'default' => ':NULL')
 	);
 	

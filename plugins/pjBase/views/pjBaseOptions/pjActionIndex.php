@@ -52,10 +52,15 @@
                             <?php
                             foreach ($tpl['arr'] as $i => $option)
                             {
+                                if ((int)$option['is_visible'] == 0) continue;
+                                $opt_text = __('plugin_base_opt_' . $option['key'].'_text', true);
                                 ?>
                                 <div class="form-group">
-
-                                    <label class="col-sm-3 control-label"><?php __('plugin_base_opt_' . $option['key']); ?></label>
+									<?php if (in_array($option['key'], array('o_buffer','o_max_wait_time_seconds','o_min_gap_fill_seconds'))) { ?>
+										<label class="col-sm-3 control-label"><?php __('plugin_base_opt_' . $option['key']); ?> (<?php __('plugin_base_label_minutes');?>)</label>
+									<?php } else { ?>
+                                    	<label class="col-sm-3 control-label"><?php __('plugin_base_opt_' . $option['key']); ?></label>
+                                    <?php } ?>
                                     <div class="col-sm-9">
                                         <?php
                                         switch ($option['type'])
@@ -146,6 +151,9 @@
                                                 break;
                                         }
                                         ?>
+                                        <?php if (!empty($opt_text)) { ?>
+                                        	<div class="small"><?php echo $opt_text;?></div>
+                                        <?php } ?>
                                     </div>
                                 </div>
                                 <?php

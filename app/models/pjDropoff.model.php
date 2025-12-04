@@ -19,6 +19,7 @@ class pjDropoffModel extends pjAppModel
 		array('name' => 'is_airport', 'type' => 'tinyint', 'default' => '0'),
 		array('name' => 'icon', 'type' => 'varchar', 'default' => ':NULL'),
 		array('name' => 'order_index', 'type' => 'int', 'default' => ':NULL'),
+	    array('name' => 'region', 'type' => 'varchar', 'default' => ':NULL'),
 		array('name' => 'domain', 'type' => 'varchar', 'default' => ':NULL')
 	);
 	

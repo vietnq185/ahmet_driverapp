@@ -96,8 +96,81 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	    </div>
 	</div>
 	
+	<div class="modal inmodal fade" id="modalAssignOrders" data-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog modal-lg">
+	        <div class="modal-content">
+	        	<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span><span class="sr-only"><?php __('btnClose');?></span></button>
+					<h3 class="modal-title"><?php __('btnAssignOrders'); ?></h3>
+				</div>
+	        	<div class="row">
+	        		<div class="col-md-9 col-sm-12 col-xs-12">
+	        			<div class="ibox">
+            	        	<div class="ibox-content">
+            	        		<div class="row">
+            						<div class="col-lg-6">
+            							<form action="" method="get" class="form-horizontal frm-filter-orders">
+                                            <div class="input-group">
+            									<input type="text" name="q" placeholder="<?php __('btnSearch', false, true); ?>" class="form-control">
+                                                <div class="input-group-btn">
+                                                    <button class="btn btn-primary" type="submit">
+                                                        <i class="fa fa-search"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+            						</div><!-- /.col-lg-6 -->
+            					</div><!-- /.row -->
+            	        		<div id="grid_orders"></div>
+            	        	</div>
+            	        </div>
+	        		</div>
+	        		<div class="col-md-3 col-sm-13 col-xs-12">
+	        			<div class="selecCarsContainer">
+	        				<form action="" method="post" class="" id="frmAssignMultiOrders">
+	        					<input type="hidden" name="assign_orders" value="1" />
+    	        				<div class="form-group">
+                    				<label class="control-label"><?php __('lblOrderCar')?>:</label>	
+                    				<select name="vehicle_id" id="vehicle_id" class="form-control select-vehicle required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+                    					<option value="">-- <?php __('lblChoose');?> --</option>
+                    					<?php foreach ($tpl['vehicle_arr'] as $veh) { ?>
+                    						<option value="<?php echo $veh['id'];?>"><?php echo pjSanitize::html($veh['name']);?></option>
+                    					<?php } ?>
+                    				</select>
+                    			</div>
+                    			
+                    			<div class="form-group">
+                    				<label class="control-label"><?php __('lblOrderShift')?>:</label>	
+                    				<select name="vehicle_order" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+                    					<?php foreach (__('_order_shift', true) as $k => $v) { ?>
+                    						<option value="<?php echo $k;?>"><?php echo $v;?></option>
+                    					<?php } ?>
+                    				</select>
+                    			</div>
+                    			
+                    			<div class="form-group">
+                    				<input type="hidden" name="order_ids" id="order_ids" class="required" data-msg-required="<?php __('lblAssignOrderError', false, true);?>" />
+                    			</div>
+                			
+                    			<div class="form-group">
+                    				<button class="btn btn-primary" type="submit"><?php __('btnAssign');?></button>&nbsp;&nbsp;&nbsp;&nbsp;
+                    				<button class="btn btn-default" type="button" data-dismiss="modal"><?php __('btnClose');?></button>
+                    			</div>
+                    			
+                    			<div class="alert alert-success" style="display: none;">
+                    			
+                    			</div>
+                			</form>
+	        			</div>
+	        		</div>
+	        	</div>
+	        </div>
+	    </div>
+	</div>
+	
 	<div id="popupMessage" style="display: none;"><?php echo isset($tpl['popup_message']) ? implode('<br/>', $tpl['popup_message']) : '';?></div>
 	<script type="text/javascript">
+	var pjGrid = pjGrid || {};
 	var myLabel = myLabel || {};
 	myLabel.choose = "<?php __('lblChoose');?>";
 	myLabel.months = "<?php echo implode("_", $months);?>";
@@ -109,4 +182,17 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	myLabel.isDriver = <?php echo $controller->isDriver() ? 'true' : 'false';?>;
 	myLabel.show_popup = "<?php echo isset($tpl['popup_message']) && !empty($tpl['popup_message']) ? 1 : 0; ?>";
 	myLabel.showperiod = <?php echo $show_period; ?>;
+
+	myLabel.order_client = "<?php __('lblScheduleOrderClient');?>";
+	myLabel.order_transfer_destinations = "<?php __('lblScheduleOrderTransferDestinations');?>";
+	myLabel.order_vehicle = "<?php __('lblScheduleOrderVehicle');?>";
+	myLabel.order_passengers = "<?php __('lblScheduleOrderPassengers');?>";
+	myLabel.order_order_id = "<?php __('lblScheduleOrderOrderID');?>";
+	myLabel.order_total = "<?php __('lblScheduleOrderTotal');?>";
+
+	myLabel.alert_assign_order_with_ai_title = <?php x__encode('infoAssignOrdersWithAITitle');?>;
+	myLabel.alert_assign_order_with_ai_text = <?php x__encode('infoAssignOrdersWithAIDesc');?>;
+
+	myLabel.btn_yes = "<?php __('btnYes');?>";
+	myLabel.btn_no = "<?php __('btnNo');?>";
 	</script>

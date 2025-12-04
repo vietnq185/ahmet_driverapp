@@ -45,7 +45,7 @@ class pjAdminWhatsappMessages extends pjAdmin
 		{
 			$pjWhatsappMessageModel->where('t1.status', $this->_get->toString('status'));
 		}
-		$column = 'subject';
+		$column = 'order';
 		$direction = 'ASC';
 		if ($this->_get->toString('column') && in_array(strtoupper($this->_get->toString('direction')), array('ASC', 'DESC')))
 		{
@@ -64,7 +64,7 @@ class pjAdminWhatsappMessages extends pjAdmin
 		}
 		$data = $pjWhatsappMessageModel
 					->select('t1.*, t2.content AS subject')
-					->orderBy("$column $direction")
+					->orderBy("`$column` $direction")
 					->limit($rowCount, $offset)
 					->findAll()
 					->getData();

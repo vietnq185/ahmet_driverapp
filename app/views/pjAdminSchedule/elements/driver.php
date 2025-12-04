@@ -25,7 +25,7 @@
 		</div>
 		<div class="col-lg-4 col-md-4 col-sm-12 col-xs-12 text-right hidden-md hidden-sm hidden-xs">
 			<div class="form-group">
-				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
+				<a class="btn btn-primary 1" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
 				<?php 
 				$last_update = '';
 				if (!empty($tpl['option_arr']['o_last_update_data'])) { 
@@ -54,7 +54,7 @@
 				?> 
 			</div>
 			<div class="form-group">
-				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
+				<a class="btn btn-primary 2" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
 			</div>
 		</div>
 	</div>

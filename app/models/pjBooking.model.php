@@ -107,8 +107,14 @@ class pjBookingModel extends pjAppModel
 		array('name' => 'distance', 'type' => 'int', 'default' => ':NULL'),
 	    array('name' => 'notes_from_driver', 'type' => 'text', 'default' => ':NULL'),
 	    array('name' => 'notes_from_office', 'type' => 'text', 'default' => ':NULL'),
+	    array('name' => 'region', 'type' => 'varchar', 'default' => ':NULL'),
+	    array('name' => 'dropoff_region', 'type' => 'varchar', 'default' => ':NULL'),
 		array('name' => 'platform', 'type' => 'enum', 'default' => 'newsystem'),
-	    array('name' => 'locale_id', 'type' => 'int', 'default' => '1')
+	    array('name' => 'locale_id', 'type' => 'int', 'default' => '1'),
+	    array('name' => 'is_manual', 'type' => 'tinyint', 'default' => '0'),
+	    
+	    array('name' => 'empty_travel_start_time', 'type' => 'datetime', 'default' => ':NULL'),
+	    array('name' => 'empty_travel_arrival_time', 'type' => 'datetime', 'default' => ':NULL')
 	);
 	
 	public static function factory($attr=array())

@@ -5,7 +5,8 @@ var jQuery = jQuery || $.noConflict();
 		var validator,
 			validate = ($.fn.validate !== undefined),
 			datepicker = ($.fn.datepicker !== undefined),
-			sortable = ($.fn.sortable !== undefined),			
+			sortable = ($.fn.sortable !== undefined),	
+			datagrid = ($.fn.datagrid !== undefined),
 			$modalSms = $("#modalSms"),
 			$modalTurnover = $("#modalTurnover"),
 			$modalViewOrder = $("#modalViewOrder"),
@@ -13,7 +14,8 @@ var jQuery = jQuery || $.noConflict();
 			$modalAddNotesForDriver = $("#modalAddNotesForDriver"),
 			$modalChangePickupTime = $("#modalChangePickupTime"),
 			$frmSyncData = $("#frmSyncData"),
-			$adjustment;
+			$adjustment,
+			$grid_orders;
 		
 		if (datepicker) {
 			$.fn.datepicker.dates['en'] = {
@@ -28,11 +30,86 @@ var jQuery = jQuery || $.noConflict();
 	        	if (e && e.preventDefault) {
 					e.preventDefault();
 				}
+
+				var selectedDate = e.date;
+
+			    // ? Fix timezone shift � format using local date parts
+			    var formattedDate = selectedDate.getFullYear() + '-' +
+			        String(selectedDate.getMonth() + 1).padStart(2, '0') + '-' +
+			        String(selectedDate.getDate()).padStart(2, '0');
+
+			    //console.log("Selected date:", formattedDate);
+			    if(formattedDate){
+			    	$('.assign_sel_date').val(formattedDate);
+			    }
+
 	        	if (myLabel.isDriver) {
 					getDriverSchedule($('.pjSbScheduleForm'));
 				} else {
-					getSchedule($('.pjSbScheduleForm'));
+					getSchedule($('.pjSbScheduleForm'), 1);
 				}
+	        });
+
+	        $('.assign_with_ai').on('click', function(e) {
+	        	var selectedDate = $('.assign_sel_date').val();
+	        	
+	        	swal({
+					title: myLabel.alert_assign_order_with_ai_title,
+					text: myLabel.alert_assign_order_with_ai_text,
+					type: "warning",
+					showCancelButton: true,
+					confirmButtonColor: "#DD6B55",
+					confirmButtonText: myLabel.btn_yes,
+					cancelButtonText: myLabel.btn_no,
+					closeOnConfirm: false,
+					showLoaderOnConfirm: true
+				}, function (res) {
+					if (res) {
+						$.post(
+					        "index.php?controller=pjAdminAISchedule&action=pjActionIndex",
+					        { selected_date: selectedDate },
+					        function(response) {
+					            if(response.status == "OK") {
+					            	getSchedule($('.pjSbScheduleForm'), 1);
+					            }
+					            swal.close();
+					        }
+					    ).fail(function(xhr) {
+					        console.error("Error:", xhr.responseText);
+					    });
+					}
+				});
+	        });
+	        
+	        $('.reset_assign_with_ai').on('click', function(e) {
+	        	var selectedDate = $('.assign_sel_date').val();
+	        	
+	        	swal({
+					title: 'Reset',
+					text: 'Are you sure you want to reset the bookings?',
+					type: "warning",
+					showCancelButton: true,
+					confirmButtonColor: "#DD6B55",
+					confirmButtonText: myLabel.btn_yes,
+					cancelButtonText: myLabel.btn_no,
+					closeOnConfirm: false,
+					showLoaderOnConfirm: true
+				}, function (res) {
+					if (res) {
+						$.post(
+					        "index.php?controller=pjAdminAISchedule&action=pjActionIndex&type=reset",
+					        { selected_date: selectedDate },
+					        function(response) {
+					            if(response.status == "OK") {
+					            	getSchedule($('.pjSbScheduleForm'), 1);
+					            }
+					            swal.close();
+					        }
+					    ).fail(function(xhr) {
+					        console.error("Error:", xhr.responseText);
+					    });
+					}
+				});
 	        });
 		}
 		
@@ -44,9 +121,11 @@ var jQuery = jQuery || $.noConflict();
 			});
 		}
 		
-		function getSchedule($form) {
+		function getSchedule($form, $show_loader) {
 			$("ol.pjSbOrders").sortable("destroy");
-			$('.pj-loader').show();
+			if ($show_loader == 1) {
+				$('.pj-loader').show();
+			}
 			$.post("index.php?controller=pjAdminSchedule&action=pjActionCountOrders", $form.serialize()).done(function (resp) {
 				$('.pjCntOrders').html(resp);
 				$.post("index.php?controller=pjAdminSchedule&action=pjActionGetSchedule", $form.serialize()).done(function (data) {
@@ -408,6 +487,12 @@ var jQuery = jQuery || $.noConflict();
 					$modalChangePickupTime.modal('hide');
 				});
 			}
+		}).on("click", ".btnAssignOrders", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			$('#modalAssignOrders').modal('show');
+			return false;
 		});
 		
 		$("#modalAddNotesForDriver").on('hide.bs.modal', function(){
@@ -436,7 +521,7 @@ var jQuery = jQuery || $.noConflict();
 				$modalViewOrder.find(".modal-content").html(data);
 				$modalViewOrder.modal('show');
 			});
-	});
+		});
 		
 		if (sortable) {
 			initSortable();
@@ -496,7 +581,7 @@ var jQuery = jQuery || $.noConflict();
 				if (myLabel.isDriver) {
 					getDriverSchedule($('.pjSbScheduleForm'));
 				} else {
-					getSchedule($('.pjSbScheduleForm'));
+					getSchedule($('.pjSbScheduleForm'), 1);
 				}
 			}
 			
@@ -568,5 +653,163 @@ var jQuery = jQuery || $.noConflict();
 				});
 			}
 		}
+		
+		$(document).ready(function() {
+			$.fn.modal.Constructor.prototype.enforceFocus = function() {};
+
+			$(document).on('focusin', function(e) {
+			    if ($(e.target).closest(".select2-dropdown").length || 
+			        $(e.target).closest(".select2-search__field").length) {
+			        return true;
+			    }
+			    
+			    if (!$(e.target).closest('.modal').length) {
+			        return;
+			    }
+			});
+			
+			if ($(".select-vehicle").length) {
+	            $(".select-vehicle").select2({
+	                placeholder: myLabel.choose,
+	                allowClear: true,
+	                dropdownParent: $('#modalAssignOrders')
+	            });
+	        }
+			
+			if ($("#grid_orders").length > 0 && datagrid) {
+				function formatFromTo(str, obj) {
+					return obj.from_to;
+				}
+				function formatClient(str, obj) {
+					return obj.client_name;
+				}
+				function formatTotal(str, obj) {
+					return obj.total;
+				}
+				var $date = $('.pjSbScheduleForm').find('input[name="date"]').val();
+				var buttons = [];
+				var actions = [];
+				var select = select = {
+					field: "id",
+					name: "record[]"
+				};
+				var $grid_orders = $("#grid_orders").datagrid({
+					buttons: buttons,
+			          columns: [
+			        	  		{text: myLabel.order_order_id, type: "text", sortable: true, editable: false},
+			        	  		{text: myLabel.order_transfer_destinations, type: "text", sortable: true, editable: false, renderer: formatFromTo},
+								{text: myLabel.order_client, type: "text", sortable: true, editable: false, renderer: formatClient},
+								{text: myLabel.order_vehicle, type: "text", sortable: true, editable: false},
+								{text: myLabel.order_passengers, type: "text", sortable: true, editable: false},
+								{text: myLabel.order_total, type: "text", sortable: true, editable: false, renderer: formatTotal}
+					          ],
+					dataUrl: null,
+					dataType: "json",
+					fields: ['id', 'id', 'id', 'fleet', 'passengers', 'id'],
+					paginator: {
+						actions: actions,
+						gotoPage: true,
+						paginate: true,
+						total: true,
+						rowCount: true
+					},
+					saveUrl: null,
+					select: select,
+					onRender: function(){
+						$grid_orders.find('.pj-table-icon-edit').each(function() {
+							var $this = $(this),
+								$tr = $(this).closest('tr'),
+								$data_id = $tr.attr('data-id'),
+								$arr = $data_id.split('_');
+						});
+					}
+				});
+			}
+			
+			$('#modalAssignOrders').on('shown.bs.modal', function (e) {
+				var content = $grid_orders.datagrid("option", "content"),
+					cache = $grid_orders.datagrid("option", "cache"),
+					$date = $('.pjSbScheduleForm').find('input[name="date"]').val();
+				$.extend(cache, {
+					q: ''
+				});
+				$grid_orders.datagrid("option", "cache", cache);
+				$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign&date=" + $date, "booking_date", "DESC", content.page, content.rowCount);
+			}).on('hidden.bs.modal', function (e) {
+				$('#frmAssignMultiOrders').get(0).reset();
+				$('#order_ids').val('');
+				$('#vehicle_id').val('').trigger('change');
+				formValidator.resetForm();
+				var content = $grid_orders.datagrid("option", "content"),
+					cache = $grid_orders.datagrid("option", "cache"),
+					$date = $('.pjSbScheduleForm').find('input[name="date"]').val();
+				$.extend(cache, {
+					q: ''
+				});
+				$grid_orders.datagrid("option", "cache", cache);
+				$grid_orders.datagrid("load", "", "booking_date", "ASC", content.page, content.rowCount);
+				$('#modalAssignOrders').find('.alert').html('').hide();
+			}).on("submit", ".frm-filter-orders", function (e) {
+				if (e && e.preventDefault) {
+					e.preventDefault();
+				}
+				var $this = $(this),
+					content = $grid_orders.datagrid("option", "content"),
+					cache = $grid_orders.datagrid("option", "cache"),
+					$date = $('.pjSbScheduleForm').find('input[name="date"]').val();
+				$.extend(cache, {
+					q: $this.find("input[name='q']").val(),
+					date: $date,
+				});
+				$grid_orders.datagrid("option", "cache", cache);
+				$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign", "booking_date", "DESC", content.page, content.rowCount);
+				return false;
+			}).on("ifChanged", ".pj-table-select-row", function (e) {
+				var $order_ids = [];
+				$('.pj-table-select-row').each(function() {
+					if (this.checked) {
+						$order_ids.push(this.value);
+					}
+				});
+				$('#order_ids').val($order_ids.join('-'));
+			});
+			
+			var $frmAssignMultiOrders = $('#frmAssignMultiOrders');
+			var formValidator = $frmAssignMultiOrders.validate({
+				onkeyup: false,
+				ignore: "",
+				submitHandler: function (form) {
+					var l = Ladda.create( $(form).find(":submit").get(0) );
+					l.start();
+					$.post('index.php?controller=pjAdminSchedule&action=pjActionAssignOrders', $(form).serialize()).done(function (data) {
+						if (data.status == 'OK') {
+							$('#modalAssignOrders').find('.alert').html(data.text).show();
+							getSchedule($('.pjSbScheduleForm'), 0);
+							
+							var currentTime = Date.now();
+							var content = $grid_orders.datagrid("option", "content"),
+								cache = $grid_orders.datagrid("option", "cache"),
+								$date = $('.pjSbScheduleForm').find('input[name="date"]').val(),
+								$q = $('.frm-filter-orders').find("input[name='q']").val();
+							$.extend(cache, {
+								q: $q,
+								date: $date,
+							});
+							$grid_orders.datagrid("option", "cache", cache);
+							$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign", "booking_date", "DESC", content.page, content.rowCount);
+							setTimeout(function() {
+								$('#modalAssignOrders').find('.alert').html('').hide();
+								$('#vehicle_id').val('').trigger('change');
+								$('#order_ids').val('');
+								$('#frmAssignMultiOrders').get(0).reset();
+							}, 3000);
+						}
+						l.stop();
+	        		});
+					l.stop();
+					return false;
+				}
+			});
+		});
 	});
 })(jQuery);

@@ -37,7 +37,7 @@
 					<br class="pjSbClearBoth"/>
 				</div>
 			<?php } ?>
-			<div class="pjSbOrderInner <?php echo empty($order['location_color']) ? ($is_airport_to_city ? 'pjSbOrderInnerAirport' : 'pjSbOrderInnerLocation') : '';?>  <?php echo $order['status'] == 'cancelled' ? 'pjSbOrderCancelled' : '';?>" style="<?php echo !empty($order['location_color']) ? ('border-left: 10px solid '.$order['location_color']) : '';?>">
+			<div class="pjSbOrderInner <?php echo empty($order['location_color']) || strtolower($order['location_color']) == '#ffffff' || !empty($order['return_id']) ? ($is_airport_to_city ? 'pjSbOrderInnerAirport' : 'pjSbOrderInnerLocation') : '';?>  <?php echo $order['status'] == 'cancelled' ? 'pjSbOrderCancelled' : '';?>" style="<?php echo !empty($order['location_color']) && strtolower($order['location_color']) != '#ffffff' && empty($order['return_id']) ? ('border-left: 10px solid '.$order['location_color']) : '';?>">
 				<?php if ($order['status'] == 'cancelled') { ?>
 					<div class="pjSbOrderCancelledInner">
 						<a href="javascript:void(0);" data-id="<?php echo $order['id'];?>" class="pjSbBtnRemoveBooking"><?php __('btnCancelledOK');?></a>
@@ -93,6 +93,25 @@
 					</div>
 					<div><?php __('lblOrderInternalNotes');?>: <span><?php echo !empty($order['internal_notes']) ? nl2br($order['internal_notes']) : '';?></span></div>
 					<div><?php __('lblOrderID');?>: <span><?php echo !empty($order['return_uuid']) ? pjSanitize::html($order['return_uuid']) : pjSanitize::html($order['uuid']);?></span></div>
+					<?php if (!empty($order['region'])) { ?>
+						<div><small style="font-size: 10px;"><?php __('lblPickupRegion');?>: <?php echo pjSanitize::html($order['region']);?></small></div>
+					<?php } ?>
+					<?php if (!empty($order['dropoff_region'])) { ?>
+						<div><small style="font-size: 10px;"><?php __('lblDropoffRegion');?>: <?php echo pjSanitize::html($order['dropoff_region']);?></small></div>
+					<?php } ?>
+					
+					<?php /*
+					<div><small style="font-size: 10px;">Booking date: <?php echo pjSanitize::html($order['booking_date']);?></small></div>
+					<div><small style="font-size: 10px;">Pickup Lat: <?php echo pjSanitize::html($order['pickup_lat']);?></small></div>
+					<div><small style="font-size: 10px;">Pickup Lng: <?php echo pjSanitize::html($order['pickup_lng']);?></small></div>
+					<div><small style="font-size: 10px;">Dropoff Lat: <?php echo pjSanitize::html($order['dropoff_lat']);?></small></div>
+					<div><small style="font-size: 10px;">Dropoff Lng: <?php echo pjSanitize::html($order['dropoff_lng']);?></small></div>
+					<div><small style="font-size: 10px;">Duration: <?php echo pjSanitize::html($order['duration']);?></small></div>
+					<div><small style="font-size: 10px;">Distance: <?php echo pjSanitize::html($order['distance']);?></small></div>
+					<div><small style="font-size: 10px;">Platform: <?php echo pjSanitize::html($order['platform']);?></small></div>
+					<div><small style="font-size: 10px;">External ID: <?php echo pjSanitize::html($order['external_id']);?></small></div>
+					<div><small style="font-size: 10px;">Ref ID: <?php echo pjSanitize::html($order['ref_id']);?></small></div>
+					*/ ?>
 				</div>
 				<br class="pjSbClearBoth"/>
 			</div>

@@ -30,6 +30,7 @@ class pjWhatsappMessageModel extends pjAppModel
 		array('name' => 'id', 'type' => 'int', 'default' => ':NULL'),
 		array('name' => 'external_id', 'type' => 'int', 'default' => ':NULL'),
 		array('name' => 'available_for', 'type' => 'enum', 'default' => 'both'),   
+	    array('name' => 'order', 'type' => 'int', 'default' => ':NULL'),
 	    array('name' => 'domain', 'type' => 'varchar', 'default' => ':NULL'),
 	    array('name' => 'created', 'type' => 'datetime', 'default' => ':NOW()'),
 		array('name' => 'status', 'type' => 'enum', 'default' => 'T')

@@ -664,6 +664,19 @@ class pjApiSync extends pjFront
 					}
 				}
 			break;
+			case 'update_latlng':	
+			    $arr = $pjBookingModel
+			    ->where('t1.external_id', $post['id'])
+			    ->where('t1.domain', $post['domain'])
+			    //->where('(t1.ref_id IS NULL OR t1.ref_id="")')
+			    ->findAll()->getData();
+			    if ($arr) {
+			        foreach ($arr as $val) {
+			            unset($post['id']);
+			            $pjBookingModel->reset()->set('id', $val['id'])->modify($post);
+			        }
+			    }
+			    break;
 			case 'cancel':
 				if (isset($post['booking_ids']) && count($post['booking_ids']) > 0) {
 					$ids_arr = $pjBookingModel->where('t1.domain', $post['domain'])->whereIn('t1.external_id', $post['booking_ids'])->findAll()->getDataPair('uuid', 'id');

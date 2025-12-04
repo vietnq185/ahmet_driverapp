@@ -326,5 +326,31 @@ class pjAppController extends pjBaseAppController
             return $uuid;
         }
     }
+    
+    
+    public function getGeocode($str)
+    {
+        $_address = preg_replace('/\s+/', '+', $str);
+        $_address = urlencode($_address);
+        
+        $api = sprintf("https://maps.googleapis.com/maps/api/geocode/json?key=".$this->option_arr['o_google_api_key']."&address=%s&sensor=false", $_address);
+        
+        $pjHttp = new pjHttp();
+        $pjHttp->request($api);
+        $response = $pjHttp->getResponse();
+        
+        $geoObj = pjAppController::jsonDecode($response);
+        
+        $data = array();
+        if ($geoObj->status == 'OK')
+        {
+            $data['lat'] = $geoObj->results[0]->geometry->location->lat;
+            $data['lng'] = $geoObj->results[0]->geometry->location->lng;
+        } else {
+            $data['lat'] = '';
+            $data['lng'] = '';
+        }
+        return $data;
+    }
 }
 ?>

@@ -75,6 +75,51 @@ $jqDateFormat = pjUtil::momentJsDateFormat($tpl['option_arr']['o_date_format']);
 			</div>
 			
 			<div class="form-group">
+				<label class="control-label"><?php __('lblIsSki');?>:</label>			
+				<div class="clearfix">
+					<div class="switch onoffswitch-data pull-left">
+						<div class="onoffswitch">
+							<input type="checkbox" value="1" class="onoffswitch-checkbox" id="is_ski" name="is_ski" <?php echo (int)$tpl['arr']['is_ski'] == 1 ? 'checked="checked"' : '';?>>
+							<label class="onoffswitch-label" for="is_ski">
+								<span class="onoffswitch-inner" data-on="<?php __('_yesno_ARRAY_1', false, true); ?>" data-off="<?php __('_yesno_ARRAY_0', false, true); ?>"></span>
+								<span class="onoffswitch-switch"></span>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label class="control-label"><?php __('lblIsSnowboard');?>:</label>			
+				<div class="clearfix">
+					<div class="switch onoffswitch-data pull-left">
+						<div class="onoffswitch">
+							<input type="checkbox" value="1" class="onoffswitch-checkbox" id="is_snowboard" name="is_snowboard" <?php echo (int)$tpl['arr']['is_snowboard'] == 1 ? 'checked="checked"' : '';?>>
+							<label class="onoffswitch-label" for="is_snowboard">
+								<span class="onoffswitch-inner" data-on="<?php __('_yesno_ARRAY_1', false, true); ?>" data-off="<?php __('_yesno_ARRAY_0', false, true); ?>"></span>
+								<span class="onoffswitch-switch"></span>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="form-group">
+				<label class="control-label"><?php __('lblVehicleScheduleStatus');?>:</label>			
+				<div class="clearfix">
+					<div class="switch onoffswitch-data pull-left">
+						<div class="onoffswitch">
+							<input type="checkbox" value="1" class="onoffswitch-checkbox" id="schedule_status" name="schedule_status" <?php echo $tpl['arr']['schedule_status'] == 'T' ? 'checked="checked"' : '';?>>
+							<label class="onoffswitch-label" for="schedule_status">
+								<span class="onoffswitch-inner" data-on="<?php __('filter_ARRAY_active', false, true); ?>" data-off="<?php __('filter_ARRAY_inactive', false, true); ?>"></span>
+								<span class="onoffswitch-switch"></span>
+							</label>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="form-group">
 				<label class="control-label"><?php __('lblStatus');?>:</label>			
 				<div class="clearfix">
 					<div class="switch onoffswitch-data pull-left">

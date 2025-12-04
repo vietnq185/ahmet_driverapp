@@ -72,6 +72,7 @@ $get = $controller->_get->raw();
 	pjGrid.hasAccessDeleteMulti = <?php echo pjAuth::factory('pjAdminWhatsappMessages', 'pjActionDeleteBulk')->hasAccess() ? 'true' : 'false';?>;
 	
 	myLabel.subject = "<?php __('lblWMSubject'); ?>";
+	myLabel.msg_order = "<?php __('lblVehicleOrder'); ?>";
 	myLabel.available_for = "<?php __('lblWMAvailableFor'); ?>";
 	myLabel.status = "<?php __('lblWMStatus'); ?>";
 	myLabel.active = "<?php __('wm_statuses_ARRAY_T'); ?>";

@@ -35,8 +35,11 @@ class pjVehicleModel extends pjAppModel
 	    array('name' => 'maker_modell', 'type' => 'varchar', 'default' => ':NULL'),
 	    array('name' => 'vin', 'type' => 'varchar', 'default' => ':NULL'),
 	    array('name' => 'model_year', 'type' => 'varchar', 'default' => ':NULL'),
-	    array('name' => 'tuv', 'type' => 'date', 'default' => ':NULL'),	    
-		array('name' => 'status', 'type' => 'enum', 'default' => 'T')
+	    array('name' => 'tuv', 'type' => 'date', 'default' => ':NULL'),	 
+	    array('name' => 'is_ski', 'type' => 'tinyint', 'default' => '0'),	 
+	    array('name' => 'is_snowboard', 'type' => 'tinyint', 'default' => '0'),
+		array('name' => 'schedule_status', 'type' => 'enum', 'default' => 'T'),
+	    array('name' => 'status', 'type' => 'enum', 'default' => 'T')
 	);
 	
 	protected $validate = array(

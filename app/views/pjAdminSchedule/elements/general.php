@@ -1,15 +1,19 @@
 <form action="" method="get" class="pjSbScheduleForm" >
 	<input type="hidden" name="lock_orders" id="lock_orders" value="0" />
+	<input type="hidden" class="assign_sel_date" name="selected_date" value="<?php echo date('Y-m-d'); ?>">
 	<div class="row">
-		<div class="col-lg-4 col-md-4 col-sm-5">
+		<div class="col-lg-7 col-md-5 col-sm-6">
 			<div class="form-group">
-				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format']);?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_today'); ?></button>&nbsp;&nbsp;
-				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format'], strtotime('+1 day'));?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_tomorrow'); ?></button>&nbsp;&nbsp;
+				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format']);?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_today'); ?></button>&nbsp;
+				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format'], strtotime('+1 day'));?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_tomorrow'); ?></button>&nbsp;
 				<button class="btn btn-primary btn-outline btn-print btnLockOrder" type="button"><i class="fa fa-lock m-r-xs"></i><?php __('btnLock'); ?></button>
-				<button class="btn btn-primary btn-outline btn-print btnUnlockOrder" type="button" style="display: none;"><i class="fa fa-unlock m-r-xs"></i><?php __('btnUnlock'); ?></button>
+				<button class="btn btn-primary btn-outline btn-print btnUnlockOrder" type="button" style="display: none;"><i class="fa fa-unlock m-r-xs"></i><?php __('btnUnlock'); ?></button>&nbsp;
+				<button class="btn btn-primary btn-outline btn-print btnAssignOrders" type="button"><i class="fa fa-car m-r-xs"></i> <?php __('btnAssignOrders'); ?></button>&nbsp;
+				<button class="btn btn-primary btn-outline btn-print assign_with_ai" type="button"><i class="fa fa-rocket m-r-xs"></i> <?php __('btnAssignWithAI'); ?></button>
+				<button class="btn btn-primary btn-outline btn-print reset_assign_with_ai" type="button"><i class="fa fa-refresh m-r-xs"></i> Unassign</button>
 			</div>
 		</div>
-		<div class="col-lg-3 col-md-4 col-sm-4 col-xs-7">
+		<div class="col-lg-3 col-md-4 col-sm-3 col-xs-7">
 			<div class="form-group">
 				<div class="input-group date"
                      data-provide="datepicker"
@@ -23,13 +27,13 @@
 				</div>
 			</div>
 		</div>
-		<div class="col-lg-2 col-md-4 col-sm-3 col-xs-5">
+		<div class="col-lg-2 col-md-3 col-sm-3 col-xs-5">
 			<div class="form-group"><a href="javascript:void(0);" class="pjCntOrders"></a></div>
 		</div>
-		<div class="col-lg-3 col-md-4 col-sm-12 col-xs-12 text-right hidden-md hidden-sm hidden-xs">
+	</div>
+	<div class="row">
+		<div class="col-xs-12 text-right hidden-md hidden-sm hidden-xs">
 			<div class="form-group">
-				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncAllData"><?php __('btnSynchronizeData');?></a>
-				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
 				<?php 
 				$last_update = '';
 				if (!empty($tpl['option_arr']['o_last_update_data'])) { 
@@ -41,9 +45,11 @@
 				}
 				echo __('lblLastUpdate', true).': '.$last_update;
 				?> 
+				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncAllData"><?php __('btnSynchronizeData');?></a>
+				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
 			</div>
 		</div>
-		<div class="col-lg-3 col-md-12 col-sm-12 col-xs-12 text-center visible-md visible-sm visible-xs">
+		<div class="col-xs-12 text-center visible-md visible-sm visible-xs">
 			<div class="form-group pjSbLastUpdate">
 				<?php 
 				$last_update = '';
@@ -58,7 +64,7 @@
 				?> 
 			</div>
 			<div class="form-group">
-				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncAllData"><?php __('btnSynchronizeData');?></a>
+				<a class="btn btn-primary 2" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncAllData"><?php __('btnSynchronizeData');?></a>
 				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
 			</div>
 		</div>

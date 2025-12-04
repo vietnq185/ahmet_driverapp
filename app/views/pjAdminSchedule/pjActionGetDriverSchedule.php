@@ -47,7 +47,7 @@
 						<br class="pjSbClearBoth"/>
 					</div>
 				<?php } ?>
-				<div class="pjSbOrderInner <?php echo empty($order['location_color']) ? ($is_airport_to_city ? 'pjSbOrderInnerAirport' : 'pjSbOrderInnerLocation') : '';?>  <?php echo $order['status'] == 'cancelled' ? 'pjSbOrderCancelled' : '';?>" style="<?php echo !empty($order['location_color']) ? ('border-left: 10px solid '.$order['location_color']) : '';?>">
+				<div class="pjSbOrderInner <?php echo empty($order['location_color']) || strtolower($order['location_color']) == '#ffffff' || !empty($order['return_id']) ? ($is_airport_to_city ? 'pjSbOrderInnerAirport' : 'pjSbOrderInnerLocation') : '';?>  <?php echo $order['status'] == 'cancelled' ? 'pjSbOrderCancelled' : '';?>" style="<?php echo !empty($order['location_color']) && strtolower($order['location_color']) != '#ffffff' && empty($order['return_id']) ? ('border-left: 10px solid '.$order['location_color']) : '';?>">
 					<?php if ($order['status'] == 'cancelled') { ?>
 						<div class="pjSbOrderCancelledInner">
 							<a href="javascript:void(0);" data-id="<?php echo $order['id'];?>" class="pjSbBtnRemoveBooking"><?php __('btnCancelledOK');?></a>
@@ -113,6 +113,12 @@
 								<div class="alert alert-warning"><strong><?php __('lblOrderImportantNotesFromOffice');?>:</strong><div><?php echo nl2br($order['notes_from_office']);?></div></div>
 							</div>
 						<?php } ?>
+						<?php if (!empty($order['region'])) { ?>
+    						<div><small style="font-size: 10px;"><?php __('lblPickupRegion');?>: <?php echo pjSanitize::html($order['region']);?></small></div>
+    					<?php } ?>
+    					<?php if (!empty($order['dropoff_region'])) { ?>
+    						<div><small style="font-size: 10px;"><?php __('lblDropoffRegion');?>: <?php echo pjSanitize::html($order['dropoff_region']);?></small></div>
+    					<?php } ?>
 					</div>
 					<br class="pjSbClearBoth"/>
 				</div>

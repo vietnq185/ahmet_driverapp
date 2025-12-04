@@ -68,7 +68,7 @@ class pjAdminVehicles extends pjAdmin
 		{
 			$pjVehicleModel->where('t1.status', $this->_get->toString('status'));
 		}
-		$column = 'name';
+		$column = 'order';
 		$direction = 'ASC';
 		if ($this->_get->toString('column') && in_array(strtoupper($this->_get->toString('direction')), array('ASC', 'DESC')))
 		{
@@ -87,7 +87,7 @@ class pjAdminVehicles extends pjAdmin
 		}
 		$data = $pjVehicleModel
 					->select('t1.*, t2.content AS name')
-					->orderBy("$column $direction")
+					->orderBy("`$column` $direction")
 					->limit($rowCount, $offset)
 					->findAll()
 					->getData();
@@ -116,6 +116,9 @@ class pjAdminVehicles extends pjAdmin
 			$post = $this->_post->raw();
 			$data = array();
 			$data['status'] = $this->_post->check('status') ? 'T' : 'F';
+			$data['schedule_status'] = $this->_post->check('schedule_status') ? 'T' : 'F';
+			$data['is_ski'] = $this->_post->check('is_ski') ? 1 : 0;
+			$data['is_snowboard'] = $this->_post->check('is_snowboard') ? 1 : 0;
 			if (isset($post['tuv']) && !empty($post['tuv']))
 			{
 			    $data['tuv'] = pjDateTime::formatDate($post['tuv'], $this->option_arr['o_date_format']);
@@ -238,6 +241,9 @@ class pjAdminVehicles extends pjAdmin
 			$arr = $pjVehicleModel->find($this->_post->toInt('id'))->getData();
 			$data = array();
 			$data['status'] = $this->_post->check('status') ? 'T' : 'F';
+			$data['schedule_status'] = $this->_post->check('schedule_status') ? 'T' : 'F';
+			$data['is_ski'] = $this->_post->check('is_ski') ? 1 : 0;
+			$data['is_snowboard'] = $this->_post->check('is_snowboard') ? 1 : 0;
 			if ($this->_post->check('tuv') && $this->_post->toString('tuv') != '')
 			{
 			    $data['tuv'] = pjDateTime::formatDate($this->_post->toString('tuv'), $this->option_arr['o_date_format']);
