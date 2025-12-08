@@ -439,6 +439,20 @@ a.pjSbOrderRemoveDriverStatus{
 #modalAssignOrders.modal .modal-header{
 	padding: 15px;
 }
+.aiWithCaptcha{
+	margin-top: 10px;
+}
+.aiWithCaptcha .form-group{
+	margin-bottom: 0;
+  	width: 80%;
+  	margin-left: auto;
+  	margin-right: auto;
+}
+.aiWithCaptcha .form-group .input-group-captcha .input-group-addon{
+	padding-top: 3px;
+  	padding-bottom: 3px;
+}
+
 .select2-container--open {
     z-index: 99999; /* Tăng rất cao để đảm bảo nó nằm trên modal */
 }

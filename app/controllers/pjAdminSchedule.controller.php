@@ -13,6 +13,7 @@ class pjAdminSchedule extends pjAdmin
     public $max_wait_time_seconds = 7200; // 2 giờ chờ tối đa
     public $min_gap_fill_seconds = 2700; // 45 phút tối thiểu để lấp đầy khoảng trống
     public $max_distance_km = 100; // Giới hạn khoảng cách Haversine (Lọc sơ bộ)
+    public $defaultCaptcha = 'admin_captcha';
     
     public function pjActionIndex()
     {
@@ -1445,6 +1446,34 @@ class pjAdminSchedule extends pjAdmin
             $this->runBatchAssignment($targetDate);
             pjAppController::jsonResponse(array('status' => 'OK'));
         }
+    }
+    
+    public function pjActionCaptcha()
+    {
+        $this->setAjax(true);
+        
+        header("Cache-Control: max-age=3600, private");
+        $rand = $this->_get->toString('rand') ? $this->_get->toString('rand') : null;
+        $patterns = null;
+        if(!empty($this->option_arr['o_captcha_background']) && $this->option_arr['o_captcha_background'] != 'plain')
+        {
+            $patterns = PJ_INSTALL_PATH . $this->getConst('PLUGIN_IMG_PATH') . 'captcha_patterns/' . $this->option_arr['o_captcha_background'];
+        }
+        $Captcha = new pjCaptcha(PJ_INSTALL_PATH . $this->getConst('PLUGIN_WEB_PATH') . 'obj/arialbd.ttf', $this->defaultCaptcha, (int) $this->option_arr['o_captcha_length']);
+        $Captcha->setImage($patterns)->setMode($this->option_arr['o_captcha_mode'])->init($rand);
+        exit;
+    }
+    
+    public function pjActionCheckCaptcha()
+    {
+        $this->setAjax(true);
+        
+        if (!$this->_post->toString('ai_process_captcha') || !pjCaptcha::validate($this->_post->toString('ai_process_captcha'), $this->session->getData($this->defaultCaptcha))){
+            echo 'ERR';
+        }else{
+            echo 'OK';
+        }
+        exit;
     }
 }
 ?>

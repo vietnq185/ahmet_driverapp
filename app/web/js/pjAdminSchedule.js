@@ -50,64 +50,143 @@ var jQuery = jQuery || $.noConflict();
 				}
 	        });
 
-	        $('.assign_with_ai').on('click', function(e) {
+			function refreshCaptcha() {
+			    var captchaImage = document.getElementById('captchaImage');
+			    if (captchaImage) {
+			        captchaImage.src = myLabel.install_url + 'index.php?controller=pjAdminSchedule&action=pjActionCaptcha&rand=' + Math.ceil(Math.random() * 999999);
+			    }
+			}
+			
+			$('.assign_with_ai').on('click', function(e) {
 	        	var selectedDate = $('.assign_sel_date').val();
-	        	
+	        	refreshCaptcha();
 	        	swal({
 					title: myLabel.alert_assign_order_with_ai_title,
-					text: myLabel.alert_assign_order_with_ai_text,
+					text: myLabel.alert_assign_order_with_ai_text + $('#captchaContainer').html(),
+					html: true,
 					type: "warning",
 					showCancelButton: true,
 					confirmButtonColor: "#DD6B55",
 					confirmButtonText: myLabel.btn_yes,
 					cancelButtonText: myLabel.btn_no,
 					closeOnConfirm: false,
-					showLoaderOnConfirm: true
+					showLoaderOnConfirm: false
 				}, function (res) {
 					if (res) {
-						$.post(
-					        "index.php?controller=pjAdminAISchedule&action=pjActionIndex",
-					        { selected_date: selectedDate },
-					        function(response) {
-					            if(response.status == "OK") {
-					            	getSchedule($('.pjSbScheduleForm'), 1);
-					            }
-					            swal.close();
-					        }
-					    ).fail(function(xhr) {
-					        console.error("Error:", xhr.responseText);
-					    });
+						var $container = $('.sweet-alert'),
+			        		$form_group = $container.find('.form-group'),
+			        		$input = $container.find('input[name="ai_process_captcha"]'),
+			        		$error_container = $container.find('.ai_process_captcha_err'),
+			        		$msg_required = $input.attr('data-msg-required'),
+			        		$msg_remote = $input.attr('data-msg-remote'),
+			        		$btnConfirm = $container.find('.confirm');
+						
+			        	$form_group.removeClass('has-error');
+			        	$error_container.removeClass('help-block');
+			        	$error_container.html('');
+						if ($input.val() == '' || $input.length <= 0) {
+							$form_group.addClass('has-error');
+							$error_container.addClass('help-block');
+							$error_container.html($msg_required);
+						} else {
+							$.post(
+						        "index.php?controller=pjAdminSchedule&action=pjActionCheckCaptcha",
+						        { ai_process_captcha: $input.val() },
+						        function(response) {
+						            if (response == 'ERR') {
+						            	$form_group.addClass('has-error');
+										$error_container.addClass('help-block');
+										$error_container.html($msg_remote);
+						            } else {
+						            	$btnConfirm.prop('disabled', true);
+						            	$.post(
+									        "index.php?controller=pjAdminAISchedule&action=pjActionIndex",
+									        { selected_date: selectedDate },
+									        function(response) {
+									            if(response.status == "OK") {
+									            	getSchedule($('.pjSbScheduleForm'), 1);
+									            }
+									            swal.close();
+									            $btnConfirm.prop('disabled', false);
+									        }
+									    ).fail(function(xhr) {
+									    	$btnConfirm.prop('disabled', false);
+									        console.error("Error:", xhr.responseText);
+									    });
+						            }
+						        }
+						    ).fail(function(xhr) {
+						    	$btnConfirm.prop('disabled', false);
+						        console.error("Error:", xhr.responseText);
+						    });
+						}
 					}
 				});
 	        });
 	        
 	        $('.reset_assign_with_ai').on('click', function(e) {
 	        	var selectedDate = $('.assign_sel_date').val();
-	        	
+	        	refreshCaptcha();
 	        	swal({
 					title: myLabel.alert_unassign_order_with_ai_title,
-					text: myLabel.alert_unassign_order_with_ai_text,
+					text: myLabel.alert_assign_order_with_ai_text + $('#captchaContainer').html(),
+					html: true,
 					type: "warning",
 					showCancelButton: true,
 					confirmButtonColor: "#DD6B55",
 					confirmButtonText: myLabel.btn_yes,
 					cancelButtonText: myLabel.btn_no,
 					closeOnConfirm: false,
-					showLoaderOnConfirm: true
+					showLoaderOnConfirm: false
 				}, function (res) {
 					if (res) {
-						$.post(
-					        "index.php?controller=pjAdminAISchedule&action=pjActionIndex&type=reset",
-					        { selected_date: selectedDate },
-					        function(response) {
-					            if(response.status == "OK") {
-					            	getSchedule($('.pjSbScheduleForm'), 1);
-					            }
-					            swal.close();
-					        }
-					    ).fail(function(xhr) {
-					        console.error("Error:", xhr.responseText);
-					    });
+						var $container = $('.sweet-alert'),
+			        		$form_group = $container.find('.form-group'),
+			        		$input = $container.find('input[name="ai_process_captcha"]'),
+			        		$error_container = $container.find('.ai_process_captcha_err'),
+			        		$msg_required = $input.attr('data-msg-required'),
+			        		$msg_remote = $input.attr('data-msg-remote'),
+			        		$btnConfirm = $container.find('.confirm');
+						
+			        	$form_group.removeClass('has-error');
+			        	$error_container.removeClass('help-block');
+			        	$error_container.html('');
+						if ($input.val() == '' || $input.length <= 0) {
+							$form_group.addClass('has-error');
+							$error_container.addClass('help-block');
+							$error_container.html($msg_required);
+						} else {
+							$.post(
+						        "index.php?controller=pjAdminSchedule&action=pjActionCheckCaptcha",
+						        { ai_process_captcha: $input.val() },
+						        function(response) {
+						            if (response == 'ERR') {
+						            	$form_group.addClass('has-error');
+										$error_container.addClass('help-block');
+										$error_container.html($msg_remote);
+						            } else {
+						            	$btnConfirm.prop('disabled', true);
+						            	$.post(
+									        "index.php?controller=pjAdminAISchedule&action=pjActionIndex&type=reset",
+									        { selected_date: selectedDate },
+									        function(response) {
+									            if(response.status == "OK") {
+									            	getSchedule($('.pjSbScheduleForm'), 1);
+									            }
+									            swal.close();
+									            $btnConfirm.prop('disabled', false);
+									        }
+									    ).fail(function(xhr) {
+									    	$btnConfirm.prop('disabled', false);
+									        console.error("Error:", xhr.responseText);
+									    });
+						            }
+						        }
+						    ).fail(function(xhr) {
+						    	$btnConfirm.prop('disabled', false);
+						        console.error("Error:", xhr.responseText);
+						    });
+						}
 					}
 				});
 	        });
@@ -517,7 +596,10 @@ var jQuery = jQuery || $.noConflict();
 			}
 			$('#modalAssignOrders').modal('show');
 			return false;
-		});
+		}).on("click", "img.captcha", function () {
+        	var $this = $(this);
+			$this.attr("src", $this.attr("src").replace(/(&?rand=)\d+/, "$1" + Math.ceil(Math.random() * 999999)));
+        });
 		
 		$("#modalAddNotesForDriver").on('hide.bs.modal', function(){
 			var $form = $modalAddNotesForDriver.find("form"),

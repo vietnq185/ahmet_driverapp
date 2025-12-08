@@ -168,6 +168,21 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	    </div>
 	</div>
 	
+	<div id="captchaContainer" style="display: none;">
+        <div class="aiWithCaptcha">
+        	<div class="form-group">
+                <div class="input-group input-group-captcha">
+                    <input type="text" name="ai_process_captcha" class="form-control form-control-lg required" placeholder="<?php __('plugin_base_login_captcha', false, true); ?>" autocomplete="off" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>" data-msg-remote="<?php __('plugin_base_captcha_incorrect', false, true);?>">
+    
+                    <span class="input-group-addon">
+                        <img id="captchaImage" src="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjAdminSchedule&amp;action=pjActionCaptcha&amp;rand=<?php echo rand(1, 99999); ?>" alt="Captcha" class="captcha captchaImage" title="<?php __('plugin_base_captcha_reload', false, true); ?>">
+                    </span>
+                </div>
+                <span class="ai_process_captcha_err"></span>
+            </div><!-- /.form-group -->
+        </div>
+    </div>
+                
 	<div id="popupMessage" style="display: none;"><?php echo isset($tpl['popup_message']) ? implode('<br/>', $tpl['popup_message']) : '';?></div>
 	<script type="text/javascript">
 	var pjGrid = pjGrid || {};
@@ -201,4 +216,6 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 
 	myLabel.btn_yes = "<?php __('btnYes');?>";
 	myLabel.btn_no = "<?php __('btnNo');?>";
+
+	myLabel.install_url = "<?php echo PJ_INSTALL_URL;?>";
 	</script>
