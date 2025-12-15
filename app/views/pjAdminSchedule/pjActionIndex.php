@@ -134,7 +134,7 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
                     				<select name="vehicle_id" id="vehicle_id" class="form-control select-vehicle required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
                     					<option value="">-- <?php __('lblChoose');?> --</option>
                     					<?php foreach ($tpl['vehicle_arr'] as $veh) { ?>
-                    						<option value="<?php echo $veh['id'];?>"><?php echo pjSanitize::html($veh['name']);?></option>
+                    						<option value="<?php echo $veh['id'];?>"><?php echo pjSanitize::html($veh['name']);?> | <?php echo pjSanitize::html($veh['registration_number']);?></option>
                     					<?php } ?>
                     				</select>
                     			</div>
@@ -198,6 +198,7 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	myLabel.show_popup = "<?php echo isset($tpl['popup_message']) && !empty($tpl['popup_message']) ? 1 : 0; ?>";
 	myLabel.showperiod = <?php echo $show_period; ?>;
 
+	myLabel.order_transfer_time = "<?php __('lblScheduleTransferTime');?>";
 	myLabel.order_client = "<?php __('lblScheduleOrderClient');?>";
 	myLabel.order_transfer_destinations = "<?php __('lblScheduleOrderTransferDestinations');?>";
 	myLabel.order_vehicle = "<?php __('lblScheduleOrderVehicle');?>";

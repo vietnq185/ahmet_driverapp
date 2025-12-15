@@ -62,7 +62,7 @@ class pjAdminVehicles extends pjAdmin
 		if ($q = $this->_get->toString('q'))
 		{
 			$q = str_replace(array('_', '%'), array('\_', '\%'), $pjVehicleModel->escapeStr($q));
-			$pjVehicleModel->where('t2.content LIKE "%'.$q.'%"');
+			$pjVehicleModel->where('(t1.registration_number LIKE "%'.$q.'%" OR t2.content LIKE "%'.$q.'%")');
 		}
 		if ($this->_get->toString('status') && in_array($this->_get->toString('status'), array('T', 'F')))
 		{

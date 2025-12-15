@@ -104,7 +104,6 @@
 					<?php } ?>
 					
 					<?php /*
-					<div><small style="font-size: 10px;">Booking date: <?php echo pjSanitize::html($order['booking_date']);?></small></div>
 					<div><small style="font-size: 10px;">Pickup Lat: <?php echo pjSanitize::html($order['pickup_lat']);?></small></div>
 					<div><small style="font-size: 10px;">Pickup Lng: <?php echo pjSanitize::html($order['pickup_lng']);?></small></div>
 					<div><small style="font-size: 10px;">Dropoff Lat: <?php echo pjSanitize::html($order['dropoff_lat']);?></small></div>
@@ -112,9 +111,7 @@
 					<div><small style="font-size: 10px;">Duration: <?php echo pjSanitize::html($order['duration']);?></small></div>
 					<div><small style="font-size: 10px;">Distance: <?php echo pjSanitize::html($order['distance']);?></small></div>
 					<div><small style="font-size: 10px;">Platform: <?php echo pjSanitize::html($order['platform']);?></small></div>
-					<div><small style="font-size: 10px;">External ID: <?php echo pjSanitize::html($order['external_id']);?></small></div>
-					<div><small style="font-size: 10px;">Ref ID: <?php echo pjSanitize::html($order['ref_id']);?></small></div>
-					*/ ?>
+					*/?>
 				</div>
 				<br class="pjSbClearBoth"/>
 			</div>

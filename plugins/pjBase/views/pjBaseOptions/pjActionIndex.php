@@ -58,6 +58,8 @@
                                 <div class="form-group">
 									<?php if (in_array($option['key'], array('o_buffer','o_max_wait_time_seconds','o_min_gap_fill_seconds'))) { ?>
 										<label class="col-sm-3 control-label"><?php __('plugin_base_opt_' . $option['key']); ?> (<?php __('plugin_base_label_minutes');?>)</label>
+									<?php } elseif (in_array($option['key'], array('o_buffer','o_base_radius'))) { ?>
+										<label class="col-sm-3 control-label"><?php __('plugin_base_opt_' . $option['key']); ?> (km)</label>
 									<?php } else { ?>
                                     	<label class="col-sm-3 control-label"><?php __('plugin_base_opt_' . $option['key']); ?></label>
                                     <?php } ?>

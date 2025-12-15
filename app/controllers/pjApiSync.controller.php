@@ -676,6 +676,7 @@ class pjApiSync extends pjFront
 			            $pjBookingModel->reset()->set('id', $val['id'])->modify($post);
 			        }
 			    }
+			    $resp = array('status' => 'OK', 'text' => 'Booking updated.');
 			    break;
 			case 'cancel':
 				if (isset($post['booking_ids']) && count($post['booking_ids']) > 0) {
@@ -704,6 +705,17 @@ class pjApiSync extends pjFront
 					}
 				}
 				break;
+			case 'update_flag_synchronized':
+			    $cnt = $pjBookingModel
+			    ->where('t1.external_id', $post['id'])
+			    ->where('t1.domain', $post['domain'])
+			    ->findCount()->getData();
+			    if ($cnt > 0) {
+			        $resp = array('status' => 'OK', 'text' => 'Synchonized.');
+			    } else {
+			        $resp = array('status' => 'ERR', 'text' => 'Not Synchonized');
+			    }
+			    break;
 		}
 		pjOptionModel::factory()->where('`key`', 'o_last_update_data')->limit(1)->modifyAll(array('value' => date('Y-m-d H:i:s')));
 		return pjAppController::jsonResponse($resp);

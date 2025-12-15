@@ -12,6 +12,7 @@ class pjAdminAISchedule extends pjAdmin
     public $vehicle_base_address = 'Innsbruck Airport, Fürstenweg 180, A-6020 Innsbruck, Tirol, Austria';
     
     public $max_wait_time_seconds = 7200; // 2 giờ chờ tối đa
+    public $base_max_wait_time_seconds = 7200; // 2 giờ chờ tối đa
     public $max_distance_km = 200; // Giới hạn khoảng cách Haversine (Lọc sơ bộ)
     
     public $buffer_time_seconds = 300; // 15 phút là thời gian nghỉ cố định/chuẩn bị xe sau mỗi lần Drop-off // 15 phút buffer cộng vào thời gian di chuyển
@@ -29,6 +30,7 @@ class pjAdminAISchedule extends pjAdmin
             $this->buffer_time_seconds = (int)$this->option_arr['o_buffer'] * 60;
             $this->unload_payment_buffer_seconds = (int)$this->option_arr['o_unload_payment_buffer_seconds'] * 60;
             $this->max_wait_time_seconds = (int)$this->option_arr['o_max_wait_time_seconds'] * 60;
+            $this->base_max_wait_time_seconds = (int)$this->option_arr['o_base_max_wait_time_seconds'] * 60;
             
             $this->total_post_trip_buffer = $this->unload_payment_buffer_seconds;
             
@@ -232,29 +234,27 @@ class pjAdminAISchedule extends pjAdmin
         $travelStartTimeTimestamp = max($readyAfterDropoff, $targetDayStartTimestamp);
         
         // Tọa độ
-        if (isset($lastTrip['return_id']) && (int)$lastTrip['return_id'] > 0) {
-            $startLat = $lastTrip['pickup_lat'];
-            $startLng = $lastTrip['pickup_lng'];
-        } else {
-            $startLat = $lastTrip['dropoff_lat'];
-            $startLng = $lastTrip['dropoff_lng'];
-        }
+        $startLat = $lastTrip['dropoff_lat'];
+        $startLng = $lastTrip['dropoff_lng'];
         
-        if (isset($newBooking['return_id']) && (int)$newBooking['return_id'] > 0) {
-            $pickup_lat = $newBooking['dropoff_lat'];
-            $pickup_lng = $newBooking['dropoff_lng'];
-        } else {
-            $pickup_lat = $newBooking['pickup_lat'];
-            $pickup_lng = $newBooking['pickup_lng'];
-        }
+        $pickup_lat = $newBooking['pickup_lat'];
+        $pickup_lng = $newBooking['pickup_lng'];
         
         /* if ($newBooking['id'] == 80682 && @$lastTrip['id'] == 80681) {
-            $origin = "47.432102,12.2142721";
-            //$destination = "47.4477519,12.3151773";
-            $pickup_lat = '47.4477519';
-            $pickup_lng = '12.3151773';
-        } */
+         $origin = "47.432102,12.2142721";
+         //$destination = "47.4477519,12.3151773";
+         $pickup_lat = '47.4477519';
+         $pickup_lng = '12.3151773';
+         } */
         
+        $startLat = (float)($lastTrip['dropoff_lat'] ?? 0.0);
+        $startLng = (float)($lastTrip['dropoff_lng'] ?? 0.0);
+        $pickup_lat = (float)($newBooking['pickup_lat'] ?? 0.0);
+        $pickup_lng = (float)($newBooking['pickup_lng'] ?? 0.0);
+        if ($startLat === 0.0 || $startLng === 0.0 || $pickup_lat === 0.0 || $pickup_lng === 0.0) {
+            $this->scheduleByAILog("FAILED: Booking #{$newBooking['id']} latlng '{$startLat},{$startLng},{$pickup_lat},{$pickup_lng}'");
+            return null;
+        }
         // Lấy thời gian di chuyển và khoảng cách (meters) từ vị trí cuối cùng/Base đến Pickup mới
         $travelData = $this->getActualTravelData($startLat, $startLng, $pickup_lat, $pickup_lng);
         //$travelData = $this->getActualTravelData($startLat, $startLng, $newBooking['pickup_lat'], $newBooking['pickup_lng']);
@@ -273,29 +273,46 @@ class pjAdminAISchedule extends pjAdmin
         
         
         // --- KIỂM TRA KHẢ THI (FEASIBILITY CHECK) ---
-        
+        $isPhantomTrip = (isset($lastTrip['is_phantom']) && $lastTrip['is_phantom'] === true);
         // A. Kiểm tra Đến muộn
-        if ($driverArrivalTimeTimestamp > $latestAllowedArrivalTimestamp) {
+        if (!$isPhantomTrip && $driverArrivalTimeTimestamp > $latestAllowedArrivalTimestamp) {
             //echo ("-> FAILED: Booking #{$newBooking['id']} Late Arrival. Arrived: " . date('Y-m-d H:i:s', $driverArrivalTimeTimestamp) . ", Must Arrive Before: " . date('Y-m-d H:i:s', $latestAllowedArrivalTimestamp));
             return null;
         }
         
         // B. Kiểm tra Giới hạn Chờ Tối đa
-        $waitTimeSeconds = $newPickupTimestamp - $driverArrivalTimeTimestamp;
-        $isPhantomTrip = (isset($lastTrip['is_phantom']) && $lastTrip['is_phantom'] === true);
+        if ($isPhantomTrip) {
+            $waitTimeSeconds = 0;
+        } else { 
+            $waitTimeSeconds = $newPickupTimestamp - $driverArrivalTimeTimestamp;
+        }
         
-        if ($waitTimeSeconds > $this->max_wait_time_seconds && !$isPhantomTrip) {
+        $max_wait_time_seconds = $this->max_wait_time_seconds;
+        if ($this->isInnsbruckAirportRadius($pickup_lat, $pickup_lng)) {
+            $max_wait_time_seconds = $this->base_max_wait_time_seconds;
+        }
+        
+        if ($waitTimeSeconds > $max_wait_time_seconds && !$isPhantomTrip) {
             //error_log("-> FAILED: Booking #{$newBooking['id']} Wait Time {$waitTimeSeconds}s exceeds MAX_WAIT_TIME_SECONDS ({$this->max_wait_time_seconds})");
             return null;
         }
         
         // Nếu khả thi...
-        return [
-            'distance_meters' => $travelDistanceMeters,
-            'travel_start_time' => date('Y-m-d H:i:s', $travelStartTimeTimestamp),
-            'arrival_time' => date('Y-m-d H:i:s', $driverArrivalTimeTimestamp),
-            'wait_time_seconds' => $waitTimeSeconds
-        ];
+        if ($isPhantomTrip) {
+            return [
+                'distance_meters' => $travelDistanceMeters,
+                'travel_start_time' => date('Y-m-d H:i:s', $targetDayStartTimestamp),
+                'arrival_time' => date('Y-m-d H:i:s', $newPickupTimestamp),
+                'wait_time_seconds' => $waitTimeSeconds
+            ];
+        } else { 
+            return [
+                'distance_meters' => $travelDistanceMeters,
+                'travel_start_time' => date('Y-m-d H:i:s', $travelStartTimeTimestamp),
+                'arrival_time' => date('Y-m-d H:i:s', $driverArrivalTimeTimestamp),
+                'wait_time_seconds' => $waitTimeSeconds
+            ];
+        }
     }
     
     /**
@@ -394,9 +411,9 @@ class pjAdminAISchedule extends pjAdmin
         $tblBookingExtra = pjBookingExtraModel::factory()->getTable();
         $tblExtra = pjExtraModel::factory()->getTable();
         $allBookings = pjBookingModel::factory()
-        ->select('t1.*, 
+        ->select('t1.*,
         (
-            SELECT COUNT(*) FROM `'.$tblBookingExtra.'` AS tbe INNER JOIN `'.$tblExtra.'` AS te ON te.id=tbe.extra_id 
+            SELECT COUNT(*) FROM `'.$tblBookingExtra.'` AS tbe INNER JOIN `'.$tblExtra.'` AS te ON te.id=tbe.extra_id
             WHERE tbe.booking_id=t1.id AND te.external_id IN (5,6)
         ) AS `is_ski_snowboard`')
         ->where('DATE(t1.booking_date)', $date)
@@ -500,33 +517,34 @@ class pjAdminAISchedule extends pjAdmin
                 
                 foreach ($vehicleMap as $vehicleId => $vehicle) {
                     if (
-                        ($booking['passengers'] > $vehicle['seats'] && $booking['passengers'] <= 8) || 
-                        ($booking['passengers'] > 8 && !in_array((int)$vehicle['seats'], array(7,8))) || 
+                        ($booking['passengers'] > $vehicle['seats'] && $booking['passengers'] <= 8) ||
+                        ($booking['passengers'] > 8 && !in_array((int)$vehicle['seats'], array(7,8))) ||
                         (in_array((int)$booking['passengers'], array(7,8,14,15,16)) && (int)$booking['is_ski_snowboard'] > 0 && (int)$vehicle['is_ski'] == 0 && (int)$vehicle['is_snowboard'] == 0)
-                    ) continue;
-                    
-                    $lastTrip = $this->getEffectiveLastTrip($vehicleId, $schedule[$vehicleId], $previousDayTrips, $date);
-                    
-                    // --- KIỂM TRA THỨ TỰ THỜI GIAN BẮT BUỘC (ĐỂ KHÔNG PHÁ VỠ CHUỖI) ---
-                    // P1 chỉ được thêm nếu chuyến mới muộn hơn chuyến cuối cùng trong chuỗi.
-                    $isPhantom = $lastTrip['is_phantom'] ?? false;
-                    if (!$isPhantom && strtotime($booking['booking_date']) < strtotime($lastTrip['booking_date'])) {
-                        //error_log("-> P1 FAILED CHRONO: Booking #{$bookingId} ({$booking['booking_date']}) is earlier than last trip #{$lastTrip['id']} ({$lastTrip['booking_date']}). Skip P1 for this pairing.");
-                        continue;
-                    }
-                    // -----------------------------------------------------------------
-                    
-                    $costResult = $this->calculateTripCost($lastTrip, $booking, $date);
-                    
-                    if ($costResult !== null && $costResult['distance_meters'] < $bestGlobalAssignment['minDistance']) {
-                        $bestGlobalAssignment = [
-                            'bookingId' => $bookingId,
-                            'vehicleId' => $vehicleId,
-                            'minDistance' => $costResult['distance_meters'],
-                            'times' => $costResult
-                        ];
-                        $foundAssignment = true;
-                    }
+                        ) continue;
+                        
+                        $lastTrip = $this->getEffectiveLastTrip($vehicleId, $schedule[$vehicleId], $previousDayTrips, $date);
+                        
+                        // --- KIỂM TRA THỨ TỰ THỜI GIAN BẮT BUỘC (ĐỂ KHÔNG PHÁ VỠ CHUỖI) ---
+                        // P1 chỉ được thêm nếu chuyến mới muộn hơn chuyến cuối cùng trong chuỗi.
+                        $isPhantom = $lastTrip['is_phantom'] ?? false;
+                        if (!$isPhantom && strtotime($booking['booking_date']) < strtotime($lastTrip['booking_date'])) {
+                            //error_log("-> P1 FAILED CHRONO: Booking #{$bookingId} ({$booking['booking_date']}) is earlier than last trip #{$lastTrip['id']} ({$lastTrip['booking_date']}). Skip P1 for this pairing.");
+                            continue;
+                        }
+                        // -----------------------------------------------------------------
+                        
+                        $costResult = $this->calculateTripCost($lastTrip, $booking, $date);
+                        
+                        if ($costResult !== null && $costResult['distance_meters'] < $bestGlobalAssignment['minDistance']) {
+                            $bestGlobalAssignment = [
+                                'bookingId' => $bookingId,
+                                'vehicleId' => $vehicleId,
+                                'minDistance' => $costResult['distance_meters'],
+                                'times' => $costResult
+                            ];
+                            $foundAssignment = true;
+                            break 2;
+                        }
                 }
             }
             
@@ -599,25 +617,26 @@ class pjAdminAISchedule extends pjAdmin
                         $tripC = $trips[$index];
                         
                         if (
-                            ($bookingB['passengers'] > $vehicleMap[$vehicleId]['seats'] && $bookingB['passengers'] <= 8) || 
-                            ($bookingB['passengers'] > 8 && !in_array((int)$vehicleMap[$vehicleId]['seats'], array(7,8))) || 
+                            ($bookingB['passengers'] > $vehicleMap[$vehicleId]['seats'] && $bookingB['passengers'] <= 8) ||
+                            ($bookingB['passengers'] > 8 && !in_array((int)$vehicleMap[$vehicleId]['seats'], array(7,8))) ||
                             (in_array((int)$bookingB['passengers'], array(7,8,14,15,16)) && (int)$bookingB['is_ski_snowboard'] > 0 && (int)$vehicleMap[$vehicleId]['is_ski'] == 0 && (int)$vehicleMap[$vehicleId]['is_snowboard'] == 0)
-                        ) continue;
-                        
-                        // Tính toán chi phí chèn (A -> B -> C)
-                        // Hàm này đã có kiểm tra B phải nằm giữa A và C về mặt thời gian.
-                        $gapCostResult = $this->calculateGapCost($tripA, $bookingB, $tripC, $date);
-                        
-                        if ($gapCostResult !== null && $gapCostResult['insertion_cost_meters'] < $bestGapInsertion['minInsertionCost']) {
-                            $bestGapInsertion = [
-                                'unassignedIdx' => $bookingId,
-                                'vehicleId' => $vehicleId,
-                                'gapIndex' => $index,
-                                'minInsertionCost' => $gapCostResult['insertion_cost_meters'],
-                                'times' => $gapCostResult
-                            ];
-                            $foundInsertion = true;
-                        }
+                            ) continue;
+                            
+                            // Tính toán chi phí chèn (A -> B -> C)
+                            // Hàm này đã có kiểm tra B phải nằm giữa A và C về mặt thời gian.
+                            $gapCostResult = $this->calculateGapCost($tripA, $bookingB, $tripC, $date);
+                            
+                            if ($gapCostResult !== null && $gapCostResult['insertion_cost_meters'] < $bestGapInsertion['minInsertionCost']) {
+                                $bestGapInsertion = [
+                                    'unassignedIdx' => $bookingId,
+                                    'vehicleId' => $vehicleId,
+                                    'gapIndex' => $index,
+                                    'minInsertionCost' => $gapCostResult['insertion_cost_meters'],
+                                    'times' => $gapCostResult
+                                ];
+                                $foundInsertion = true;
+                                break 3;
+                            }
                     }
                 }
             }
@@ -693,6 +712,41 @@ class pjAdminAISchedule extends pjAdmin
             'assigned_count' => $assignedCount,
             'unassigned_ids' => $unassignedAfterAssignment
         ];
+    }
+    
+    public function getDistance($lat1, $lon1, $lat2, $lon2, $unit = 'km') {
+        if (($lat1 == $lat2) && ($lon1 == $lon2)) {
+            return 0;
+        }
+        
+        $theta = $lon1 - $lon2;
+        $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+        $dist = acos($dist);
+        $dist = rad2deg($dist);
+        $miles = $dist * 60 * 1.1515;
+        
+        // Chuyển đổi sang kilômét
+        if ($unit == "km") {
+            return ($miles * 1.609344);
+        }
+        // Nếu bạn muốn dùng dặm hoặc mét, giữ nguyên phần code cũ
+        return $miles;
+    }
+    
+    public function isInnsbruckAirportRadius($pickupLat, $pickupLng) {
+        // Tọa độ trung tâm Sân bay Innsbruck (INN)
+        //$airportLat = 47.260278;
+        //$airportLng = 11.343889;
+        $airportLat = $this->vehicle_base_lat;
+        $airportLng = $this->vehicle_base_lng;
+        
+        $thresholdKM = $this->option_arr['o_base_radius']; // Giới hạn bán kính là 30 km
+        
+        // Tính khoảng cách bằng kilômét
+        $distanceKM = $this->getDistance($pickupLat, $pickupLng, $airportLat, $airportLng, 'km');
+        
+        // Kiểm tra xem khoảng cách có nhỏ hơn hoặc bằng 30 km hay không
+        return $distanceKM <= $thresholdKM;
     }
 }
 ?>

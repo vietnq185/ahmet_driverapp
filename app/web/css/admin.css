@@ -460,6 +460,248 @@ a.pjSbOrderRemoveDriverStatus{
 .select2-dropdown {
     z-index: 99999; 
 }
+
+/* CONTAINER CHÍNH: Bố cục Flex */
+#main-container {
+    display: flex;
+    height: 100%;
+}
+
+/* PANEL BÊN TRÁI: DANH SÁCH */
+#vehicle-list-panel {
+    flex: 0 0 350px; /* Chiều rộng cố định 350px */
+    height: 100%;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+#list-header {
+    padding: 15px;
+    border-bottom: 1px solid #e0e0e0;
+}
+#vehicle-list-content {
+    flex-grow: 1;
+    overflow-y: auto; /* Cho phép cuộn khi danh sách dài */
+}
+
+/* Các mục trong danh sách */
+.vehicle-item {
+    display: flex; /* Dùng flex để xếp icon và nội dung ngang hàng */
+    align-items: center;
+    padding: 5px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+/* CONTAINER ICON (Hình tròn màu xám) */
+.vehicle-icon-list {
+    position: relative;
+    flex-shrink: 0; /* Ngăn container icon bị thu nhỏ */
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #e9ecef; /* Màu nền xám nhạt */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+.vehicle-icon-list i {
+    color: #6c757d; /* Màu icon xe bên trong (xám đậm) */
+    font-size: 20px;
+}
+
+/* DẤU CHẤM TRẠNG THÁI (STATUS DOT) */
+.status-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid white; /* Viền trắng nhỏ */
+    background-color: #adb5bd; /* Màu mặc định: Xám (Đứng yên) */
+}
+
+/* MÀU CHO TRẠNG THÁI ĐANG DI CHUYỂN */
+.status-dot.moving {
+    background-color: #28a745; /* Xanh lá cây */
+}
+
+/* CONTAINER NỘI DUNG */
+.vehicle-details {
+    flex-grow: 1;
+}
+.vehicle-item:hover, .vehicle-item.highlighted {
+    background-color: #e6f7ff; /* Màu highlight khi hover */
+}
+.vehicle-item .name {
+    font-weight: bold;
+	float: left;
+}
+.vehicle-item .address {
+    font-size: 0.9em;
+    color: #666;
+}
+
+/* PANEL BÊN PHẢI: BẢN ĐỒ */
+#map-panel {
+    flex-grow: 1; /* Chiếm hết không gian còn lại */
+    height: 100%;
+}
+
+/* THÊM CSS ĐỂ HIGHLIGHT MARKER TRÊN BẢN ĐỒ */
+.highlight-marker {
+    /* Đổi màu viền sang màu highlight khi hover */
+    border: 3px solid #007bff !important; 
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.7); 
+    transform: scale(1.2); /* Phóng to nhẹ icon */
+    transition: transform 0.2s, border 0.2s, box-shadow 0.2s;
+}
+
+/* Đảm bảo áp dụng cho cả icon đứng yên và di chuyển */
+.custom-vehicle-icon.highlight-marker,
+.moving-vehicle-icon.highlight-marker {
+    /* Các thuộc tính giữ nguyên */
+}
+
+#map { height: 600px; width: 100%;}
+.vehicle-info { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; }
+.custom-vehicle-icon {
+    /* Bắt buộc phải có display: block/flex để áp dụng width/height/border */
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    
+    background-color: white; /* Nền trắng */
+    border-radius: 50%; /* Hình tròn */
+    border: 2px solid #00344f; /* Viền xanh */
+    width: 34px; 
+    height: 34px;
+	line-height: 34px;
+	text-align: center;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3); /* Thêm bóng đổ nhẹ cho nổi bật */
+}
+.custom-vehicle-icon i {
+    /* Thiết lập màu xanh cho icon bên trong */
+    color: #00344f; 
+    font-size: 16px; /* Kích thước icon */
+}
+/* CSS CHO XE ĐANG DI CHUYỂN (Màu xanh lá) */
+.moving-vehicle-icon {
+    /* Tạo hình nền tròn trắng cho icon xe */
+    background-color: white; 
+    border-radius: 50%;
+    border: 2px solid #28a745; /* VIỀN XANH LÁ CÂY */
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; 
+    height: 30px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+.moving-vehicle-icon i {
+    color: #28a745; /* Màu XANH LÁ CÂY cho icon */
+    font-size: 16px;
+}
+
+/* Thêm CSS cho nhãn tên xe */
+.vehicle-label {
+    /* Xóa nền và viền mặc định của Tooltip */
+    background: none;
+    border: none;
+    box-shadow: none;
+    /* Đảm bảo chữ nổi bật */
+    font-weight: bold;
+    color: #00344f; /* Màu chữ tối */
+	font-zie: 16px;
+    padding: 0;
+    white-space: nowrap; /* Ngăn tên xe bị ngắt dòng */
+}
+.vehicle-label-moving{
+	/* Xóa nền và viền mặc định của Tooltip */
+    background: none;
+    border: none;
+    box-shadow: none;
+    /* Đảm bảo chữ nổi bật */
+    font-weight: bold;
+    color: #28a745; /* Màu chữ tối */
+	font-zie: 16px;
+    
+    white-space: nowrap; /* Ngăn tên xe bị ngắt dòng */
+}
+
+/* TOOLTIP CHUNG: Đảm bảo không có nền/viền mặc định */
+.leaflet-tooltip.vehicle-label,
+.leaflet-tooltip.vehicle-label-moving {
+    opacity: 1; 
+    padding: 0;
+    margin-left: 5px; /* Điều chỉnh vị trí ngang */
+	padding: 3px;
+}
+
+/* 1. MÀU XANH DƯƠNG CHO XE ĐỨNG YÊN */
+.leaflet-tooltip.vehicle-label  {
+    font-weight: bold;
+    color: #00344f; /* MÀU XANH DƯƠNG */
+	font-size: 13px;
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. MÀU XANH LÁ CHO XE DI CHUYỂN */
+.leaflet-tooltip.vehicle-label-moving  {
+    font-weight: bold;
+    color: #28a745; /* MÀU XANH LÁ CÂY */
+	font-size: 13px;
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+#vehicle-list{
+	max-height: 537px;
+  	overflow-y: auto;
+}
+#vehicle-list .vehicle-item .vehicle-details{
+	color: #00344f;
+	font-weight: 600;
+}
+/* Màu highlight khi tracking (có thể giống với hover, hoặc khác) */
+.vehicle-item.is-tracking {
+    background-color: #007bff; /* Màu nền xanh dương đậm */
+    color: white; /* Màu chữ trắng */
+}
+/* Đảm bảo trạng thái tracking áp dụng cho cả hover */
+.vehicle-item.is-tracking:hover {
+    background-color: #0056b3; /* Xanh đậm hơn khi hover */
+}
+/* Đảm bảo các thuộc tính chữ bên trong vẫn đẹp */
+.vehicle-item.is-tracking .name, 
+.vehicle-item.is-tracking .address {
+    color: white; 
+}
+
+/* Đảm bảo hover không bị xung đột với tracking highlight */
+.vehicle-item:not(.is-tracking):hover {
+    background-color: #e6f7ff; /* Màu hover nhẹ khi KHÔNG tracking */
+}
+#vehicle-list .vehicle-details .speed,
+#vehicle-list .vehicle-details .date{
+	float: right;
+}
+#vehicle-list .vehicle-details .speed{
+	color: #28a745;
+}
+#vehicle-list .vehicle-details .speed:after{
+	clear: both;
+}
+.vehicle-details:after{
+	clear: both;
+}
+#vehicle-list .vehicle-item.is-tracking .speed{
+	color: #fff;
+}
+
+
 @media (max-width: 479px){
 	.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbSign{
 		width: 10%;

@@ -1010,7 +1010,7 @@ class pjAdminSchedule extends pjAdmin
         }
         
         $column = 'booking_date';
-        $direction = 'DESC';
+        $direction = 'ASC';
         if ($this->_get->toString('column') && in_array(strtoupper($this->_get->toString('direction')), array('ASC', 'DESC')))
         {
             $column = $this->_get->toString('column');
@@ -1028,56 +1028,57 @@ class pjAdminSchedule extends pjAdmin
         }
         $data = $pjBookingModel
         ->select("t1.*, t2.content as fleet,
-				    (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
-					IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
-					IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
-					t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2,
-					IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
-					IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
-					t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
-					t6.title, t6.fname, t6.lname, t6.email,t6.phone, t10.content AS c_country_title, t11.color AS location_color")
-					->orderBy("$column $direction")
-					->limit($rowCount, $offset)
-					->findAll()
-					->getData();
-					
-					$booking_ids_arr = $booking_extras_arr = array();
-					foreach ($data as $val) {
-					    $booking_ids_arr[] = $val['id'];
-					}
-					if ($booking_ids_arr) {
-					    $be_arr = pjBookingExtraModel::factory()->select('t1.*, t2.domain, t2.image_path, t3.content AS name')
-					    ->join('pjExtra', 't2.id=t1.extra_id', 'left outer')
-					    ->join('pjMultiLang', "t3.model='pjExtra' AND t3.foreign_id=t1.extra_id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
-					    ->whereIn('t1.booking_id', $booking_ids_arr)
-					    ->orderBy('t3.content ASC')
-					    ->findAll()
-					    ->getData();
-					    foreach ($be_arr as $val) {
-					        $booking_extras_arr[$val['booking_id']][] = $val;
-					    }
-					}
-					
-					foreach ($data as $i => $order) {
-					    $data[$i]['extra_arr'] = isset($booking_extras_arr[$order['id']]) ? $booking_extras_arr[$order['id']] : array();
-					    $is_airport_to_city = false;
-					    if ((int)$order['return_id'] > 0 && (int)$order['return_pickup_is_airport'] == 1 && (int)$order['return_dropoff_is_airport'] == 0) {
-					        $is_airport_to_city = true;
-					    } else if ((int)$order['pickup_is_airport'] == 1 && (int)$order['dropoff_is_airport'] == 0) {
-					        $is_airport_to_city = true;
-					    }
-					    if(!empty($order['return_id'])) {
-					        $data[$i]['from_to'] = pjSanitize::html($order['location2']).'<br/>'.pjSanitize::html($order['dropoff2']);
-					        $data[$i]['order_id'] = pjSanitize::html($order['return_uuid']);
-					    } else {
-					        $data[$i]['from_to'] = pjSanitize::html($order['location']).'<br/>'.pjSanitize::html($order['dropoff']);
-					        $data[$i]['order_id'] = pjSanitize::html($order['uuid']);
-					    }
-					    $data[$i]['client_name'] = pjSanitize::html($order['c_fname'].' '.$order['c_lname']);
-					    $data[$i]['total'] = pjCurrency::formatPriceOnly($order['price']);
-					}
-					
-					self::jsonResponse(compact('data', 'total', 'pages', 'page', 'rowCount', 'column', 'direction'));
+	    (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
+		IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
+		IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
+		t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2,
+		IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
+		IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
+		t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
+		t6.title, t6.fname, t6.lname, t6.email,t6.phone, t10.content AS c_country_title, t11.color AS location_color")
+		->orderBy("$column $direction")
+		->limit($rowCount, $offset)
+		->findAll()
+		->getData();
+		
+		$booking_ids_arr = $booking_extras_arr = array();
+		foreach ($data as $val) {
+		    $booking_ids_arr[] = $val['id'];
+		}
+		if ($booking_ids_arr) {
+		    $be_arr = pjBookingExtraModel::factory()->select('t1.*, t2.domain, t2.image_path, t3.content AS name')
+		    ->join('pjExtra', 't2.id=t1.extra_id', 'left outer')
+		    ->join('pjMultiLang', "t3.model='pjExtra' AND t3.foreign_id=t1.extra_id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
+		    ->whereIn('t1.booking_id', $booking_ids_arr)
+		    ->orderBy('t3.content ASC')
+		    ->findAll()
+		    ->getData();
+		    foreach ($be_arr as $val) {
+		        $booking_extras_arr[$val['booking_id']][] = $val;
+		    }
+		}
+		
+		foreach ($data as $i => $order) {
+		    $data[$i]['extra_arr'] = isset($booking_extras_arr[$order['id']]) ? $booking_extras_arr[$order['id']] : array();
+		    $is_airport_to_city = false;
+		    if ((int)$order['return_id'] > 0 && (int)$order['return_pickup_is_airport'] == 1 && (int)$order['return_dropoff_is_airport'] == 0) {
+		        $is_airport_to_city = true;
+		    } else if ((int)$order['pickup_is_airport'] == 1 && (int)$order['dropoff_is_airport'] == 0) {
+		        $is_airport_to_city = true;
+		    }
+		    if(!empty($order['return_id'])) {
+		        $data[$i]['from_to'] = pjSanitize::html($order['location2']).'<br/>'.pjSanitize::html($order['dropoff2']);
+		        $data[$i]['order_id'] = pjSanitize::html($order['return_uuid']);
+		    } else {
+		        $data[$i]['from_to'] = pjSanitize::html($order['location']).'<br/>'.pjSanitize::html($order['dropoff']);
+		        $data[$i]['order_id'] = pjSanitize::html($order['uuid']);
+		    }
+		    $data[$i]['client_name'] = pjSanitize::html($order['c_fname'].' '.$order['c_lname']);
+		    $data[$i]['total'] = pjCurrency::formatPriceOnly($order['price']);
+		    $data[$i]['transfer_time'] = date($this->option_arr['o_time_format'], strtotime($order['booking_date']));
+		}
+		
+		self::jsonResponse(compact('data', 'total', 'pages', 'page', 'rowCount', 'column', 'direction'));
     }
     
     public function pjActionAssignOrders() {

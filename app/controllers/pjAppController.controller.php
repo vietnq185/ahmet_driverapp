@@ -352,5 +352,13 @@ class pjAppController extends pjBaseAppController
         }
         return $data;
     }
+    
+    public static function scheduleByAILog($content, $save=false, $filename=null)
+    {
+        if ($save) { 
+            $filename = is_null($filename) ? 'ai_Schedule.log' : $filename;
+            @file_put_contents($filename, $content . "\r\n", FILE_APPEND|FILE_TEXT); 
+        }
+    }
 }
 ?>

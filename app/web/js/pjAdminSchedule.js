@@ -792,6 +792,9 @@ var jQuery = jQuery || $.noConflict();
 				function formatTotal(str, obj) {
 					return obj.total;
 				}
+				function formatTransferTime(str, obj) {
+					return obj.transfer_time;
+				}
 				var $date = $('.pjSbScheduleForm').find('input[name="date"]').val();
 				var buttons = [];
 				var actions = [];
@@ -802,7 +805,7 @@ var jQuery = jQuery || $.noConflict();
 				var $grid_orders = $("#grid_orders").datagrid({
 					buttons: buttons,
 			          columns: [
-			        	  		{text: myLabel.order_order_id, type: "text", sortable: true, editable: false},
+			        	  		{text: myLabel.order_transfer_time, type: "text", sortable: true, editable: false, renderer: formatTransferTime},
 			        	  		{text: myLabel.order_transfer_destinations, type: "text", sortable: true, editable: false, renderer: formatFromTo},
 								{text: myLabel.order_client, type: "text", sortable: true, editable: false, renderer: formatClient},
 								{text: myLabel.order_vehicle, type: "text", sortable: true, editable: false},
@@ -811,7 +814,7 @@ var jQuery = jQuery || $.noConflict();
 					          ],
 					dataUrl: null,
 					dataType: "json",
-					fields: ['id', 'id', 'id', 'fleet', 'passengers', 'id'],
+					fields: ['booking_date', 'id', 'id', 'fleet', 'passengers', 'id'],
 					paginator: {
 						actions: actions,
 						gotoPage: true,
@@ -840,7 +843,7 @@ var jQuery = jQuery || $.noConflict();
 					q: ''
 				});
 				$grid_orders.datagrid("option", "cache", cache);
-				$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign&date=" + $date, "booking_date", "DESC", content.page, content.rowCount);
+				$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign&date=" + $date, "booking_date", "ASC", content.page, content.rowCount);
 			}).on('hidden.bs.modal', function (e) {
 				$('#frmAssignMultiOrders').get(0).reset();
 				$('#order_ids').val('');
@@ -868,7 +871,7 @@ var jQuery = jQuery || $.noConflict();
 					date: $date,
 				});
 				$grid_orders.datagrid("option", "cache", cache);
-				$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign", "booking_date", "DESC", content.page, content.rowCount);
+				$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign", "booking_date", "ASC", content.page, content.rowCount);
 				return false;
 			}).on("ifChanged", ".pj-table-select-row", function (e) {
 				var $order_ids = [];
@@ -902,7 +905,7 @@ var jQuery = jQuery || $.noConflict();
 								date: $date,
 							});
 							$grid_orders.datagrid("option", "cache", cache);
-							$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign", "booking_date", "DESC", content.page, content.rowCount);
+							$grid_orders.datagrid("load", "index.php?controller=pjAdminSchedule&action=pjActionGetOrdersToAssign", "booking_date", "ASC", content.page, content.rowCount);
 							setTimeout(function() {
 								$('#modalAssignOrders').find('.alert').html('').hide();
 								$('#vehicle_id').val('').trigger('change');

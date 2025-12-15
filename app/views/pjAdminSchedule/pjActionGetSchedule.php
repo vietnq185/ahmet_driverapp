@@ -104,11 +104,11 @@
 												<div><?php __('lblOrderPassengers');?>: <span><?php echo pjSanitize::html($order['passengers']);?></span></div>
 												<?php if (isset($order['extra_arr']) && count($order['extra_arr']) > 0) { 
 													$extra_arr = array();
-													$additional_info = '';
-													if (isset($_extras_info[$ex['extra_id']]) && !empty($_extras_info[$ex['extra_id']])) {
-														$additional_info = ' ('.$_extras_info[$ex['extra_id']].')';
-													}
 													foreach ($order['extra_arr'] as $ex) {
+													    $additional_info = '';
+													    if (isset($_extras_info[$ex['extra_id']]) && !empty($_extras_info[$ex['extra_id']])) {
+													        $additional_info = ' ('.$_extras_info[$ex['extra_id']].')';
+													    }
 														if (!empty($ex['image_path'])) {
 															$extra_arr[] = '<img class="img-responsive" src="'.$ex['domain'] . $ex['image_path'] .'" /> '.$ex['quantity'].' x '.$ex['name']. $additional_info;
 														} else {
@@ -146,7 +146,6 @@
                             					<?php } ?>
                             					
                             					<?php /*
-                            					<div class="text-danger">Booking date: <?php echo pjSanitize::html($order['booking_date']);?></div>
                             					<div class="text-danger">Pickup Lat: <?php echo pjSanitize::html($order['pickup_lat']);?></div>
                             					<div class="text-danger">Pickup Lng: <?php echo pjSanitize::html($order['pickup_lng']);?></div>
                             					<div class="text-danger">Dropoff Lat: <?php echo pjSanitize::html($order['dropoff_lat']);?></div>
@@ -294,10 +293,19 @@
 												<div><?php __('lblOrderClient');?>: <span><?php echo pjSanitize::html($order['c_fname'].' '.$order['c_lname']);?></span></div>
 												<div><?php __('lblOrderVehicle');?>: <span><?php echo pjSanitize::html($order['fleet']);?></span></div>
 												<div><?php __('lblOrderPassengers');?>: <span><?php echo pjSanitize::html($order['passengers']);?></span></div>
+												
 												<?php if (isset($order['extra_arr']) && count($order['extra_arr']) > 0) { 
 													$extra_arr = array();
 													foreach ($order['extra_arr'] as $ex) {
-														$extra_arr[] = $ex['quantity'].'x'.$ex['name'];
+													    $additional_info = '';
+													    if (isset($_extras_info[$ex['extra_id']]) && !empty($_extras_info[$ex['extra_id']])) {
+													        $additional_info = ' ('.$_extras_info[$ex['extra_id']].')';
+													    }
+														if (!empty($ex['image_path'])) {
+															$extra_arr[] = '<img class="img-responsive" src="'.$ex['domain'] . $ex['image_path'] .'" /> '.$ex['quantity'].' x '.$ex['name']. $additional_info;
+														} else {
+															$extra_arr[] = $ex['quantity'].' x '.$ex['name'] . $additional_info;
+														}
 													}
 													?>
 													<div><?php __('lblOrderExtras');?>: <span><?php echo implode(', ', $extra_arr);?></span></div>
