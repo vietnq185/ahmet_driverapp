@@ -8,6 +8,10 @@ $isScriptDashboard = in_array($controller_name, array('pjAdmin')) && in_array($a
 // Schedule
 $isScriptSchedule = in_array($controller_name, array('pjAdminSchedule'));
 
+// Live Tracking
+$isScriptLiveTrackingController = in_array($controller_name, array('pjAdminTracking'));
+$isScriptLiveTrackingIndex = $isScriptLiveTrackingController && in_array($action_name, array('pjActionIndex'));
+
 // Vehicles
 $isScriptVehicles = in_array($controller_name, array('pjAdminVehicles'));
 
@@ -36,6 +40,9 @@ $hasAccessScriptDashboard = pjAuth::factory('pjAdmin', 'pjActionIndex')->hasAcce
 
 // Permissions - Schedule
 $hasAccessScriptSchedule          = pjAuth::factory('pjAdminSchedule')->hasAccess();
+
+// Permissions - Live Tracking
+$hasAccessScriptLiveTrackingIndex       = pjAuth::factory('pjAdminTracking', 'pjActionIndex')->hasAccess();
 
 // Permissions - Vehicles
 $hasAccessScriptVehicles          = pjAuth::factory('pjAdminVehicles')->hasAccess();
@@ -68,6 +75,12 @@ $hasAccessScriptOptionsNotifications    = pjAuth::factory('pjAdminOptions', 'pjA
 <?php if ($hasAccessScriptSchedule): ?>
     <li<?php echo $isScriptSchedule ? ' class="active"' : NULL; ?>>
         <a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionIndex"><i class="fa fa-calendar"></i> <span class="nav-label"><?php __('menuSchedule');?></span></a>
+    </li>
+<?php endif; ?>
+
+<?php if ($hasAccessScriptLiveTrackingIndex && false): ?>
+    <li<?php echo $isScriptLiveTrackingIndex ? ' class="active"' : NULL; ?>>
+        <a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminTracking&amp;action=pjActionIndex"><i class="fa fa-map-marker"></i> <span class="nav-label"><?php __('menuLiveTracking');?></span></a>
     </li>
 <?php endif; ?>
 

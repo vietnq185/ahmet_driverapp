@@ -261,6 +261,12 @@ body.dragging, body.dragging * {
 	font-size: 16px;
 	padding: 10px;
 }
+.pjTblVehicles tr th .btn:hover,
+.pjTblVehicles tr th .btn:active,
+.pjTblVehicles tr th .btn:focus{
+	background: #fc801c;
+	border: 1px solid #fc801c;
+}
 
 /* Driver */
 .pjSbDriverSchedule .pjSbDriverSchedueTitle{
@@ -480,11 +486,16 @@ a.pjSbOrderRemoveDriverStatus{
     padding: 15px;
     border-bottom: 1px solid #e0e0e0;
 }
+#list-header h3{
+	margin: 0;
+}
 #vehicle-list-content {
     flex-grow: 1;
     overflow-y: auto; /* Cho phép cuộn khi danh sách dài */
 }
-
+#vehicle-list-panel .filter-vehicles-container{
+	margin: 5px;
+}
 /* Các mục trong danh sách */
 .vehicle-item {
     display: flex; /* Dùng flex để xếp icon và nội dung ngang hàng */
@@ -559,6 +570,9 @@ a.pjSbOrderRemoveDriverStatus{
     transform: scale(1.2); /* Phóng to nhẹ icon */
     transition: transform 0.2s, border 0.2s, box-shadow 0.2s;
 }
+.highlight-marker .fa{
+	color: #007bff;
+}
 
 /* Đảm bảo áp dụng cho cả icon đứng yên và di chuyển */
 .custom-vehicle-icon.highlight-marker,
@@ -566,7 +580,10 @@ a.pjSbOrderRemoveDriverStatus{
     /* Các thuộc tính giữ nguyên */
 }
 
-#map { height: 600px; width: 100%;}
+#map { 
+	height: 630px; 
+	width: 100%;
+}
 .vehicle-info { margin-bottom: 15px; padding: 10px; border: 1px solid #ccc; }
 .custom-vehicle-icon {
     /* Bắt buộc phải có display: block/flex để áp dụng width/height/border */
@@ -675,9 +692,10 @@ a.pjSbOrderRemoveDriverStatus{
     background-color: #0056b3; /* Xanh đậm hơn khi hover */
 }
 /* Đảm bảo các thuộc tính chữ bên trong vẫn đẹp */
-.vehicle-item.is-tracking .name, 
+.vehicle-item.is-tracking .name,
+.vehicle-item.is-tracking .vehicle-details .name > a, 
 .vehicle-item.is-tracking .address {
-    color: white; 
+    color: #fff; 
 }
 
 /* Đảm bảo hover không bị xung đột với tracking highlight */
@@ -700,7 +718,31 @@ a.pjSbOrderRemoveDriverStatus{
 #vehicle-list .vehicle-item.is-tracking .speed{
 	color: #fff;
 }
+.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving{
+	background: #28a745 !important;
+}
+.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving:hover,
+.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving:active,
+.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving:focus{
+	background: #28a745;
+	border: 1px solid #28a745;
+}
 
+/* Khi bản đồ có class 'hide-all-tooltips', tất cả tooltip sẽ bị ẩn */
+.hide-all-tooltips .leaflet-tooltip-pane {
+    display: none !important;
+}
+
+/* Nhưng vẫn cho phép hiển thị lại tooltip của riêng marker đang hover nếu muốn */
+/* (Tùy chọn nếu bạn muốn giữ lại nhãn của riêng xe đang chọn) */
+.hide-all-tooltips .highlight-marker-tooltip {
+    display: block !important;
+}
+.leaflet-popup-content-wrapper .leaflet-popup-content{
+	margin: 10px;
+  	line-height: unset;
+  	font-size: 12px;
+}
 
 @media (max-width: 479px){
 	.pjSbDriverSchedule .pjSbBlock .pjSbBlockInner .pjSbSign{

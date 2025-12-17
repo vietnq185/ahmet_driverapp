@@ -168,6 +168,22 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	    </div>
 	</div>
 	
+	<div class="modal inmodal fade" id="modalLocateVehicleOnMap" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog modal-lg">
+	        <div class="modal-content">
+	        	<div class="modal-body">
+                	<div id="map-panel">
+                        <div id="map"></div>
+                    </div>
+              	</div>
+              
+              	<div class="modal-footer">
+              		<button class="btn btn-default" type="button" data-dismiss="modal"><?php __('btnClose');?></button>
+              	</div>
+	        </div>
+	    </div>
+	</div>
+	
 	<div id="captchaContainer" style="display: none;">
         <div class="aiWithCaptcha">
         	<div class="form-group">

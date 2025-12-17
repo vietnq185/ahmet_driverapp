@@ -71,6 +71,11 @@ class pjAdmin extends pjAppController
 		    
 		    'pjAdminSchedule::pjActionCaptcha' => 'pjAdminSchedule::pjActionIndex',
 		    'pjAdminSchedule::pjActionCheckCaptcha' => 'pjAdminSchedule::pjActionIndex',
+		    'pjAdminSchedule::getVehiclesFromAPI' => 'pjAdminSchedule::pjActionIndex',
+		    'pjAdminSchedule::getVehicleFromAPI' => 'pjAdminSchedule::pjActionIndex',
+		    'pjAdminSchedule::pjActionCheckVehiclesStatus' => 'pjAdminSchedule::pjActionIndex',
+		    
+		    'pjAdminTracking::pjActionGetVehicles' => 'pjAdminTracking::pjActionIndex'
 		);
 		if ($_REQUEST['controller'] == 'pjAdminOptions' && isset($_REQUEST['next_action'])) {
 			$inherits_arr['pjAdminOptions::pjActionUpdate'] = 'pjAdminOptions::'.$_REQUEST['next_action'];

@@ -45,6 +45,9 @@ class pjAdminSchedule extends pjAdmin
         $this->appendCss('css/select2.min.css', PJ_THIRD_PARTY_PATH . 'select2/');
         $this->appendJs('js/select2.full.min.js', PJ_THIRD_PARTY_PATH . 'select2/');
         
+        $this->appendCss('https://unpkg.com/leaflet@1.9.4/dist/leaflet.css', '', true, false);
+        $this->appendJs('https://unpkg.com/leaflet@1.9.4/dist/leaflet.js', '', true, false);
+        
         $this->appendCss('datepicker.css', PJ_THIRD_PARTY_PATH . 'bootstrap_datepicker/');
         $this->appendJs('bootstrap-datepicker.js', PJ_THIRD_PARTY_PATH . 'bootstrap_datepicker/');
         $this->appendCss('clockpicker.css', PJ_THIRD_PARTY_PATH . 'clockpicker/');
@@ -240,6 +243,9 @@ class pjAdminSchedule extends pjAdmin
             ->set('date', $schedule_arr['date'])
             ->set('assigned_driver_arr', $schedule_arr['assigned_driver_arr'])
             ->set('assigned_driver_name_arr', $schedule_arr['assigned_driver_name_arr']);
+            
+            $vehicle_from_api_arr = $this->getVehiclesFromAPI();
+            $this->set('vehicle_from_api_arr', $vehicle_from_api_arr);
         }
     }
     
@@ -1295,160 +1301,6 @@ class pjAdminSchedule extends pjAdmin
     }
     
     
-    protected function runBatchAssignment($date) {
-        $data = $this->getDataForDay($date);
-        $allBookings = $data['all_bookings'];
-        $vehicles = $data['vehicles'];
-        $initialTrips = $data['vehicle_initial_trip'];
-        
-        $schedule = []; $pendingBookings = [];
-        foreach ($vehicles as $vehicle) $schedule[$vehicle['id']] = [];
-        
-        // Phân loại: Tách các Booking ĐÃ GÁN khỏi các Booking CHƯA GÁN
-        foreach ($allBookings as $booking) {
-            if ((int)$booking['vehicle_id'] > 0) {
-                $schedule[$booking['vehicle_id']][] = $booking;
-            } else {
-                $pendingBookings[] = $booking;
-            }
-        }
-        
-        // Sắp xếp lịch trình đã gán theo thời gian
-        foreach ($schedule as $vehicleId => &$trips) {
-            usort($trips, fn($a, $b) => strtotime($a['booking_date']) <=> strtotime($b['booking_date']));
-        }
-        unset($trips);
-        
-        //echo "--- BẮT ĐẦU GÁN XE TỰ ĐỘNG CHO NGÀY {$date} ---\n";
-        $assignedCount = 0;
-        
-        // --- VÒNG LẶP CHÍNH (PRIMARY LOOP): Gán vào CUỐI chuỗi (Greedy) ---
-        $unassignedAfterPrimary = [];
-        
-        foreach ($pendingBookings as &$booking) {
-            $bestInsertion = ['vehicleId' => null, 'waitTime' => PHP_INT_MAX, 'position' => -1];
-            
-            foreach ($vehicles as $vehicle) {
-                $vehicleId = $vehicle['id'];
-                if ($booking['passengers'] > $vehicle['seats']) continue;
-                
-                $trips = $schedule[$vehicleId];
-                $lastTrip = empty($trips) ? @$initialTrips[$vehicleId] : end($trips);
-                
-                // TÍNH TOÁN CHI PHÍ CHÈN VÀO CUỐI CHUỖI
-                $waitTime = $this->calculateTripCostToEnd($lastTrip, $booking);
-                
-                if ($waitTime !== null && $waitTime !== PHP_INT_MAX && $waitTime < $bestInsertion['waitTime']) {
-                    $bestInsertion = ['vehicleId' => $vehicleId, 'waitTime' => $waitTime, 'position' => count($trips)];
-                }
-            }
-            
-            // Thực hiện gán (nếu tìm thấy)
-            if ($bestInsertion['vehicleId'] !== null) {
-                $assignedCount++;
-                $vehicleId = $bestInsertion['vehicleId'];
-                
-                // Cập nhật Database
-                pjBookingModel::factory()->reset()->set('id', $booking['id'])->modify(array('vehicle_id' => $vehicleId, 'vehicle_order' => 1));
-                
-                $booking['vehicle_id'] = $vehicleId;
-                $schedule[$vehicleId][] = $booking;
-                
-                //echo "-> P1: Assigned Booking #{$booking['id']} to Vehicle #{$vehicleId} (Wait: {$bestInsertion['waitTime']}s) at end.\n";
-            } else {
-                $unassignedAfterPrimary[] = $booking;
-            }
-        }
-        
-        //echo "\n--- BẮT ĐẦU LẤP ĐẦY KHOẢNG TRỐNG (SECONDARY LOOP) --- ({$assignedCount} bookings gán được ở P1)\n";
-        
-        // --- VÒNG LẶP PHỤ (SECONDARY LOOP): Lấp đầy Khoảng trống ---
-        $recheck = true;
-        while ($recheck) {
-            $recheck = false;
-            $bestGapInsertion = ['bookingId' => null, 'vehicleId' => null, 'minCost' => PHP_INT_MAX, 'index' => -1, 'unassignedIdx' => -1];
-            
-            // 1. Duyệt qua TẤT CẢ các Booking BỊ BỎ QUA
-            foreach ($unassignedAfterPrimary as $idx => $bookingB) {
-                if ($bookingB === null) continue;
-                
-                // 2. Duyệt qua TẤT CẢ các Xe
-                foreach ($vehicles as $vehicle) {
-                    $vehicleId = $vehicle['id'];
-                    $trips = $schedule[$vehicleId];
-                    
-                    if ($bookingB['passengers'] > $vehicle['seats']) continue;
-                    
-                    // 3. Duyệt qua TẤT CẢ các khoảng trống trong lịch trình xe đó
-                    $tripA = $initialTrips[$vehicleId];
-                    
-                    for ($i = 0; $i < count($trips); $i++) {
-                        $tripC = $trips[$i];
-                        
-                        if ($tripA && $tripC) {
-                            // Tính chi phí chèn B vào giữa A và C
-                            $cost = $this->calculateInsertionCost($pdo, $tripA, $tripC, $bookingB);
-                            
-                            if ($cost !== null && $cost !== PHP_INT_MAX && $cost < $bestGapInsertion['minCost']) {
-                                $bestGapInsertion = [
-                                    'bookingId' => $bookingB['id'],
-                                    'vehicleId' => $vehicleId,
-                                    'minCost' => $cost,
-                                    'index' => $i,
-                                    'unassignedIdx' => $idx
-                                ];
-                            }
-                        }
-                        $tripA = $tripC;
-                    }
-                }
-            }
-            
-            // 4. Thực hiện Chèn TỐI ƯU NHẤT (Nếu tìm thấy)
-            if ($bestGapInsertion['bookingId'] !== null) {
-                $assignedCount++;
-                $recheck = true;
-                
-                $bId = $bestGapInsertion['bookingId'];
-                $vId = $bestGapInsertion['vehicleId'];
-                $index = $bestGapInsertion['index'];
-                $minCost = $bestGapInsertion['minCost'];
-                
-                $bookingB = $unassignedAfterPrimary[$bestGapInsertion['unassignedIdx']];
-                
-                // Cập nhật Database
-                pjBookingModel::factory()->reset()->set('id', $bId)->modify(array('vehicle_id' => $vId, 'vehicle_order' => 1));
-                
-                // Cập nhật LỊCH TRÌNH trong bộ nhớ
-                array_splice($schedule[$vId], $index, 0, [$bookingB]);
-                
-                // Xóa booking ra khỏi mảng unassigned
-                unset($unassignedAfterPrimary[$bestGapInsertion['unassignedIdx']]);
-                
-                //echo "-> P2: Gap Filled Booking #{$bId} to Vehicle #{$vId} at index {$index} (Cost: {$minCost}s).\n";
-            }
-        }
-        
-        //echo "\n--- KẾT THÚC GÁN XE: Tổng cộng {$assignedCount} bookings mới được gán. ---\n";
-        //echo "Số booking không gán được (cần xử lý thủ công): " . count($unassignedAfterPrimary) . "\n";
-    }
-    
-    public function pjActionAssignOrdersWithAI() {
-        $this->setAjax(true);
-        if ($this->isXHR()) {
-            $this->buffer_time_seconds = (int)$this->option_arr['o_buffer'] * 60;
-            $this->max_wait_time_seconds = (int)$this->option_arr['o_max_wait_time_seconds'] * 60;
-            $this->min_gap_fill_seconds = (int)$this->option_arr['o_min_gap_fill_seconds'] * 60;
-            
-            $targetDate = $this->_post->toString('selected_date');//date('2025-11-28');
-            
-            //pjBookingModel::factory()->where('DATE(booking_date)="'.$targetDate.'"')->modifyAll(array('vehicle_id' => 0));
-            
-            $this->runBatchAssignment($targetDate);
-            pjAppController::jsonResponse(array('status' => 'OK'));
-        }
-    }
-    
     public function pjActionCaptcha()
     {
         $this->setAjax(true);
@@ -1474,6 +1326,122 @@ class pjAdminSchedule extends pjAdmin
         }else{
             echo 'OK';
         }
+        exit;
+    }
+    
+    public function getVehiclesFromAPI() {
+        // Cấu hình
+        $api_token = $this->option_arr['o_infleet_api_token']; // Thay thế bằng API Token thực của bạn
+        // === ĐÃ THAY ĐỔI ENDPOINT TẠI ĐÂY ===
+        $api_url = 'https://api.bornemann.net/data/assets/all';
+        //$api_url = 'https://api.bornemann.net/data/hardware/find?make=Mercedes';
+        
+        // Thiết lập Headers cho API Call
+        $headers = [
+            'Authorization: Bearer ' . $api_token,
+            'Accept: application/json'
+        ];
+        
+        // Khởi tạo cURL
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $api_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        // Thực thi API Call
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        // Kiểm tra lỗi cURL
+        if (curl_errno($ch)) {
+            $error_msg = curl_error($ch);
+            curl_close($ch);
+            http_response_code(500);
+            die(json_encode(['error' => 'cURL error: ' . $error_msg]));
+        }
+        
+        curl_close($ch);
+        
+        // Kiểm tra HTTP Status Code
+        if ($http_code != 200) {
+            http_response_code($http_code);
+            die(json_encode(['error' => 'API returned non-200 status code: ' . $http_code, 'response' => $response]));
+        }
+        
+        // Chuyển đổi JSON response thành mảng PHP
+        $arr = json_decode($response, true);
+        $data = array();
+        foreach ($arr as $val) {
+            $is_valid = true;
+            if (isset($val['child']) && $val['child']['type'] == 'vehicle' && !empty($val['child']['licensePlate'])) {
+                $data[$val['child']['licensePlate']] = $val;
+            }
+        }
+        
+        return $data;
+    }
+    
+    public function getVehicleFromAPI() {
+        // Cấu hình
+        $vehicle_id = $this->_get->toString('vehicle_id');
+        $api_token = $this->option_arr['o_infleet_api_token']; // Thay thế bằng API Token thực của bạn
+        $api_url = 'https://api.bornemann.net/data/assets/'.$vehicle_id;
+        
+        // Thiết lập Headers cho API Call
+        $headers = [
+            'Authorization: Bearer ' . $api_token,
+            'Accept: application/json'
+        ];
+        
+        // Khởi tạo cURL
+        $ch = curl_init();
+        
+        curl_setopt($ch, CURLOPT_URL, $api_url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        
+        // Thực thi API Call
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        
+        // Kiểm tra lỗi cURL
+        if (curl_errno($ch)) {
+            $error_msg = curl_error($ch);
+            curl_close($ch);
+            http_response_code(500);
+            die(json_encode(['error' => 'cURL error: ' . $error_msg]));
+        }
+        
+        curl_close($ch);
+        
+        // Kiểm tra HTTP Status Code
+        if ($http_code != 200) {
+            http_response_code($http_code);
+            die(json_encode(['error' => 'API returned non-200 status code: ' . $http_code, 'response' => $response]));
+        }
+        
+        // Chuyển đổi JSON response thành mảng PHP
+        $data = json_decode($response, true);
+        
+        // Định dạng lại dữ liệu và gửi về Frontend (JavaScript)
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
+    }
+    
+    public function pjActionCheckVehiclesStatus() {
+        $resp = $this->getVehiclesFromAPI();
+        $data = array();
+        foreach ($resp as $val) {
+            $isMoving = isset($val['logLast']['isMoving']) ? (int)$val['logLast']['isMoving'] : '';
+            $data[] = array(
+                'id' => $val['_id'],
+                'isMoving' => $isMoving
+            );
+        }
+        header('Content-Type: application/json');
+        echo json_encode($data);
         exit;
     }
 }
