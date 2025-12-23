@@ -613,7 +613,7 @@ var jQuery = jQuery || $.noConflict();
 			});
 		});
 		
-		$("#modalChangePickupTime").on('shown.bs.modal', function(){console.log(111)
+		$("#modalChangePickupTime").on('shown.bs.modal', function(){
 			if ($('.clockpicker').length) {
 	        	$('.clockpicker').clockpicker({
 	                twelvehour: myLabel.showperiod,
@@ -798,7 +798,7 @@ var jQuery = jQuery || $.noConflict();
 	        var IdleIcon;
 	        var MovingIcon;
 			$('#modalLocateVehicleOnMap').on('shown.bs.modal', function (e) {
-				map = L.map('map', {
+				map = L.map('map-on-popup', {
 		            zoomControl: false 
 		        }).setView([47.2576489, 11.3513075], 13);
 				// Lấy ngôn ngữ ưu tiên của trình duyệt (ví dụ: 'en-US', 'vi-VN')
@@ -950,7 +950,7 @@ var jQuery = jQuery || $.noConflict();
                             var selectedIcon;
                             var tooltipClassName;
                             var vehicleId = vehicle._id;
-                            if (isMoving == 1) {
+                            if (isMoving == 1 || parseInt(currentSpeed, 10) > 0) {
                                 selectedIcon = MovingIcon;
                                 tooltipClassName = 'vehicle-label-moving';
                             } else {
@@ -1026,7 +1026,7 @@ var jQuery = jQuery || $.noConflict();
 	        }
 	        
 	     // Hàm Tải dữ liệu và Cập nhật bản đồ
-	        function checkVehiclesStatus($vehicle_id) {
+	        function checkVehiclesStatus() {
 	        	$.ajax({
 	                url: 'index.php?controller=pjAdminSchedule&action=pjActionCheckVehiclesStatus', 
 	                type: 'GET',

@@ -246,6 +246,9 @@ class pjAdminSchedule extends pjAdmin
             
             $vehicle_from_api_arr = $this->getVehiclesFromAPI();
             $this->set('vehicle_from_api_arr', $vehicle_from_api_arr);
+            
+            $date = pjDateTime::formatDate($post['date'], $this->option_arr['o_date_format']);
+            $this->set('date', $date);
         }
     }
     
@@ -935,14 +938,15 @@ class pjAdminSchedule extends pjAdmin
 				if ($message_arr) {
 				    $_driver_payment_status = __('_driver_payment_status', true);
 				    $driver_payment_status = sprintf(@$_driver_payment_status[$arr['driver_payment_status']], pjCurrency::formatPrice($arr['price'] + $arr['duplicate_price']));
-				    
-				    $search = array('{DriverName}','{CustomerName}','{Date}','{PaymentStatus}','{ReferenceID}');
+				    $url_tracking = $this->option_arr['o_customer_tracking_url'].'?hash='.sha1($arr['id'].PJ_SALT);
+				    $search = array('{DriverName}','{CustomerName}','{Date}','{PaymentStatus}','{ReferenceID}','{URLTracking}');
 				    $replace = array(
 				        $arr['name'],
 				        $arr['fname'].' '.$arr['lname'],
 				        date($this->option_arr['o_date_format'], strtotime($arr['booking_date'])).', '.date($this->option_arr['o_time_format'], strtotime($arr['booking_date'])),
 				        $driver_payment_status,
-				        !empty($arr['uuid2']) ? $arr['uuid2'] : $arr['uuid']
+				        !empty($arr['uuid2']) ? $arr['uuid2'] : $arr['uuid'],
+				        $url_tracking
 				    );
 				    
 				    $message = str_replace($search, $replace, $message_arr['message']);
@@ -1357,16 +1361,18 @@ class pjAdminSchedule extends pjAdmin
         if (curl_errno($ch)) {
             $error_msg = curl_error($ch);
             curl_close($ch);
-            http_response_code(500);
-            die(json_encode(['error' => 'cURL error: ' . $error_msg]));
+            /* http_response_code(500);
+            die(json_encode(['error' => 'cURL error: ' . $error_msg])); */
+            return array();
         }
         
         curl_close($ch);
         
         // Kiểm tra HTTP Status Code
         if ($http_code != 200) {
-            http_response_code($http_code);
-            die(json_encode(['error' => 'API returned non-200 status code: ' . $http_code, 'response' => $response]));
+            /* http_response_code($http_code);
+            die(json_encode(['error' => 'API returned non-200 status code: ' . $http_code, 'response' => $response])); */
+            return array();
         }
         
         // Chuyển đổi JSON response thành mảng PHP
@@ -1410,7 +1416,8 @@ class pjAdminSchedule extends pjAdmin
             $error_msg = curl_error($ch);
             curl_close($ch);
             http_response_code(500);
-            die(json_encode(['error' => 'cURL error: ' . $error_msg]));
+            echo json_encode(['error' => 'cURL error: ' . $error_msg]);
+            exit;
         }
         
         curl_close($ch);
@@ -1418,7 +1425,8 @@ class pjAdminSchedule extends pjAdmin
         // Kiểm tra HTTP Status Code
         if ($http_code != 200) {
             http_response_code($http_code);
-            die(json_encode(['error' => 'API returned non-200 status code: ' . $http_code, 'response' => $response]));
+            echo json_encode(['error' => 'API returned non-200 status code: ' . $http_code, 'response' => $response]);
+            exit;
         }
         
         // Chuyển đổi JSON response thành mảng PHP
@@ -1435,6 +1443,10 @@ class pjAdminSchedule extends pjAdmin
         $data = array();
         foreach ($resp as $val) {
             $isMoving = isset($val['logLast']['isMoving']) ? (int)$val['logLast']['isMoving'] : '';
+            $speed = isset($val['logLast']['speed']) ? (int)$val['logLast']['speed'] : 0;
+            if ($isMoving || $speed > 0) {
+                $isMoving = 1;
+            }
             $data[] = array(
                 'id' => $val['_id'],
                 'isMoving' => $isMoving

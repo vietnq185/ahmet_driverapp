@@ -9,11 +9,22 @@
 	</div>
 </div>
 <div class="row wrapper wrapper-content animated fadeInRight">
-	<div class="col-lg-12">
+	<div class="col-xs-12">
+		
         <div id="main-container">
-            <div id="vehicle-list-panel">
-            	<div class="filter-vehicles-container">
-            		<form action="" method="get" class="frm-filter">
+        	<div class="btn-toggle-container">
+        		<button type="button" id="btnOpenVehiclePanel" class="btn-toggle">
+                    <i class="fa fa-chevron-right"></i>
+                </button>
+                <button type="button" id="btnCloseVehiclePanel" class="btn-toggle">
+                    <i class="fa fa-chevron-left"></i>
+                </button>
+        	</div>
+        	<div id="vehicle-list-panel">
+        		<div class="filter-vehicles-container">
+        			<form action="" method="get" class="frm-filter">
+        				<input type="hidden" name="column" value="name" />
+        				<input type="hidden" name="direction" value="asc" />
                     	<div class="row">
                     		<div class="col-md-8 col-sm-12">
                     			<input name="q" id="specific-search-box" placeholder="<?php __('lblTrackingSearchPlaceholder');?>" class="form-control" />
@@ -31,6 +42,18 @@
                 
                 <div id="list-header">
                     <h3><?php __('lblTrackingVehicles');?></h3>
+                    <div class="row">
+                        <div class="col-xs-8">
+                            <a href="javascript:void(0);" class="sort-link sort-vehicle-name asc" data-sort="name">
+                                <strong><?php __('lblTrackingSortName');?></strong> <i class="fa fa-sort-asc"></i>
+                            </a>
+                        </div>
+                        <div class="col-xs-4 text-right">
+                            <a href="javascript:void(0);" class="sort-link" data-sort="speed">
+                                <strong><?php __('lblTrackingSortSpeed');?></strong> <i class="fa fa-sort"></i>
+                            </a>
+                        </div>
+                    </div>
                 </div>
                 <div id="vehicle-list-content" class="pj-loader-outer">
                 	<div class="pj-loader"></div>

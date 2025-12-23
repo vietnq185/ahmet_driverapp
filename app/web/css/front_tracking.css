@@ -1,0 +1,121 @@
+@CHARSET "UTF-8";
+
+#pjWrapper #main-container {
+    display: flex;
+    flex-grow: 1;
+    overflow: hidden; 
+    height: calc(100vh - 100px);
+    position: relative;
+}
+#pjWrapper #map-panel {
+    flex-grow: 1;
+    height: 100% !important;
+}
+#pjWrapper #map-tracking { 
+	height: 100%; 
+	width: 100%;
+}
+
+#pjWrapper .custom-vehicle-icon {
+    /* Bắt buộc phải có display: block/flex để áp dụng width/height/border */
+    display: flex; 
+    align-items: center;
+    justify-content: center;
+    
+    background-color: white; /* Nền trắng */
+    border-radius: 50%; /* Hình tròn */
+    border: 2px solid #00344f; /* Viền xanh */
+    width: 34px; 
+    height: 34px;
+	line-height: 34px;
+	text-align: center;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3); /* Thêm bóng đổ nhẹ cho nổi bật */
+}
+#pjWrapper .custom-vehicle-icon i {
+    /* Thiết lập màu xanh cho icon bên trong */
+    color: #00344f; 
+    font-size: 16px; /* Kích thước icon */
+}
+/* CSS CHO XE ĐANG DI CHUYỂN (Màu xanh lá) */
+#pjWrapper .moving-vehicle-icon {
+    /* Tạo hình nền tròn trắng cho icon xe */
+    background-color: white; 
+    border-radius: 50%;
+    border: 2px solid #28a745; /* VIỀN XANH LÁ CÂY */
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px; 
+    height: 30px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+#pjWrapper .moving-vehicle-icon i {
+    color: #28a745; /* Màu XANH LÁ CÂY cho icon */
+    font-size: 16px;
+}
+
+/* Thêm CSS cho nhãn tên xe */
+#pjWrapper .vehicle-label {
+    /* Đảm bảo chữ nổi bật */
+    font-weight: bold;
+    color: #00344f; /* Màu chữ tối */
+	font-zie: 16px;
+    padding: 0;
+    white-space: nowrap; /* Ngăn tên xe bị ngắt dòng */
+}
+#pjWrapper .vehicle-label-moving{
+	/* Đảm bảo chữ nổi bật */
+    font-weight: bold;
+    color: #28a745; /* Màu chữ tối */
+	font-zie: 16px;
+    
+    white-space: nowrap; /* Ngăn tên xe bị ngắt dòng */
+}
+
+/* TOOLTIP CHUNG: Đảm bảo không có nền/viền mặc định */
+#pjWrapper .leaflet-tooltip.vehicle-label,
+#pjWrapper .leaflet-tooltip.vehicle-label-moving {
+    opacity: 1; 
+    padding: 0;
+    margin-left: 5px; /* Điều chỉnh vị trí ngang */
+	padding: 3px;
+}
+
+/* 1. MÀU XANH DƯƠNG CHO XE ĐỨNG YÊN */
+#pjWrapper .leaflet-tooltip.vehicle-label  {
+    font-weight: bold;
+    color: #00344f; /* MÀU XANH DƯƠNG */
+	font-size: 13px;
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* 2. MÀU XANH LÁ CHO XE DI CHUYỂN */
+#pjWrapper .leaflet-tooltip.vehicle-label-moving  {
+    font-weight: bold;
+    color: #28a745; /* MÀU XANH LÁ CÂY */
+	font-size: 13px;
+	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Khi bản đồ có class 'hide-all-tooltips', tất cả tooltip sẽ bị ẩn */
+#pjWrapper .hide-all-tooltips .leaflet-tooltip-pane {
+    display: none !important;
+}
+
+/* Nhưng vẫn cho phép hiển thị lại tooltip của riêng marker đang hover nếu muốn */
+/* (Tùy chọn nếu bạn muốn giữ lại nhãn của riêng xe đang chọn) */
+#pjWrapper .hide-all-tooltips .highlight-marker-tooltip {
+    display: block !important;
+}
+#pjWrapper .leaflet-popup-content-wrapper .leaflet-popup-content{
+	margin: 10px;
+  	line-height: unset;
+  	font-size: 12px;
+}
+/* Làm cho marker di chuyển mượt mà trong 2 giây */
+#pjWrapper .leaflet-marker-icon {
+    transition: transform 1s ease-in-out !important;
+	text-align: center;
+}
+

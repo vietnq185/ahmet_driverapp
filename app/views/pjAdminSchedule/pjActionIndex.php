@@ -85,7 +85,7 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	</div>
 	
 	<div class="modal inmodal fade" id="modalWhatsappSms" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
-	    <div class="modal-dialog">
+	    <div class="modal-dialog modal-md">
 	        <div class="modal-content"></div>
 	    </div>
 	</div>
@@ -172,8 +172,8 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	    <div class="modal-dialog modal-lg">
 	        <div class="modal-content">
 	        	<div class="modal-body">
-                	<div id="map-panel">
-                        <div id="map"></div>
+                	<div id="map-panel-on-popup">
+                        <div id="map-on-popup"></div>
                     </div>
               	</div>
               

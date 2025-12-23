@@ -4,6 +4,7 @@
 	$_booking_driver_statuses = __('_booking_driver_statuses', true);
 	$_driver_payment_status = __('_driver_payment_status', true);
 	$_extras_info = __('_extras_info', true);
+	$today = date('Y-m-d');
 	?>
 	<div class="table-responsive">
 		<table class="table pjTblVehicles" width="100%">
@@ -14,12 +15,12 @@
 					    ?>
 						<th>
 							<?php echo pjSanitize::html($veh['name']);?><br/><?php echo pjSanitize::html($veh['registration_number']);?>
-							<?php if ($vehicle_from_api) { 
+							<?php if ($vehicle_from_api && $today == $tpl['date']) { 
 							    $lat = isset($vehicle_from_api['logLast']['lonlat'][1]) ? $vehicle_from_api['logLast']['lonlat'][1] : '0.00';
 							    $lng = isset($vehicle_from_api['logLast']['lonlat'][0]) ? $vehicle_from_api['logLast']['lonlat'][0] : '0.00';
 							    $isMoving = isset($vehicle_from_api['logLast']['isMoving']) ? (int)$vehicle_from_api['logLast']['isMoving'] : 0;
 							    ?>
-								<div><a href="javascript:void(0);" class="btn btn-sm btn-default btn-outline btnLocateVehicelOnMap vehicleFromApiID-<?php echo pjSanitize::html($vehicle_from_api['_id']);?> <?php echo $isMoving == 1 ? 'btnVehiclMoving' : '';?>" data-id="<?php echo pjSanitize::html($vehicle_from_api['_id']);?>" data-lat="<?php echo $lat;?>" data-lng="<?php echo $lng;?>"><?php __('btnLocateVehicleOnMap');?></a></div>
+								<div><a href="javascript:void(0);" class="btn btn-sm btn-danger btn-outline btnLocateVehicelOnMap vehicleFromApiID-<?php echo pjSanitize::html($vehicle_from_api['_id']);?> <?php echo $isMoving == 1 ? 'btnVehiclMoving' : '';?>" data-id="<?php echo pjSanitize::html($vehicle_from_api['_id']);?>" data-lat="<?php echo $lat;?>" data-lng="<?php echo $lng;?>"><?php __('btnLocateVehicleOnMap');?></a></div>
 							<?php } ?>
 						</th>
 					<?php } ?>
@@ -219,12 +220,12 @@
 					    ?>
 						<th>
 							<?php echo pjSanitize::html($veh['name']);?><br/><?php echo pjSanitize::html($veh['registration_number']);?>
-							<?php if ($vehicle_from_api) { 
+							<?php if ($vehicle_from_api && $today == $tpl['date']) { 
 							    $lat = isset($vehicle_from_api['logLast']['lonlat'][1]) ? $vehicle_from_api['logLast']['lonlat'][1] : '0.00';
 							    $lng = isset($vehicle_from_api['logLast']['lonlat'][0]) ? $vehicle_from_api['logLast']['lonlat'][0] : '0.00';
 							    $isMoving = isset($vehicle_from_api['logLast']['isMoving']) ? (int)$vehicle_from_api['logLast']['isMoving'] : 0;
 							    ?>
-								<div><a href="javascript:void(0);" class="btn btn-sm btn-default btn-outline btnLocateVehicelOnMap vehicleFromApiID-<?php echo pjSanitize::html($vehicle_from_api['_id']);?> <?php echo $isMoving == 1 ? 'btnVehiclMoving' : '';?>" data-id="<?php echo pjSanitize::html($vehicle_from_api['_id']);?>" data-lat="<?php echo $lat;?>" data-lng="<?php echo $lng;?>"><?php __('btnLocateVehicleOnMap');?></a></div>
+								<div><a href="javascript:void(0);" class="btn btn-sm btn-danger btn-outline btnLocateVehicelOnMap vehicleFromApiID-<?php echo pjSanitize::html($vehicle_from_api['_id']);?> <?php echo $isMoving == 1 ? 'btnVehiclMoving' : '';?>" data-id="<?php echo pjSanitize::html($vehicle_from_api['_id']);?>" data-lat="<?php echo $lat;?>" data-lng="<?php echo $lng;?>"><?php __('btnLocateVehicleOnMap');?></a></div>
 							<?php } ?>
 						</th>
 					<?php } ?>

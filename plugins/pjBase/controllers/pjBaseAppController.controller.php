@@ -372,7 +372,7 @@ class pjBaseAppController extends pjController
                 $this->sendForbidden();
                 return false;
             }
-            if (!$this->isLoged() && !in_array($this->_get->toString('action'), array('pjActionLogin', 'pjActionForgot', 'pjActionCaptcha', 'pjActionCheckCaptcha', 'pjActionCheckReCaptcha', 'pjActionCheckLoginEmail', 'pjActionResendPassword', 'pjActionRun', 'pjActionReset', 'pjActionMessages', 'syncBooking', 'pjActionPullBookingData'))) {
+            if (!$this->isLoged() && !in_array($this->_get->toString('controller'), array('pjFrontTracking')) && !in_array($this->_get->toString('action'), array('pjActionLogin', 'pjActionForgot', 'pjActionCaptcha', 'pjActionCheckCaptcha', 'pjActionCheckReCaptcha', 'pjActionCheckLoginEmail', 'pjActionResendPassword', 'pjActionRun', 'pjActionReset', 'pjActionMessages', 'syncBooking', 'pjActionPullBookingData'))) {
             	pjUtil::redirect($_SERVER['PHP_SELF'] . "?controller=pjBase&action=pjActionLogin");
             }
         }

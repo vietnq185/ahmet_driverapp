@@ -26,7 +26,7 @@
 			<div class="col-sm-12 WhatsappMessageContainer">
 				<div class="form-group">
 					<label class="control-label"><?php __('lblMessage'); ?></label>
-					<textarea name="message" id="message" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>"></textarea>
+					<textarea name="message" id="message" class="form-control required" rows="5" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>"></textarea>
 				</div>
 			</div>
 		</div>

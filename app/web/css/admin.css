@@ -467,10 +467,43 @@ a.pjSbOrderRemoveDriverStatus{
     z-index: 99999; 
 }
 
+.pjTblVehicles .btnLocateVehicelOnMap.btn-danger {
+    background: #FF0000;
+	border: 1px solid #FF0000;
+	color: #fff;
+}
+.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving{
+	background: #28a745 !important;
+	border: 1px solid #28a745;
+	color: #fff;
+}
+
+/* Need to check on mobile again */
+#wrapper.wrapper-tracking{
+	display: flex;
+    height: 100vh;
+}
+#wrapper.wrapper-tracking #page-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 100vh !important;
+}
+#wrapper.wrapper-tracking .wrapper-content {
+    display: flex;
+    flex-grow: 1; /* Lấy toàn bộ phần còn lại sau Title */
+    overflow: hidden; /* Cực kỳ quan trọng */
+    height: 0; /* Ép flexbox tính toán lại */
+    min-height: 0;
+	height: 100vh;
+}
 /* CONTAINER CHÍNH: Bố cục Flex */
 #main-container {
     display: flex;
-    height: 100%;
+    flex-grow: 1;
+    overflow: hidden; 
+    height: 100%; /* Thay đổi từ 100vh thành 100% để bám sát container cha */
+    position: relative;
 }
 
 /* PANEL BÊN TRÁI: DANH SÁCH */
@@ -481,13 +514,43 @@ a.pjSbOrderRemoveDriverStatus{
     border-right: 1px solid #e0e0e0;
     display: flex;
     flex-direction: column;
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
+/* Nút Toggle nằm ở cạnh phải Sidebar */
+.btn-toggle {
+    width: 40px;
+    height: 40px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-left: none;
+	border-top: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+}
+
+/* Hiệu ứng xoay Icon khi Sidebar đóng */
+.btn-toggle i {
+    transition: transform 0.4s;
+}
+
+
 #list-header {
-    padding: 15px;
+    padding: 10px 10px 5px 10px;
     border-bottom: 1px solid #e0e0e0;
 }
 #list-header h3{
-	margin: 0;
+	margin: 0 0 10px 0;
+}
+#list-header .sort-vehicle-name{
+	padding-left: 56px;
+}
+#list-header .sort-link .fa-sort-asc{
+	vertical-align: bottom;
+}
+#list-header .sort-link .fa-sort-desc{
+	vertical-align: top;
 }
 #vehicle-list-content {
     flex-grow: 1;
@@ -558,8 +621,8 @@ a.pjSbOrderRemoveDriverStatus{
 
 /* PANEL BÊN PHẢI: BẢN ĐỒ */
 #map-panel {
-    flex-grow: 1; /* Chiếm hết không gian còn lại */
-    height: 100%;
+    flex-grow: 1;
+    height: 100% !important;
 }
 
 /* THÊM CSS ĐỂ HIGHLIGHT MARKER TRÊN BẢN ĐỒ */
@@ -581,6 +644,10 @@ a.pjSbOrderRemoveDriverStatus{
 }
 
 #map { 
+	height: 100%; 
+	width: 100%;
+}
+#map-on-popup { 
 	height: 630px; 
 	width: 100%;
 }
@@ -675,7 +742,6 @@ a.pjSbOrderRemoveDriverStatus{
 	text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 #vehicle-list{
-	max-height: 537px;
   	overflow-y: auto;
 }
 #vehicle-list .vehicle-item .vehicle-details{
@@ -718,15 +784,6 @@ a.pjSbOrderRemoveDriverStatus{
 #vehicle-list .vehicle-item.is-tracking .speed{
 	color: #fff;
 }
-.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving{
-	background: #28a745 !important;
-}
-.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving:hover,
-.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving:active,
-.pjTblVehicles .btnLocateVehicelOnMap.btnVehiclMoving:focus{
-	background: #28a745;
-	border: 1px solid #28a745;
-}
 
 /* Khi bản đồ có class 'hide-all-tooltips', tất cả tooltip sẽ bị ẩn */
 .hide-all-tooltips .leaflet-tooltip-pane {
@@ -742,6 +799,49 @@ a.pjSbOrderRemoveDriverStatus{
 	margin: 10px;
   	line-height: unset;
   	font-size: 12px;
+}
+/* Làm cho marker di chuyển mượt mà trong 2 giây */
+.leaflet-marker-icon {
+    transition: transform 1s ease-in-out !important;
+	text-align: center;
+}
+
+
+.btn-toggle-container{
+	z-index: 10000;
+	position: absolute;
+	opacity: 0;
+}
+#btnCloseVehiclePanel{
+	display: none;
+}
+#vehicle-list-panel.open {
+    transform: translateX(0);
+}
+
+/* 1. Định nghĩa hiệu ứng hiện dần (Fade In) */
+@keyframes smoothFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px); /* Tùy chọn: nhích nhẹ từ dưới lên cho đẹp */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 992px){
+	.btn-toggle-container{
+		animation: smoothFadeIn 1.5s ease-out forwards;
+	}
+	#vehicle-list-panel {
+	    position: absolute;
+	    padding-top: 40px;
+	    left: -100%;
+	    z-index: 1100;
+		top: 0;
+	}
 }
 
 @media (max-width: 479px){

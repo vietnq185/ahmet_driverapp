@@ -21,6 +21,7 @@ class pjAdminTracking extends pjAdmin
     }
     
     public function pjActionGetVehicles() {
+        $this->setAjax(true);
         // Cấu hình
         $api_token = $this->option_arr['o_infleet_api_token']; // Thay thế bằng API Token thực của bạn
         // === ĐÃ THAY ĐỔI ENDPOINT TẠI ĐÂY ===
@@ -85,15 +86,31 @@ class pjAdminTracking extends pjAdmin
             }
             
             $isMoving = isset($val['logLast']['isMoving']) ? (int)$val['logLast']['isMoving'] : '';
-            if ($this->_get->check('status') && in_array($this->_get->toInt('status'), array(0,1)) && 
-                $this->_get->toInt('status') != $isMoving
-            ) {
+            $speed = isset($val['logLast']['speed']) ? (int)$val['logLast']['speed'] : 0;
+            $val['speed'] = $speed;
+            if ($this->_get->check('status') && in_array($this->_get->toInt('status'), array(0,1)) && $this->_get->toInt('status') != $isMoving && $speed <= 0) {
                 $is_valid = false;
             }
             if ($is_valid) {
                 $data[] = $val;
             }
         }
+        
+        $sortBy = 'name';
+        $direction = 'asc';
+        if ($this->_get->toString('column') && in_array($this->_get->toString('direction'), array('asc', 'desc')))
+        {
+            $sortBy = $this->_get->toString('column');
+            $direction = $this->_get->toString('direction');
+        }
+        
+        usort($data, function($a, $b) use ($sortBy, $direction) {
+            if ($direction == 'asc') {
+                return $a[$sortBy] <=> $b[$sortBy];
+            } else {
+                return $b[$sortBy] <=> $a[$sortBy];
+            }
+        });
         
         // Định dạng lại dữ liệu và gửi về Frontend (JavaScript)
         header('Content-Type: application/json');

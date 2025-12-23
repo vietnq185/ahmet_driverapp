@@ -104,7 +104,9 @@ var jQuery = jQuery || $.noConflict();
 	                	}
 	                    // Thêm class highlight
 	                    L.DomUtil.addClass(marker._icon, 'highlight-marker');
-	                    marker.openPopup(); // Mở popup khi highlight (như hover)
+	                    if (SHOW_TOOLTIP_ON_HOVER) {
+	                    	marker.openPopup(); // Mở popup khi highlight (như hover)
+	                    }
 	                } else {
 	                	if (SHOW_TOOLTIP_ON_HOVER) {
 		                	mapElement.classList.remove('hide-all-tooltips');
@@ -115,7 +117,9 @@ var jQuery = jQuery || $.noConflict();
 	                	}
 	                    // Xóa class highlight
 	                    L.DomUtil.removeClass(marker._icon, 'highlight-marker');
-	                    marker.closePopup(); // Đóng popup khi hết highlight
+	                    if (SHOW_TOOLTIP_ON_HOVER) {
+	                    	marker.closePopup(); // Đóng popup khi hết highlight
+	                    }
 	                }
 	            }
 	        }
@@ -160,7 +164,7 @@ var jQuery = jQuery || $.noConflict();
 	                listItem.setAttribute('data-vehicle-id', vehicleId);
 	                
 	                // Nội dung danh sách
-	                if (isMoving == 1) {
+	                if (isMoving == 1 || parseInt(currentSpeed, 10) > 0) {
 	                	listItem.innerHTML = `
 		                    <div class="vehicle-icon-list">
 		                        <i class="fa fa-car"></i>
@@ -243,12 +247,14 @@ var jQuery = jQuery || $.noConflict();
 	        function loadVehicles($showLoader) {
 	            var $form = $('.frm-filter'),
 	            $q = $form.find('input[name="q"]').val(),
-	            $status = $form.find('select[name="status"]').val();
+	            $status = $form.find('select[name="status"]').val(),
+	            $column = $form.find('input[name="column"]').val(),
+	            $direction = $form.find('input[name="direction"]').val();
 	            if ($showLoader == 1) {
 	            	$('.pj-loader').show();
 	            }
 	        	$.ajax({
-	                url: 'index.php?controller=pjAdminTracking&action=pjActionGetVehicles&q=' + $q + '&status=' + $status, 
+	                url: 'index.php?controller=pjAdminTracking&action=pjActionGetVehicles&q=' + $q + '&status=' + $status + '&column=' + $column + '&direction=' + $direction, 
 	                type: 'GET',
 	                dataType: 'json',
 	                success: function(vehicles) {
@@ -273,10 +279,24 @@ var jQuery = jQuery || $.noConflict();
 	                            var lng = position[0];
 	                            var currentSpeed = vehicle.logLast?.speed;
 	                            var isMoving = vehicle.logLast.isMoving !== undefined ? parseInt(vehicle.logLast.isMoving, 10) : 0;
+	                            
+	                            var make = vehicle.child.make;
+	                            if (make == null) {
+	                            	make = '';
+	                            }
+	                            var model = vehicle.child.model;
+	                            if (model == null) {
+	                            	model = '';
+	                            }
+	                            var licensePlate = vehicle.child.licensePlate;
+	                            if (licensePlate == null) {
+	                            	licensePlate = '';
+	                            }
+	                            
 	                            var selectedIcon;
 	                            var tooltipClassName;
 	                            var vehicleId = vehicle._id;
-	                            if (isMoving == 1) {
+	                            if (isMoving == 1 || parseInt(currentSpeed, 10) > 0) {
 	                                selectedIcon = MovingIcon;
 	                                tooltipClassName = 'vehicle-label-moving';
 	                            } else {
@@ -285,26 +305,25 @@ var jQuery = jQuery || $.noConflict();
 	                            }
 	                            var popupContent = `
 	                                <b>${vehicle.name || 'N/A'}</b><br>
-	                                ${myLabel.make}: ${vehicle.child.make}<br>
-	                                ${myLabel.model}: ${vehicle.child.model}<br>
-	                                ${myLabel.license_plate}: ${vehicle.child.licensePlate}
+	                                ${myLabel.make}: ${make}<br>
+	                                ${myLabel.model}: ${model}<br>
+	                                ${myLabel.license_plate}: ${licensePlate}
 	                            `;
 	                            
 	                            var marker = L.marker([lat, lng], {
 	                                icon: selectedIcon // Dùng icon đã định nghĩa
-	                            }).bindTooltip(vehicle.name, {
+	                            })/*.bindTooltip(vehicle.name, {
 	                            	permanent: true,
 	                                direction: 'top',   // <--- ĐÃ THAY ĐỔI TẠI ĐÂY
 	                                offset: [0, -25],   // Điều chỉnh vị trí (0, -25) để nhãn cao hơn icon
 	                                className: tooltipClassName
+	                            })*/;
+
+	                            marker.bindPopup(popupContent, { 
+	                                closeButton: false, 
+	                                autoClose: false 
 	                            });
-	                            if (SHOW_TOOLTIP_ON_HOVER) {
-	                            	marker.bindPopup(popupContent, { 
-		                                closeButton: false, 
-		                                autoClose: false 
-		                            });
-	                            	bindHoverPopup(marker);
-	                            }
+                            	bindHoverPopup(marker);
 	                            
 	                            // 🔑 LƯU TRỮ MARKER VÀ ID
 	                            vehicleMarkersMap[vehicleId] = marker;
@@ -323,9 +342,12 @@ var jQuery = jQuery || $.noConflict();
 	                        if (trackedMarker) {
 	                            const newLatlng = trackedMarker.getLatLng();
 	                            
-	                            // Sử dụng panTo để di chuyển bản đồ đến vị trí mới MƯỢT MÀ
-	                            map.panTo(newLatlng, { animate: true, duration: 1 }); 
-	                            
+	                            const pad = 0.2; 
+	                            const isStillVisible = map.getBounds().pad(-pad).contains(newLatlng);
+	                            if (!isStillVisible) {
+		                            // Sử dụng panTo để di chuyển bản đồ đến vị trí mới MƯỢT MÀ
+		                            map.panTo(newLatlng, { animate: true, duration: 2.0, easeLinearity: 1.0}); 
+	                            }
 	                            // Cập nhật lại highlight trên danh sách (đề phòng)
 	                            const trackingItem = document.querySelector(`.vehicle-item[data-vehicle-id="${currentlyTrackingId}"]`);
 	                            if (trackingItem) {
@@ -368,6 +390,35 @@ var jQuery = jQuery || $.noConflict();
 	            });
 	        }
 	        
+	        var isOpen = false;
+	     // Hàm thực hiện Slide
+	        function toggleSidebar() {
+	            var panel = $('#vehicle-list-panel');
+	            var btnOpen = $('#btnOpenVehiclePanel');
+	            var btnClose = $('#btnCloseVehiclePanel');
+
+	            if (!isOpen) {
+	                // SLIDE RIGHT (Mở ra)
+	                panel.animate({
+	                    left: '0'
+	                }, 400, 'swing'); // 400ms, hiệu ứng swing mượt mà
+	                btnOpen.fadeOut(200);
+	                setTimeout(function() {
+	                	btnClose.fadeIn(100);
+	                }, 1000)
+	                isOpen = true;
+	            } else {
+	                // SLIDE LEFT (Đóng lại)
+	                panel.animate({
+	                    left: '-100%'
+	                }, 400, 'swing');
+	                btnClose.fadeOut(200);
+	                setTimeout(function() {
+	                	btnOpen.fadeIn(100);
+	                }, 1000)
+	                isOpen = false;
+	            }
+	        }
 	        $(document).on("keydown", "#specific-search-box", function (e) {
 	        	if (e.which === 13) {
 	        		e.preventDefault();
@@ -384,7 +435,58 @@ var jQuery = jQuery || $.noConflict();
         	        clearTimeout(filterTimer);
         	    }
 				loadVehicles(1);
-			});
+			}).on('click', '.sort-link', function() {
+			    var $column = $(this).attr('data-sort');
+			    var isAsc = $(this).hasClass('asc');
+			    $('.frm-filter').find('input[name="column"]').val($column);
+			    $('.sort-link').removeClass('asc desc').find('i').attr('class', 'fa fa-sort');
+			    if (isAsc) {
+			        $(this).addClass('desc').find('i').attr('class', 'fa fa-sort-desc');
+			        var $direction = 'desc';
+			    } else {
+			        $(this).addClass('asc').find('i').attr('class', 'fa fa-sort-asc');
+			        var $direction = 'asc';
+			    }
+			    $('.frm-filter').find('input[name="direction"]').val($direction);
+			    
+			    var $q = $('.frm-filter').find('input[name="q"]').val();
+			    var $status = $('.frm-filter').find('select[name="status"]').val();
+			    $('.pj-loader').show();
+			    $.ajax({
+			    	url: 'index.php?controller=pjAdminTracking&action=pjActionGetVehicles&q=' + $q + '&status=' + $status + '&column=' + $column + '&direction=' + $direction, 
+			    	type: 'GET',
+			    	dataType: 'json',
+			    	success: function(vehicles) {
+			    		var vehiclesData = vehicles; 
+			    		// 🔑 GỌI HÀM TẠO DANH SÁCH MỚI
+			    		renderVehicleList(vehiclesData);
+			    		$('.pj-loader').hide();
+			    	},
+			    	error: function(xhr, status, error) {
+			    		console.error("Lỗi tải dữ liệu phương tiện: " + error);
+			    		$('.pj-loader').hide();
+			    	}
+			    });
+			}).on("click", "#btnOpenVehiclePanel, #btnCloseVehiclePanel", function (e) {
+				if (e && e.preventDefault) {
+					e.preventDefault();
+				}
+				toggleSidebar();
+			})/*.on("click", "#btnOpenVehiclePanel", function (e) {
+				if (e && e.preventDefault) {
+					e.preventDefault();
+				}
+				$('#vehicle-list-panel').addClass('open');
+		        $(this).fadeOut(300);
+		        $('#btnCloseVehiclePanel').fadeIn(300);
+			}).on("click", "#btnCloseVehiclePanel", function (e) {
+				if (e && e.preventDefault) {
+					e.preventDefault();
+				}
+				$('#vehicle-list-panel').removeClass('open');
+				$(this).fadeOut(300);
+		        $('#btnOpenVehiclePanel').fadeIn(300);
+			})*/;
 	        
 		});
 	});

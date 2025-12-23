@@ -52,8 +52,9 @@ $bodies = __('error_bodies', true);
 									<textarea class="form-control textarea_install" rows="5">
 &lt;meta http-equiv="X-UA-Compatible" content="IE=edge" /&gt;
 &lt;meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" /&gt;
+&lt;link href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" type="text/css" rel="stylesheet" /&gt;
 &lt;link href="<?php echo PJ_INSTALL_URL.PJ_FRAMEWORK_LIBS_PATH . 'pj/css/'; ?>pj.bootstrap.min.css" type="text/css" rel="stylesheet" /&gt;
-&lt;link href="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjFront&action=pjActionLoadCss" type="text/css" rel="stylesheet" /&gt;</textarea>
+&lt;link href="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjFrontTracking&action=pjActionLoadCss" type="text/css" rel="stylesheet" /&gt;</textarea>
 								</div>
 							</div>
 						</div>
@@ -67,11 +68,11 @@ $bodies = __('error_bodies', true);
 							<div class="form-group">
 								<div class="col-xs-12">
 									<textarea class="form-control textarea_install" id="install_code" rows="5">
-&lt;script type="text/javascript" src="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjFront&action=pjActionLoad"&gt;&lt;/script&gt;</textarea>
+&lt;script type="text/javascript" src="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjFrontTracking&action=pjActionLoad&hash=&lt;?php echo $_GET['hash'];?&gt;"&gt;&lt;/script&gt;</textarea>
 								</div>
 							</div>
 						</div>
-						<div style="display:none" id="hidden_code">&lt;script type="text/javascript" src="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjFront&action=pjActionLoadJS"&gt;&lt;/script&gt;</div>
+						<div style="display:none" id="hidden_code">&lt;script type="text/javascript" src="<?php echo PJ_INSTALL_URL; ?>index.php?controller=pjFrontTracking&action=pjActionLoadJS"&gt;&lt;/script&gt;</div>
 					</div>
 				</form>
 			</div>

@@ -22,7 +22,7 @@
         ?>
 	</head>
 	<body>
-		<div id="wrapper">
+		<div id="wrapper" class="<?php echo $controller->_get->check('controller') && $controller->_get->toString('controller') == 'pjAdminTracking' ? 'wrapper-tracking' : '';?>">
 			<?php require dirname(__FILE__) . '/elements/menu-left.php'; ?>
 			<div id="page-wrapper" class="gray-bg dashbard-1">
     			<?php

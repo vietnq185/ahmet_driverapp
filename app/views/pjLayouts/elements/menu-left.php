@@ -78,7 +78,7 @@ $hasAccessScriptOptionsNotifications    = pjAuth::factory('pjAdminOptions', 'pjA
     </li>
 <?php endif; ?>
 
-<?php if ($hasAccessScriptLiveTrackingIndex && false): ?>
+<?php if ($hasAccessScriptLiveTrackingIndex): ?>
     <li<?php echo $isScriptLiveTrackingIndex ? ' class="active"' : NULL; ?>>
         <a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminTracking&amp;action=pjActionIndex"><i class="fa fa-map-marker"></i> <span class="nav-label"><?php __('menuLiveTracking');?></span></a>
     </li>
