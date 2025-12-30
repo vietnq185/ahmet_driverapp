@@ -6,6 +6,9 @@ if (isset($tpl['arr']) && $tpl['arr']) {
     $allow_tracking_from = $start_time - (15 * 60);; //before 15 minutes
     $end_tracking_at = $end_time + (15 * 60);; //after 15 minutes
     ?>
+    <?php if ((isset($tpl['arr']['vehicle_data']) && $tpl['arr']['vehicle_data'] && time() >= $allow_tracking_from && time() < $end_tracking_at) || time() < $allow_tracking_from) { ?>
+    	<input type="hidden" name="vehicle_id_from_api" id="vehicle_id_from_api" value="<?php echo $tpl['arr']['vehicle_data']['_id'];?>" />
+    <?php } ?>
 	<?php if (isset($tpl['arr']['vehicle_data']) && $tpl['arr']['vehicle_data'] && time() >= $allow_tracking_from && time() < $end_tracking_at) { 
 	    $in_trip = time() >= $start_time && time() < $end_time ? true : false;
 	    ?>
@@ -15,7 +18,6 @@ if (isset($tpl['arr']) && $tpl['arr']) {
 			<div><strong><?php __('front_scheduled_end_time');?>: <?php echo date($tpl['option_arr']['o_time_format'], $end_time);?></strong></div>
 			<div class="pjVehicleSpeed"></div>
 		</div><br/>
-		<input type="hidden" name="vehicle_id_from_api" id="vehicle_id_from_api" value="<?php echo $tpl['arr']['vehicle_data']['_id'];?>" />
         <div id="main-container">
             <div id="map-panel">
                 <div id="map-tracking"></div>
