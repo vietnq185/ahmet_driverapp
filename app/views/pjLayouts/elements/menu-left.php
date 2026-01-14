@@ -15,6 +15,18 @@ $isScriptLiveTrackingIndex = $isScriptLiveTrackingController && in_array($action
 // Vehicles
 $isScriptVehicles = in_array($controller_name, array('pjAdminVehicles'));
 
+// Vehicles Maintrance
+$isScriptVehiclesMaintrance = in_array($controller_name, array('pjAdminVehiclesMaintrance'));
+
+// Vehicles Maintrance Service Types
+$isScriptVehicleMaintranceServiceTypes = in_array($controller_name, array('pjAdminVehicleMaintranceServiceTypes'));
+
+// Vehicles Maintrance Attribute Types
+$isScriptVehicleMaintranceAttributeTypes = in_array($controller_name, array('pjAdminVehicleMaintranceAttributeTypes'));
+
+// Vehicles Maintrance Report
+$isScriptVehicleMaintranceReport = in_array($controller_name, array('pjAdminVehicleMaintranceReport'));
+
 // Drivers
 $isScriptDrivers = in_array($controller_name, array('pjAdminDrivers'));
 
@@ -46,6 +58,18 @@ $hasAccessScriptLiveTrackingIndex       = pjAuth::factory('pjAdminTracking', 'pj
 
 // Permissions - Vehicles
 $hasAccessScriptVehicles          = pjAuth::factory('pjAdminVehicles')->hasAccess();
+
+// Permissions - Vehicles Maintrance
+$hasAccessScriptVehiclesMaintrance          = pjAuth::factory('pjAdminVehiclesMaintrance')->hasAccess();
+
+// Permissions - Vehicles Maintrance Service Types
+$hasAccessScriptVehicleMaintranceServiceTypes          = pjAuth::factory('pjAdminVehicleMaintranceServiceTypes')->hasAccess();
+
+// Permissions - Vehicles Maintrance Atribute Types
+$hasAccessScriptVehicleMaintranceAtributeTypes          = pjAuth::factory('pjAdminVehicleMaintranceAttributeTypes')->hasAccess();
+
+// Permissions - Vehicles Maintrance Report
+$hasAccessScriptVehicleMaintranceReport          = pjAuth::factory('pjAdminVehicleMaintranceReport')->hasAccess();
 
 // Permissions - Drivers
 $hasAccessScriptDrivers = pjAuth::factory('pjAdminDrivers')->hasAccess();
@@ -87,6 +111,26 @@ $hasAccessScriptOptionsNotifications    = pjAuth::factory('pjAdminOptions', 'pjA
 <?php if ($hasAccessScriptVehicles): ?>
     <li<?php echo $isScriptVehicles ? ' class="active"' : NULL; ?>>
         <a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminVehicles&amp;action=pjActionIndex"><i class="fa fa-car"></i> <span class="nav-label"><?php __('menuVehicles');?></span></a>
+    </li>
+<?php endif; ?>
+
+<?php if ($hasAccessScriptVehiclesMaintrance || $hasAccessScriptVehicleMaintranceServiceTypes || $hasAccessScriptVehicleMaintranceAtributeTypes || $hasAccessScriptVehicleMaintranceReport): ?>
+    <li<?php echo $isScriptVehiclesMaintrance || $isScriptVehicleMaintranceServiceTypes || $isScriptVehicleMaintranceAttributeTypes || $isScriptVehicleMaintranceReport ? ' class="active"' : NULL; ?>>
+        <a href="#"><i class="fa fa-wrench"></i> <span class="nav-label"><?php __('MenuVehiclesMaintraince');?></span><span class="fa arrow"></span></a>
+        <ul class="nav nav-second-level collapse">
+        	<?php if ($hasAccessScriptVehiclesMaintrance): ?>
+                <li<?php echo $isScriptVehiclesMaintrance ? ' class="active"' : NULL; ?>><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminVehiclesMaintrance&amp;action=pjActionIndex"><?php __('MenuMaintrainceVehicles');?></a></li>
+            <?php endif; ?>
+            <?php if ($hasAccessScriptVehicleMaintranceReport): ?>
+                <li<?php echo $isScriptVehicleMaintranceReport ? ' class="active"' : NULL; ?>><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminVehicleMaintranceReport&amp;action=pjActionIndex"><?php __('MenuMaintrainceReport');?></a></li>
+            <?php endif; ?>
+            <?php if ($hasAccessScriptVehicleMaintranceServiceTypes): ?>
+                <li<?php echo $isScriptVehicleMaintranceServiceTypes ? ' class="active"' : NULL; ?>><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminVehicleMaintranceServiceTypes&amp;action=pjActionIndex"><?php __('menuVehicleMaintranceServiceTypes');?></a></li>
+            <?php endif; ?>
+            <?php if ($hasAccessScriptVehicleMaintranceAtributeTypes): ?>
+                <li<?php echo $isScriptVehicleMaintranceAttributeTypes ? ' class="active"' : NULL; ?>><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminVehicleMaintranceAttributeTypes&amp;action=pjActionIndex"><?php __('menuVehicleMaintranceAttributeTypes');?></a></li>
+            <?php endif; ?>
+        </ul>
     </li>
 <?php endif; ?>
 

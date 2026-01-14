@@ -8,9 +8,13 @@
 				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format'], strtotime('+1 day'));?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_tomorrow'); ?></button>&nbsp;
 				<button class="btn btn-primary btn-outline btn-print btnLockOrder" type="button"><i class="fa fa-lock m-r-xs"></i><?php __('btnLock'); ?></button>
 				<button class="btn btn-primary btn-outline btn-print btnUnlockOrder" type="button" style="display: none;"><i class="fa fa-unlock m-r-xs"></i><?php __('btnUnlock'); ?></button>&nbsp;
-				<button class="btn btn-primary btn-outline btn-print btnAssignOrders" type="button"><i class="fa fa-car m-r-xs"></i> <?php __('btnAssignOrders'); ?></button>&nbsp;
+				<?php if ($tpl['option_arr']['o_enable_assign_unassign_orders_button'] == 'Yes') { ?>
+					<button class="btn btn-primary btn-outline btn-print btnAssignOrders" type="button"><i class="fa fa-car m-r-xs"></i> <?php __('btnAssignOrders'); ?></button>&nbsp;
+				<?php } ?>
 				<button class="btn btn-primary btn-outline btn-print assign_with_ai" type="button"><i class="fa fa-rocket m-r-xs"></i> <?php __('btnAssignWithAI'); ?></button>
-				<button class="btn btn-primary btn-outline btn-print reset_assign_with_ai" type="button"><i class="fa fa-refresh m-r-xs"></i> Unassign</button>
+				<?php if ($tpl['option_arr']['o_enable_assign_unassign_orders_button'] == 'Yes') { ?>
+					<button class="btn btn-primary btn-outline btn-print reset_assign_with_ai" type="button"><i class="fa fa-refresh m-r-xs"></i> Unassign</button>
+				<?php } ?>
 			</div>
 		</div>
 		<div class="col-lg-3 col-md-4 col-sm-3 col-xs-7">
@@ -32,7 +36,12 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-xs-12 text-right hidden-md hidden-sm hidden-xs">
+		<div class="col-sm-4 col-xs-12">
+			<button class="btn btn-primary btn-outline btnSelectMultipleOrders" type="button"><?php __('btnSelectMultipleOrders'); ?></button>
+			<span class="txtAssignOrders text-danger"></span>
+			<input type="hidden" name="selected_order_ids" id="selected_order_ids" />
+		</div>
+		<div class="col-sm-8 col-xs-12 text-right hidden-md hidden-sm hidden-xs">
 			<div class="form-group">
 				<?php 
 				$last_update = '';
@@ -79,9 +88,11 @@
 					</button>
 				</div>
 			</div>
+			<div class="pjSbScheduleRow">
 			<ol class="pjSbOrdersList pjSbOrders list-unstyled" data-vehicle_id="0">
 				
 			</ol>
+			</div>
 		</div>
 		<div class="col-lg-9 col-md-8 col-xs-12 pj-loader-outer">
 			<div class="pj-loader"></div>

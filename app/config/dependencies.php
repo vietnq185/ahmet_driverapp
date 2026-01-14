@@ -45,5 +45,6 @@ return array(
     'd3' => '>=3.5.12',
     'steps' => '>=1.1.0',
 	'awesome_bootstrap_checkbox' => '1.0.0',
+    'magnific_popup' => '1.1.0',
 );
 ?>

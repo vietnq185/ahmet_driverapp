@@ -603,5 +603,75 @@ class pjAdminOptions extends pjAdmin
 	    echo 'Data updated!';
 	    exit;
 	}
+	
+	public function pjActionUpdate11012026() {
+	    $pjAuthRolePermissionModel = pjAuthRolePermissionModel::factory();
+	    $pjAuthUserPermissionModel = pjAuthUserPermissionModel::factory();
+	    
+	    $permissions = pjAuthPermissionModel::factory()->findAll()->getDataPair('key', 'id');
+	    
+	    $user_arr = array();
+	    $u_arr = pjAuthUserModel::factory()->whereIn('t1.role_id', array(1))->findAll()->getData();
+	    if ($u_arr) {
+	        $user_ids = array();
+	        foreach ($u_arr as $val) {
+	            $user_arr[$val['role_id']][] = $val['id'];
+	            $user_ids[] = $val['id'];
+	        }
+	        $pjAuthUserPermissionModel->whereIn('user_id', $user_ids)->eraseAll();
+	    }
+	    $roles = array(1 => 'admin');
+	    foreach ($roles as $role_id => $role)
+	    {
+	        if (isset($GLOBALS['CONFIG'], $GLOBALS['CONFIG']["role_permissions_{$role}"])
+	        && is_array($GLOBALS['CONFIG']["role_permissions_{$role}"])
+	        && !empty($GLOBALS['CONFIG']["role_permissions_{$role}"]))
+	        {
+	            $pjAuthRolePermissionModel->reset()->where('role_id', $role_id)->eraseAll();
+	            
+	            foreach ($GLOBALS['CONFIG']["role_permissions_{$role}"] as $role_permission)
+	            {
+	                if($role_permission == '*')
+	                {
+	                    // Grant full permissions for the role
+	                    foreach($permissions as $key => $permission_id)
+	                    {
+	                        $pjAuthRolePermissionModel->setAttributes(compact('role_id', 'permission_id'))->insert();
+	                        if (isset($user_arr[$role_id])) {
+	                            foreach ($user_arr[$role_id] as $user_id) {
+	                                $pjAuthUserPermissionModel->reset()->setAttributes(array('user_id' => $user_id, 'permission_id' => $permission_id))->insert();
+	                            }
+	                        }
+	                    }
+	                    break;
+	                }
+	                else
+	                {
+	                    $hasAsterix = strpos($role_permission, '*') !== false;
+	                    if($hasAsterix)
+	                    {
+	                        $role_permission = str_replace('*', '', $role_permission);
+	                    }
+	                    
+	                    foreach($permissions as $key => $permission_id)
+	                    {
+	                        if($role_permission == $key || ($hasAsterix && strpos($key, $role_permission) !== false))
+	                        {
+	                            $pjAuthRolePermissionModel->setAttributes(compact('role_id', 'permission_id'))->insert();
+	                            if (isset($user_arr[$role_id])) {
+	                                foreach ($user_arr[$role_id] as $user_id) {
+	                                    $pjAuthUserPermissionModel->reset()->setAttributes(array('user_id' => $user_id, 'permission_id' => $permission_id))->insert();
+	                                }
+	                            }
+	                        }
+	                    }
+	                }
+	            }
+	        }
+	    }
+	    
+	    echo 'Data updated!';
+	    exit;
+	}
 }
 ?>

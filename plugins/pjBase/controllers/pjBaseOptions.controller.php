@@ -11,7 +11,10 @@ class pjBaseOptions extends pjBase
 		if (self::isPost())
 		{
 			$pjBaseOptionModel = new pjBaseOptionModel();
-			
+			$pjBaseOptionModel
+			->where('foreign_id', $this->getForeignId())
+			->where('type', 'bool')
+			->modifyAll(array('value' => '1|0::0'));
 			foreach ($this->_post->raw() as $key => $value)
 			{
 				if (preg_match('/value-(string|text|int|float|enum|bool|color)-(.*)/', $key) === 1)

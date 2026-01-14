@@ -17,6 +17,7 @@ var jQuery = jQuery || $.noConflict();
 			$adjustment,
 			$grid_orders,
 			$filterTimer = null, 
+			$filterTimerTracking = null, 
 			$delayTime = 10000,
 			$currentlyTrackingId = null;
 		
@@ -643,7 +644,7 @@ var jQuery = jQuery || $.noConflict();
 	                allowClear: true
 	            });
 	        }
-			$("ol.pjSbOrders").sortable({
+			/*$("ol.pjSbOrders").sortable({
 			    group: 'pjSbOrders',
 			    pullPlaceholder: false,
 			    onDrop: function($item, container, _super) {
@@ -662,8 +663,9 @@ var jQuery = jQuery || $.noConflict();
 			        
 			        var $vehicle_id = $item.closest('.pjSbOrders').attr('data-vehicle_id'),
 			        	$vehicle_order = $item.closest('.pjSbOrders').attr('data-vehicle_order'),
-			        	$booking_id = $item.attr('data-booking_id');
-			        $.post("index.php?controller=pjAdminSchedule&action=pjActionUpdateBooking", {type: 'assign_vehicle', vehicle_id: $vehicle_id, vehicle_order: $vehicle_order, booking_id: $booking_id}).done(function (data) {
+			        	$booking_id = $item.attr('data-booking_id'),
+			        	$selected_order_ids = $('#selected_order_ids').val();
+			        $.post("index.php?controller=pjAdminSchedule&action=pjActionUpdateBooking", {type: 'assign_vehicle', vehicle_id: $vehicle_id, vehicle_order: $vehicle_order, booking_id: $booking_id, selected_order_ids: $selected_order_ids}).done(function (data) {
 						//getSchedule($('.pjSbScheduleForm'));
 					});
 			    },
@@ -682,7 +684,87 @@ var jQuery = jQuery || $.noConflict();
 			            top: position.top - $adjustment.top
 			        });
 			    }
+			});*/
+			
+			
+			$("ol.pjSbOrders").sortable({
+			    group: 'pjSbOrders',
+			    pullPlaceholder: false,
+			    containerPath: 'body', 
+			    onDragStart: function($item, container, _super) {
+			        var offset = $item.offset(),
+			            pointer = container.rootGroup.pointer;
+
+			        $adjustment = {
+			            left: pointer.left - offset.left,
+			            top: pointer.top - offset.top
+			        };
+
+			        $item.addClass('dragging');
+
+			        if ($item.hasClass('selected')) {
+			            var count = $('.pjSbOrder.selected').length;
+			            if (count > 1) {
+			                $item.addClass('dragging-multiple');
+			            }
+			        }
+
+			        _super($item, container);
+			    },
+			    onDrop: function($item, container, _super) {
+			        $item.removeClass('dragging dragging-multiple');
+			        
+			        var $clonedItem = $('<li/>').css({ height: 0 });
+			        $item.before($clonedItem);
+			        $clonedItem.animate({ 'height': $item.height() });
+
+			        $item.animate($clonedItem.position(), function() {
+			            $clonedItem.detach();
+			            _super($item, container);
+
+			            var $targetContainer = $item.closest('ol.pjSbOrders');
+			            var vehicle_id = $targetContainer.attr('data-vehicle_id');
+			            var vehicle_order = $targetContainer.attr('data-vehicle_order');
+			            
+			            // 1. Lấy tất cả các item đang được chọn theo đúng thứ tự trên DOM
+			            var $selectedItems = $('.pjSbOrder.selected');
+			            var booking_ids = [];
+
+			            if ($selectedItems.length > 0 && $item.hasClass('selected')) {
+			                // Duyệt qua tập hợp đã chọn để lấy ID
+			                $selectedItems.each(function() {
+			                    booking_ids.push($(this).attr('data-booking_id'));
+			                });
+
+			                // 2. QUAN TRỌNG: Di chuyển toàn bộ nhóm được chọn vào container mới
+			                // Thao tác này giữ nguyên thứ tự của các box như khi chúng hiển thị
+			                $targetContainer.append($selectedItems); 
+			            } else {
+			                // Nếu chỉ kéo 1 item không được chọn trước đó
+			                booking_ids.push($item.attr('data-booking_id'));
+			            }
+
+			            // 3. Gửi AJAX với mảng ID đã giữ đúng thứ tự
+			            $.post("index.php?controller=pjAdminSchedule&action=pjActionUpdateBooking", {
+			                type: 'assign_vehicle', 
+			                vehicle_id: vehicle_id, 
+			                vehicle_order: vehicle_order, 
+			                booking_ids: booking_ids 
+			            }).done(function (data) {
+			                // Bỏ highlight sau khi hoàn tất
+			                $('.pjSbOrder').removeClass('selected');
+			                $('.txtAssignOrders').html('');
+			            });
+			        });
+			    },
+			    onDrag: function($item, position) {
+			        $item.css({
+			            left: position.left - $adjustment.left,
+			            top: position.top - $adjustment.top
+			        });
+			    }
 			});
+
 		}
 		
 		$(document).ready(function() {
@@ -717,6 +799,87 @@ var jQuery = jQuery || $.noConflict();
 					});
 				});
 			}
+			
+			var isMultipleMode = false;
+
+		    // 1. Theo dõi phím Ctrl để thay đổi con trỏ chuột
+		    $(document).on('keydown keyup', function(e) {
+		        if (e.ctrlKey || e.metaKey) {
+		            $('body').addClass('ctrl-down');
+		        } else {
+		            $('body').removeClass('ctrl-down');
+		        }
+		    });
+
+		    // 2. Click nút "Select multiple orders"
+		    $(document).on('click', '.btnSelectMultipleOrders', function(e) {
+		        e.preventDefault();
+		        isMultipleMode = !isMultipleMode; // Đảo trạng thái
+
+		        $('#selected_order_ids').val('');
+		        $('.txtAssignOrders').html('');
+		        if (isMultipleMode) {
+		            $(this).addClass('active')
+		                   .html('<i class="fa fa-check-square-o"></i> Mode: Ctrl + Click to select');
+		            $('body').addClass('multiple-mode-active');
+		        } else {
+		            $(this).removeClass('active')
+		                   .html('Select multiple orders');
+		            $('body').removeClass('multiple-mode-active');
+		            
+		            // Tùy chọn: Bỏ chọn tất cả khi tắt chế độ
+		            $('li.pjSbOrder').removeClass('selected');
+		        }
+		    });
+
+		    // 3. Xử lý click chọn đơn hàng (li.pjSbOrder)
+		    $(document).on('click', 'li.pjSbOrder', function(e) {
+		        // Chỉ xử lý nếu chế độ Select Multiple đang bật
+		        if (!isMultipleMode) return;
+
+		        var $this = $(this);
+
+		        if (e.ctrlKey || e.metaKey) {
+		            // NẾU GIỮ CTRL: Đảo ngược trạng thái (Toggle)
+		            // Nếu đã chọn rồi thì bỏ chọn, chưa chọn thì chọn
+		            $this.toggleClass('selected');
+		        } else {
+		            // NẾU KHÔNG GIỮ CTRL:
+		            if ($this.hasClass('selected')) {
+		                // Nếu click vào chính cái đang chọn -> Bỏ chọn nó
+		                $this.removeClass('selected');
+		            } else {
+		                // Click vào cái mới -> Chỉ chọn duy nhất cái đó
+		                $('li.pjSbOrder').removeClass('selected');
+		                $this.addClass('selected');
+		            }
+		        }
+
+		        updateSelectionSummary();
+		    });
+
+		    // Hàm lấy danh sách ID và cập nhật giao diện
+		    function updateSelectionSummary() {
+		        var selectedOrders = $('li.pjSbOrder.selected');
+		        var count = selectedOrders.length;
+		        var selectedIds = [];
+
+		        selectedOrders.each(function() {
+		            // Lấy ID từ data-booking_id sẵn có trong HTML của bạn
+		            selectedIds.push($(this).attr('data-booking_id'));
+		        });
+
+		        console.log("Selected Booking IDs:", selectedIds);
+		        $('#selected_order_ids').val(selectedIds.join('|'));
+		        
+		        // Bạn có thể hiển thị số lượng này lên các nút Assign/Unassign
+		        if (count > 0) {
+		            $('.txtAssignOrders').html('Selected (' + count + ')');
+		        } else {
+		            $('.txtAssignOrders').html('');
+		        }
+		    }
+		    
 		});
 		
 		if ($frmSyncData.length > 0 && validate) {
@@ -779,8 +942,8 @@ var jQuery = jQuery || $.noConflict();
 				if (e && e.preventDefault) {
 					e.preventDefault();
 				}
-				if ($filterTimer !== null) {
-        	        clearTimeout($filterTimer);
+				if ($filterTimerTracking !== null) {
+        	        clearTimeout($filterTimerTracking);
         	    }
 				var $vehicle_id = $(this).attr('data-id');
 				$currentlyTrackingId = $vehicle_id;
@@ -870,8 +1033,8 @@ var jQuery = jQuery || $.noConflict();
 		            popupAnchor: [0, -34] 
 		        });
 			}).on('hidden.bs.modal', function (e) {
-				if ($filterTimer !== null) {
-        	        clearTimeout($filterTimer);
+				if ($filterTimerTracking !== null) {
+        	        clearTimeout($filterTimerTracking);
         	    }
 				if (map !== null) {
 			        // Hủy bỏ (Destroy) bản đồ hiện tại
@@ -1020,7 +1183,7 @@ var jQuery = jQuery || $.noConflict();
 	            });
 	        	
 	        	// TỰ ĐỘNG CẬP NHẬT (LIVE TRACKING): Cứ sau 15 giây sẽ tải lại dữ liệu
-	        	$filterTimer = setTimeout(function() {
+	        	$filterTimerTracking = setTimeout(function() {
 	        		loadVehicle($vehicle_id);
 	            }, $delayTime);
 	        }
@@ -1050,7 +1213,7 @@ var jQuery = jQuery || $.noConflict();
 	            }, $delayTime);
 	        }
 	        
-	        checkVehiclesStatus();
+	        //checkVehiclesStatus();
 			
 			if ($(".select-vehicle").length) {
 	            $(".select-vehicle").select2({

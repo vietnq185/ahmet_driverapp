@@ -273,8 +273,12 @@ class pjAdminSchedule extends pjAdmin
                         if($this->_post->toInt('vehicle_id') > 0){
                             $is_manual = 1;
                         }
-                        //pjBookingModel::factory()->set('id', $this->_post->toInt('booking_id'))->modify(array('vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
-                        pjBookingModel::factory()->set('id', $this->_post->toInt('booking_id'))->modify(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
+                        
+                        if ($booking_ids = $this->_post->toArray('booking_ids')) {
+                            pjBookingModel::factory()->whereIn('id', $booking_ids)->modifyAll(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
+                        } else {
+                            pjBookingModel::factory()->set('id', $this->_post->toInt('booking_id'))->modify(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
+                        }
                         pjAppController::jsonResponse(array('status' => 'OK'));
                         break;
                     case 'assign_driver':
