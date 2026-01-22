@@ -1460,5 +1460,13 @@ class pjAdminSchedule extends pjAdmin
         echo json_encode($data);
         exit;
     }
+    
+    public function testBookings(){
+        $arr = pjBookingModel::factory()->whereIn('t1.status', array('in_progress','pending'))->findAll()->getData();
+        echo "<pre>";
+        print_r($arr);
+        echo "</pre>";
+        exxit;
+    }
 }
 ?>
