@@ -1461,6 +1461,40 @@ class pjAdminSchedule extends pjAdmin
         exit;
     }
     
+    public function pjActionCheckFlights() {
+        $this->setAjax(true);
+        
+        //$listFlights = ['Ba686', 'HV6604', 'HV6833', 'HV6681', 'TB2063']; // Danh sách cần check
+        $listFlights = array();
+        $date = date('Y-m-d');
+        if ($this->_get->check('date') && $this->_get->toString('date') != '')
+        {
+            $date = pjDateTime::formatDate($this->_get->toString('date'), $this->option_arr['o_date_format']);
+        }
+        if ($this->_get->check('flight_number') && $this->_get->toString('flight_number') != '') {
+            $listFlights[] = $this->_get->toString('flight_number');
+        } else {
+            $pjBookingModel = pjBookingModel::factory()
+            ->where('t1.location_id!="" AND ((t1.dropoff_type="server" AND t1.dropoff_id!="") OR (t1.dropoff_type="google" AND t1.dropoff_place_id!=""))')
+            ->where('(t1.pickup_is_airport=1 OR t1.dropoff_is_airport=1) AND (t1.c_flight_number!="" OR t1.c_departure_flight_number="")');
+            $pjBookingModel->where("(DATE_FORMAT(t1.booking_date, '%Y-%m-%d')='$date')");
+            $booking_arr = $pjBookingModel->findAll()->getData();
+           
+            foreach ($booking_arr as $booking) {
+                if (!empty($booking['c_flight_number'])) {
+                    $listFlights[] = $booking['c_flight_number'];
+                }
+                if (!empty($booking['c_departure_flight_number'])) {
+                    $listFlights[] = $booking['c_departure_flight_number'];
+                }
+            }
+            $listFlights = array_unique($listFlights);
+        }
+        $targetDate = $date;
+        $arr = pjAppController::getMultipleFlights($listFlights, $targetDate, $this->option_arr);
+        $this->set('arr', $arr);
+    }
+    
     public function testBookings(){
         $arr = pjBookingModel::factory()->whereIn('t1.status', array('in_progress','pending'))->findAll()->getData();
         echo "<pre>";

@@ -198,6 +198,23 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
             </div><!-- /.form-group -->
         </div>
     </div>
+    
+    <div class="modal inmodal fade" id="modalCheckFlights" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog modal-lg">
+	        <div class="modal-content">
+	        	<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"><?php __('lblFlightInformation');?></h4>
+                  </div>
+                  <div class="modal-body">
+                  
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php __('btnClose');?></button>
+                  </div>
+	        </div>
+	    </div>
+	</div>
                 
 	<div id="popupMessage" style="display: none;"><?php echo isset($tpl['popup_message']) ? implode('<br/>', $tpl['popup_message']) : '';?></div>
 	<script type="text/javascript">
@@ -235,4 +252,6 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	myLabel.btn_no = "<?php __('btnNo');?>";
 
 	myLabel.install_url = "<?php echo PJ_INSTALL_URL;?>";
+
+	myLabel.loading_info = "<?php __('lblLoadingFlightData');?>";
 	</script>

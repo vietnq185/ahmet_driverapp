@@ -36,12 +36,14 @@
 		</div>
 	</div>
 	<div class="row">
-		<div class="col-sm-4 col-xs-12">
+		<div class="col-sm-6 col-xs-12">
 			<button class="btn btn-primary btn-outline btnSelectMultipleOrders" type="button"><?php __('btnSelectMultipleOrders'); ?></button>
 			<span class="txtAssignOrders text-danger"></span>
 			<input type="hidden" name="selected_order_ids" id="selected_order_ids" />
+			
+			<button class="btn btn-primary btn-outline btnCheckFlights" type="button"><?php __('btnCheckFlights'); ?></button>
 		</div>
-		<div class="col-sm-8 col-xs-12 text-right hidden-md hidden-sm hidden-xs">
+		<div class="col-sm-6 col-xs-12 text-right hidden-md hidden-sm hidden-xs">
 			<div class="form-group">
 				<?php 
 				$last_update = '';

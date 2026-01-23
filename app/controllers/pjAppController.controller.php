@@ -363,6 +363,47 @@ class pjAppController extends pjBaseAppController
         return $randomString;
     }
     
+    public static function getMultipleFlights($flightNumbers, $date, $option_arr) {
+        $baseUrl = "https://aerodatabox.p.rapidapi.com/flights/number/";
+        $apiKey = $option_arr['o_rapidapi_key'];
+        
+        $results = [];
+        foreach ($flightNumbers as $flight) {
+            $url = $baseUrl . $flight . "/" . $date;
+            
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    "X-RapidAPI-Host: aerodatabox.p.rapidapi.com",
+                    "X-RapidAPI-Key: " . $apiKey
+                ],
+                CURLOPT_TIMEOUT => 10
+            ]);
+            
+            $response = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+            
+            // Nếu bị Rate Limit (429), thử lại 1 lần sau khi nghỉ
+            if ($httpCode == 429) {
+                sleep(1); // Nghỉ 1 giây
+                $ch = curl_init($url); // Thử lại
+                // ... (thiết lập tương tự bên trên)
+                $response = curl_exec($ch);
+                curl_close($ch);
+            }
+            
+            $results[$flight] = json_decode($response, true);
+            
+            // QUAN TRỌNG: Nghỉ 1.1 giây để không vượt quá giới hạn "1 request per second"
+            // usleep nhận micro-seconds (1,000,000 = 1 giây)
+            usleep(1000000);
+        }
+        
+        return $results;
+    }
+    
     public static function scheduleByAILog($content, $save=false, $filename=null)
     {
         if ($save) { 

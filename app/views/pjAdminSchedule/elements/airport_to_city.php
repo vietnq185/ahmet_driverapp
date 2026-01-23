@@ -51,7 +51,7 @@ if (!empty($tpl['arr']['prev_passengers']) && $tpl['arr']['prev_passengers'] != 
 				<p><?php __('lblAirlineName');?>: <?php echo pjSanitize::html($tpl['arr']['c_airline_company']);?></p>
 			<?php } ?>
 			<?php if (!empty($tpl['arr']['c_flight_number'])) { ?>
-				<p><a class="btn btn-primary btn-block" href="https://www.google.at/search?q=<?php echo pjSanitize::html($tpl['arr']['c_flight_number']);?>" target="_blank"><?php __('Check Flight');?>Check Flight</a></p>
+				<p><a class="btn btn-primary btn-block btnCheckFlights" href="javascript:void(0);" data-flight_number="<?php echo pjSanitize::html($tpl['arr']['c_flight_number']);?>" target="_blank"><?php __('Check Flight');?>Check Flight</a></p>
 			<?php } ?>
 		</div>
 		<br class="pjSbClearBoth"/>

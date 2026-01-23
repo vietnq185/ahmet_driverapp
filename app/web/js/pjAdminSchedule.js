@@ -13,6 +13,7 @@ var jQuery = jQuery || $.noConflict();
 			$modalWhatsappSms = $("#modalWhatsappSms"),
 			$modalAddNotesForDriver = $("#modalAddNotesForDriver"),
 			$modalChangePickupTime = $("#modalChangePickupTime"),
+			$modalCheckFlights = $("#modalCheckFlights"),
 			$frmSyncData = $("#frmSyncData"),
 			$adjustment,
 			$grid_orders,
@@ -603,7 +604,34 @@ var jQuery = jQuery || $.noConflict();
 		}).on("click", "img.captcha", function () {
         	var $this = $(this);
 			$this.attr("src", $this.attr("src").replace(/(&?rand=)\d+/, "$1" + Math.ceil(Math.random() * 999999)));
-        });
+        }).on("click", ".btnCheckFlights", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			var $flight_number = $(this).attr('data-flight_number');
+			var loadingHtml = `
+		        <div class="text-center p-5">
+		            <div class="spinner-border text-primary" role="status">
+		                <span class="sr-only">Loading...</span>
+		            </div>
+		            <p class="mt-2">${myLabel.loading_info}</p>
+		        </div>`;
+		    
+		    $modalCheckFlights.find(".modal-body").html(loadingHtml);
+		    $modalCheckFlights.data('flight_number', $flight_number).modal('show');
+		});
+
+		$modalCheckFlights.on('shown.bs.modal', function(){
+			var $this = $(this),
+				$form = $('.pjSbScheduleForm'),
+				$date = $form.find('input[name="date"]').val();
+			$.get("index.php?controller=pjAdminSchedule&action=pjActionCheckFlights", {
+				"date": $date,
+				"flight_number": $modalCheckFlights.data('flight_number')
+			}).done(function (data) {
+				$modalCheckFlights.find(".modal-body").html(data);
+			});
+		});
 		
 		$("#modalAddNotesForDriver").on('hide.bs.modal', function(){
 			var $form = $modalAddNotesForDriver.find("form"),

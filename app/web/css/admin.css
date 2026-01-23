@@ -1067,6 +1067,44 @@ li.pjSbOrder.dragging-multiple::after {
     z-index: 10000;
 }
 
+#modalCheckFlights .modal-body{
+	font-size: 18px;
+}
+#modalCheckFlights .flight-card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 0 20px rgba(0,0,0,0.08);
+	font-size: 18px;
+}
+#modalCheckFlights .flight-card .table thead th {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 15px;
+}
+#modalCheckFlights .flight-card .table tbody td {
+	padding: 15px;
+}
+#modalCheckFlights .flight-card .text-flight { font-weight: 800; color: #1a202c; }
+#modalCheckFlights .flight-card .text-airline { color: #a0aec0; }
+#modalCheckFlights .flight-card .badge-status { padding: 6px 12px; border-radius: 6px; font-weight: 600; }
+#modalCheckFlights .flight-card .delay-tag { font-weight: 700; color: #e53e3e; }
+#modalCheckFlights .flight-card .time-main { font-weight: 700; color: #2d3748; }
+#modalCheckFlights .flight-card .time-strikethrough { text-decoration: line-through; color: #e53e3e; }
+
+#modalCheckFlights .flight-card .fa-double-check {
+    position: relative;
+    display: inline-block;
+}
+#modalCheckFlights .flight-card .fa-double-check .fa-first {
+    position: relative;
+}
+#modalCheckFlights .flight-card .fa-double-check .fa-second {
+    position: absolute;
+	left: 0px;
+  	top: -2px;
+}
 
 /* 1. Định nghĩa hiệu ứng hiện dần (Fade In) */
 @keyframes smoothFadeIn {
