@@ -569,7 +569,8 @@ var jQuery = jQuery || $.noConflict();
 				$text = $form.find('textarea[name="message"]').val();
 				$.post("index.php?controller=pjAdminSchedule&action=pjActionWhatsAppMessages", $form.serialize()).done(function (data) {
 					$modalWhatsappSms.modal('hide');
-					var $href = 'https://wa.me/'+$c_phone+'?text='+$text;
+					var $encodedText = encodeURIComponent($text);
+					var $href = 'https://wa.me/'+$c_phone+'?text='+$encodedText;
 					window.open($href, '_blank');
 				});
 			}
@@ -609,28 +610,53 @@ var jQuery = jQuery || $.noConflict();
 				e.preventDefault();
 			}
 			var $flight_number = $(this).attr('data-flight_number');
-			var loadingHtml = `
-		        <div class="text-center p-5">
-		            <div class="spinner-border text-primary" role="status">
-		                <span class="sr-only">Loading...</span>
-		            </div>
-		            <p class="mt-2">${myLabel.loading_info}</p>
-		        </div>`;
-		    
-		    $modalCheckFlights.find(".modal-body").html(loadingHtml);
 		    $modalCheckFlights.data('flight_number', $flight_number).modal('show');
+		    
+			
 		});
 
 		$modalCheckFlights.on('shown.bs.modal', function(){
 			var $this = $(this),
 				$form = $('.pjSbScheduleForm'),
-				$date = $form.find('input[name="date"]').val();
-			$.get("index.php?controller=pjAdminSchedule&action=pjActionCheckFlights", {
-				"date": $date,
-				"flight_number": $modalCheckFlights.data('flight_number')
-			}).done(function (data) {
-				$modalCheckFlights.find(".modal-body").html(data);
-			});
+				$date = $form.find('input[name="date"]').val(),
+				$flight_number = $modalCheckFlights.data('flight_number');
+			if ($flight_number != '') {
+				$('.trLoadingData').show();
+				$.get("index.php?controller=pjAdminSchedule&action=pjActionCheckFlights", {
+					"date": $date,
+					"flight_number": $flight_number
+				}).done(function (data) {
+					$('.trLoadingData').before(data);
+					$('.trLoadingData').hide();
+				});
+			} else {
+				$.get("index.php?controller=pjAdminSchedule&action=getFlightNumbers", {
+					"date": $date
+				}).done(function (flightData) {
+					var length = Object.keys(flightData).length;
+					if (length > 0) {
+						$('.trLoadingData').show();
+						var $cnt = 0;
+			            $.each(flightData, function(i, item) {
+			            	setTimeout(function() {
+				            	$.get("index.php?controller=pjAdminSchedule&action=pjActionCheckFlights", {
+									"date": $date,
+									"flight_number": item
+								}).done(function (data) {
+									$('.trLoadingData').before(data);
+								}).always(function () {
+						            $cnt = $cnt + 1;
+						            if ($cnt == length) {
+						                $('.trLoadingData').hide();
+						            }
+						        });
+			            	}, i * 1700);
+			            });
+			        }
+				});
+			}
+		}).on('hide.bs.modal', function(){
+			$modalCheckFlights.find('.trFlightInfo').remove();
 		});
 		
 		$("#modalAddNotesForDriver").on('hide.bs.modal', function(){

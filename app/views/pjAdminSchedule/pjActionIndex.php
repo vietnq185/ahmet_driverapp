@@ -207,7 +207,24 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
                     <h4 class="modal-title" id="myModalLabel"><?php __('lblFlightInformation');?></h4>
                   </div>
                   <div class="modal-body">
-                  
+                  	<div class="card flight-card">
+                        <div class="flightsContainer">
+                            <table class="table table-hover align-middle mb-0 tblflights">
+                                <thead>
+                                    <tr>
+                                        <th class="ps-4"><?php __('lblFlightAirline');?></th>
+                                        <th><?php __('lblFlightTrackDeparture')?></th>
+                                        <th><?php __('lblFlightTrackArrival');?></th>
+                                        <th><?php __('lblFlightStatus');?></th>
+                                        <th class="text-center"><?php __('lblFlightRemarks');?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="trLoadingData" style="display: none;"><td colspan="5" align="center"><?php __('lblLoadingFlightData');?></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                   </div>
                   <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal"><?php __('btnClose');?></button>

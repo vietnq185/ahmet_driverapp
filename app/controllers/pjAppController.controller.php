@@ -366,16 +366,16 @@ class pjAppController extends pjBaseAppController
     public static function getMultipleFlights($flightNumbers, $date, $option_arr) {
         $baseUrl = "https://aerodatabox.p.rapidapi.com/flights/number/";
         $apiKey = $option_arr['o_rapidapi_key'];
+        $apiHost = $option_arr['o_rapidapi_host'];
         
         $results = [];
         foreach ($flightNumbers as $flight) {
             $url = $baseUrl . $flight . "/" . $date;
-            
             $ch = curl_init($url);
             curl_setopt_array($ch, [
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HTTPHEADER => [
-                    "X-RapidAPI-Host: aerodatabox.p.rapidapi.com",
+                    "X-RapidAPI-Host: ".$apiHost,
                     "X-RapidAPI-Key: " . $apiKey
                 ],
                 CURLOPT_TIMEOUT => 10
@@ -393,12 +393,14 @@ class pjAppController extends pjBaseAppController
                 $response = curl_exec($ch);
                 curl_close($ch);
             }
-            
+            if ($httpCode !== 200) {
+                continue; // Bỏ qua chuyến bay này và chạy tiếp
+            }
             $results[$flight] = json_decode($response, true);
             
             // QUAN TRỌNG: Nghỉ 1.1 giây để không vượt quá giới hạn "1 request per second"
-            // usleep nhận micro-seconds (1,000,000 = 1 giây)
-            usleep(1000000);
+            // usleep nhận micro-seconds (1,100,000 = 1.1 giây)
+            usleep(1100000);
         }
         
         return $results;

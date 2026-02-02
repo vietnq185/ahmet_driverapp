@@ -2,6 +2,17 @@
 START TRANSACTION;
 
 
+
+INSERT INTO `plugin_base_options` (`foreign_id`, `key`, `tab_id`, `value`, `label`, `type`, `order`, `is_visible`, `style`) VALUES
+(1, 'o_rapidapi_host', 1, '', '', 'string', 20, 1, NULL);
+
+
+INSERT INTO `fields` VALUES (NULL, 'plugin_base_opt_o_rapidapi_host', 'backend', 'Options / Rapid API Host', 'script', NULL);
+SET @id := (SELECT LAST_INSERT_ID());
+INSERT INTO `multi_lang` VALUES (NULL, @id, 'pjField', '::LOCALE::', 'title', 'Rapid API Host', 'script');
+
+
+
 INSERT INTO `plugin_base_options` (`foreign_id`, `key`, `tab_id`, `value`, `label`, `type`, `order`, `is_visible`, `style`) VALUES
 (1, 'o_rapidapi_key', 1, '', '', 'string', 19, 1, NULL);
 

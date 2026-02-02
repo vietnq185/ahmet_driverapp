@@ -3,8 +3,8 @@ $front_tracking_statuses = __('front_tracking_statuses', true);
 if (isset($tpl['arr']) && $tpl['arr']) { 
     $start_time = strtotime($tpl['arr']['booking_date']);
     $end_time = strtotime($tpl['arr']['booking_date']) + ($tpl['arr']['duration']*60);
-    $allow_tracking_from = $start_time - (15 * 60);; //before 15 minutes
-    $end_tracking_at = $end_time + (15 * 60);; //after 15 minutes
+    $allow_tracking_from = $start_time - (2 * 60 * 60); //before 15 minutes
+    $end_tracking_at = $end_time + (2 * 60 * 60); //after 15 minutes
     ?>
     <?php if ((isset($tpl['arr']['vehicle_data']) && $tpl['arr']['vehicle_data'] && time() >= $allow_tracking_from && time() < $end_tracking_at) || time() < $allow_tracking_from) { ?>
     	<input type="hidden" name="vehicle_id_from_api" id="vehicle_id_from_api" value="<?php echo $tpl['arr']['vehicle_data']['_id'];?>" />

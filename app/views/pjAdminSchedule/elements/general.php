@@ -41,7 +41,7 @@
 			<span class="txtAssignOrders text-danger"></span>
 			<input type="hidden" name="selected_order_ids" id="selected_order_ids" />
 			
-			<button class="btn btn-primary btn-outline btnCheckFlights" type="button"><?php __('btnCheckFlights'); ?></button>
+			<button class="btn btn-primary btn-outline btnCheckFlights" data-flight_number="" type="button"><?php __('btnCheckFlights'); ?></button>
 		</div>
 		<div class="col-sm-6 col-xs-12 text-right hidden-md hidden-sm hidden-xs">
 			<div class="form-group">
