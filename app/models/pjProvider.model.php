@@ -30,6 +30,10 @@ class pjProviderModel extends pjAppModel
 		array('name' => 'id', 'type' => 'int', 'default' => ':NULL'),
 		array('name' => 'name', 'type' => 'varchar', 'default' => ':NULL'),
 		array('name' => 'url', 'type' => 'varchar', 'default' => ':NULL'),
+	    array('name' => 'whatsapp_name', 'type' => 'varchar', 'default' => ':NULL'),
+	    array('name' => 'whatsapp_phone_number_id', 'type' => 'varchar', 'default' => ':NULL'),
+	    array('name' => 'whatsapp_permanent_access_token', 'type' => 'varchar', 'default' => ':NULL'),
+	    array('name' => 'name_sign_logo', 'type' => 'varchar', 'default' => ':NULL'),
 		array('name' => 'status', 'type' => 'enum', 'default' => 'T')
 	);
 	

@@ -15,7 +15,8 @@ class pjAdminProviders extends pjAdmin
 			$this->sendForbidden();
 			return;
 		}
-		
+		$this->appendCss('jasny-bootstrap.min.css', PJ_THIRD_PARTY_PATH . 'jasny/');
+		$this->appendJs('jasny-bootstrap.min.js', PJ_THIRD_PARTY_PATH . 'jasny/');
 		$this->appendJs('jquery.datagrid.js', PJ_FRAMEWORK_LIBS_PATH . 'pj/js/');
 		$this->appendJs('pjAdminProviders.js');
 	}
@@ -90,6 +91,43 @@ class pjAdminProviders extends pjAdmin
 			$provider_id = pjProviderModel::factory(array_merge($post, $data))->insert()->getInsertId();
 			if ($provider_id !== false && (int) $provider_id > 0)
 			{
+			    if (isset($_FILES['name_sign_logo']))
+			    {
+			        if($_FILES['name_sign_logo']['error'] == 0)
+			        {
+			            if(getimagesize($_FILES['name_sign_logo']["tmp_name"]) != false)
+			            {
+			                $Image = new pjImage();
+			                if ($Image->getErrorCode() !== 200)
+			                {
+			                    $Image->setAllowedTypes(array('image/png', 'image/gif', 'image/jpg', 'image/jpeg', 'image/pjpeg'));
+			                    if ($Image->load($_FILES['name_sign_logo']))
+			                    {
+			                        $resp = $Image->isConvertPossible();
+			                        if ($resp['status'] === true)
+			                        {
+			                            $hash = md5(uniqid(rand(), true));
+			                            $image_path = PJ_UPLOAD_PATH . 'logos/' . $provider_id . '_' . $hash . '.' . $Image->getExtension();
+			                            
+			                            $data = array();
+			                            
+			                            $data['name_sign_logo'] = $image_path;
+			                            
+			                            $Image->loadImage($_FILES['name_sign_logo']["tmp_name"]);
+			                            $Image->saveImage($image_path);
+			                            
+			                            pjProviderModel::factory()->reset()->where('id', $provider_id)->limit(1)->modifyAll($data);
+			                        }
+			                    }
+			                }
+			            }else{
+			                //$err = 'ALY09';
+			            }
+			        }else if($_FILES['name_sign_logo']['error'] != 4){
+			            //$err = 'ALY09';
+			        }
+			    }
+			    
 				self::jsonResponse(array('status' => 'OK', 'code' => 200, 'text' => ''));
 			}
 			self::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => ''));
@@ -114,8 +152,14 @@ class pjAdminProviders extends pjAdmin
 		{
 			self::jsonResponse(array('status' => 'ERR', 'code' => 101, 'text' => 'HTTP method not allowed.'));
 		}
-		if (pjProviderModel::factory()->set('id', $this->_get->toInt('id'))->erase()->getAffectedRows() == 1)
+		$arr = pjProviderModel::factory()->find($this->_get->toInt('id'))->getData();
+		if (pjProviderModel::factory()->reset()->set('id', $this->_get->toInt('id'))->erase()->getAffectedRows() == 1)
 		{
+		    @clearstatcache();
+		    if (!empty($arr['name_sign_logo']) && is_file($arr['name_sign_logo']))
+		    {
+		        @unlink($arr['name_sign_logo']);
+		    }
 			$response = array('status' => 'OK');
 		} else {
 			$response = array('status' => 'ERR');
@@ -147,8 +191,17 @@ class pjAdminProviders extends pjAdmin
 		{
 			self::jsonResponse(array('status' => 'ERR', 'code' => 102, 'text' => 'Missing, empty or invalid data.'));
 		}
-		if (pjProviderModel::factory()->whereIn('id', $record)->eraseAll()->getAffectedRows() > 0)
+		$arr = pjProviderModel::factory()->whereIn('id', $record)->findAll()->getData();
+		if (pjProviderModel::factory()->reset()->whereIn('id', $record)->eraseAll()->getAffectedRows() > 0)
 		{
+		    @clearstatcache();
+		    foreach ($arr as $val)
+		    {
+		        if (!empty($val['name_sign_logo']) && is_file($val['name_sign_logo']))
+		        {
+		            @unlink($val['name_sign_logo']);
+		        }
+		    }
 			self::jsonResponse(array('status' => 'OK'));
 		}
 		
@@ -189,8 +242,46 @@ class pjAdminProviders extends pjAdmin
 				$provider_id = $this->_post->toInt('id');
 				$pjProviderModel->reset()->set('id', $provider_id)->modify(array_merge($this->_post->raw(), $data));
 			} else {
-				$pjProviderModel->reset()->setAttributes(array_merge($this->_post->raw(), $data))->insert();
+			    $provider_id = $pjProviderModel->reset()->setAttributes(array_merge($this->_post->raw(), $data))->insert()->getInsertId();
 			}			
+			
+			if ($provider_id !== false && (int)$provider_id > 0) {
+			    if (isset($_FILES['name_sign_logo']))
+			    {
+			        if($_FILES['name_sign_logo']['error'] == 0)
+			        {
+			            $size = getimagesize($_FILES['name_sign_logo']['tmp_name']);
+			            if($size == true)
+			            {
+			                $pjImage = new pjImage();
+			                $pjImage->setAllowedExt($this->extensions)->setAllowedTypes($this->mimeTypes);
+			                if ($pjImage->load($_FILES['name_sign_logo']))
+			                {
+			                    @clearstatcache();
+			                    if($arr && !empty($arr['name_sign_logo']))
+			                    {
+			                        @unlink(PJ_INSTALL_PATH . $arr['name_sign_logo']);
+			                    }
+			                    
+			                    $hash = md5(uniqid(rand(), true));
+			                    $image_path = PJ_UPLOAD_PATH . 'logos/' . $provider_id . '_' . $hash . '.' . $pjImage->getExtension();
+			                    $pjImage
+			                    ->loadImage()
+			                    ->saveImage($image_path);
+			                    
+			                    $data = array();
+			                    $data['name_sign_logo'] = $image_path;
+			                    $pjProviderModel->reset()->set('id', $provider_id)->modify($data);
+			                }
+			            }else{
+			                
+			            }
+			        }else if($_FILES['name_sign_logo']['error'] != 4){
+			            
+			        }
+			    }
+			}
+			
 			self::jsonResponse(array('status' => 'OK'));
 		}
 		
@@ -236,6 +327,45 @@ class pjAdminProviders extends pjAdmin
 		}
 		
 		self::jsonResponse(array('status' => 'OK', 'code' => 200));
+	}
+	
+	public function pjActionDeleteImage()
+	{
+	    $this->setAjax(true);
+	    
+	    if (!$this->isXHR())
+	    {
+	        self::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => 'Missing headers.'));
+	    }
+	    
+	    if (!self::isPost())
+	    {
+	        self::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => 'HTTP method not allowed.'));
+	    }
+	    
+	    $id = NULL;
+	    if ($this->_post->check('id') && $this->_post->toInt('id') > 0) {
+	        $id = $this->_post->toInt('id');
+	    }
+	    
+	    if (!is_null($id))
+	    {
+	        $pjProviderModel = pjProviderModel::factory();
+	        $arr = $pjProviderModel->find($id)->getData();
+	        if (!empty($arr))
+	        {
+	            $pjProviderModel->modify(array('name_sign_logo' => ':NULL'));
+	            
+	            @clearstatcache();
+	            if (!empty($arr['name_sign_logo']) && is_file($arr['name_sign_logo']))
+	            {
+	                @unlink($arr['name_sign_logo']);
+	            }
+	            
+	            self::jsonResponse(array('status' => 'OK', 'code' => 200, 'text' => ''));
+	        }
+	    }
+	    self::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => ''));
 	}
 }
 ?>

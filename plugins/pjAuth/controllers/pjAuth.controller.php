@@ -559,6 +559,10 @@ class pjAuth extends pjAuthAppController
                     return array('status' => 'ERR', 'code' => $this->checkAccountLocked($params['login_email']) ? '5' : '3');
                 }
                 $last_login = date("Y-m-d H:i:s");
+                
+                $timeout = 24 * 60 * 60; // 1 day in seconds
+                $this->session_start_timeout($timeout);
+                
                 $this->session->setData($this->defaultUser, $user);
 
                 $login_token = sha1(time());

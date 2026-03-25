@@ -117,7 +117,8 @@ google.load('visualization', '1', {packages: ['corechart', 'line']});
 			validate = ($.fn.validate !== undefined),
 			$charts = $("#charts"),
 			$frmSendSms = $("#frmSendSms"),
-			$frmSendPopup = $("#frmSendPopup");
+			$frmSendPopup = $("#frmSendPopup"),
+			$frmSendWhatsapp = $("#frmSendWhatsapp");
 		
 		if ($frmSendSms.length > 0 && validate) {
 			$frmSendSms.validate({
@@ -163,6 +164,44 @@ google.load('visualization', '1', {packages: ['corechart', 'line']});
 			});
 		}
 		
+		if ($frmSendWhatsapp.length > 0 && validate) {
+			$frmSendWhatsapp.validate({
+				rules: {
+					whatsapp_template: {
+			            require_from_group: [1, ".msg-group"]
+			        },
+			        whatsapp_message: {
+			            require_from_group: [1, ".msg-group"]
+			        }
+			    },
+			    messages: {
+			    	whatsapp_template: myLabel.dash_select_template_or_enter_message,
+			    	whatsapp_message: myLabel.dash_select_template_or_enter_message
+			    },
+			    groups: {
+			        messageGroup: "whatsapp_template whatsapp_message"
+			    },
+				onkeyup: false,
+				submitHandler: function (form) {
+					var l = Ladda.create( $(form).find(":submit").get(0) );
+					l.start();
+					
+					$.post("index.php?controller=pjAdmin&action=pjActionSendWhatsapp", $(form).serialize()).done(function (data) {
+						if (data.status == 'OK') {
+		            		$('.pjSbSendWhatsappMsg').find('.alert').html(data.text).removeClass('alert-danger').addClass('alert-success');
+		            		$frmSendWhatsapp.trigger("reset");
+		            	} else {
+		            		$('.pjSbSendWhatsappMsg').find('.alert').html(data.text).removeClass('alert-success').addClass('alert-danger');
+		            	}
+		            	$('.pjSbSendWhatsappMsg').show();
+		            	$('.pjSbSendWhatsappMsg').delay(5000).fadeOut('slow');
+						l.stop();
+					});
+					return false;
+				}
+			});
+		}
+		
 		if ($charts.length > 0 && tabs) {
 			$charts.tabs({
 				disabled: true
@@ -182,6 +221,9 @@ google.load('visualization', '1', {packages: ['corechart', 'line']});
 		$(document).ready(function() {
 			var $today_ts = $('#today_ts').val();
 			drawChart($today_ts);
+			
+			var $provider_id = $('#provider_id').val();
+			loadTemplates($provider_id);
 		});
 		
 		$(document).on("click", ".navUpcomingBookings", function (e) {
@@ -199,9 +241,30 @@ google.load('visualization', '1', {packages: ['corechart', 'line']});
 				$('.navPrevUpcomingBookings').attr('data-ts', $next_ts - $step);
 				$('.navNextUpcomingBookings').attr('data-ts', $next_ts + $step);
 			}
+		}).on("change", "#whatsapp_template", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			let body = $(this).find(':selected').data('body');
+            if(body) {
+                // Đổ vào textarea
+                $('#whatsapp_message').val(body);
+                
+                // Tự động focus và cuộn textarea lên đầu nội dung
+                $('#whatsapp_message').focus();
+            } else {
+                $('#whatsapp_message').val('');
+            }
 		});
-		/*window.setTimeout(function () {
-			window.location.reload();
-		}, 1000 * 60 * 2);*/
+		
+		function loadTemplates($provider_id) {
+			$('#whatsapp_template').empty();
+			$('#whatsapp_template').append(`<option value="" data-body="">${myLabel.select_template}</option>`);
+	        $.getJSON('index.php?controller=pjAdmin&action=pjActionGetTemplates&provider_id=' + $provider_id, function(data) {
+	            data.forEach(t => {
+	                $('#whatsapp_template').append(`<option value="${t.value}" data-body="${t.body}">${t.name}</option>`);
+	            });
+	        });
+	    }
 	});
 })(jQuery);

@@ -8,12 +8,16 @@ var jQuery = jQuery || $.noConflict();
 			sortable = ($.fn.sortable !== undefined),	
 			datagrid = ($.fn.datagrid !== undefined),
 			$modalSms = $("#modalSms"),
+			$modalWhatsapp = $("#modalWhatsapp"),
 			$modalTurnover = $("#modalTurnover"),
 			$modalViewOrder = $("#modalViewOrder"),
 			$modalWhatsappSms = $("#modalWhatsappSms"),
 			$modalAddNotesForDriver = $("#modalAddNotesForDriver"),
 			$modalChangePickupTime = $("#modalChangePickupTime"),
 			$modalCheckFlights = $("#modalCheckFlights"),
+			$modalAddNote = $("#modalAddNote"),
+			$modalDriverConfirmJobs = $("#modalDriverConfirmJobs"),
+			$modalGetDriverJobStatus = $("#modalGetDriverJobStatus"),
 			$frmSyncData = $("#frmSyncData"),
 			$adjustment,
 			$grid_orders,
@@ -210,6 +214,11 @@ var jQuery = jQuery || $.noConflict();
 			if ($show_loader == 1) {
 				$('.pj-loader').show();
 			}
+			var $date = $form.find('input[name="date"]').val(),
+				$href_sync_all_data = $('.btnSyncAllData').attr('data-href'),
+				$href_sync_general_data = $('.btnSycGeneralData').attr('data-href');
+			$('.btnSyncAllData').attr('href', $href_sync_all_data + '&date=' + $date);
+			$('.btnSycGeneralData').attr('href', $href_sync_general_data + '&date=' + $date);
 			$.post("index.php?controller=pjAdminSchedule&action=pjActionCountOrders", $form.serialize()).done(function (resp) {
 				$('.pjCntOrders').html(resp);
 				$.post("index.php?controller=pjAdminSchedule&action=pjActionGetSchedule", $form.serialize()).done(function (data) {
@@ -236,7 +245,17 @@ var jQuery = jQuery || $.noConflict();
 				$('.pjCntOrders').html(resp);
 	        	$.post("index.php?controller=pjAdminSchedule&action=pjActionGetDriverSchedule", $form.serialize()).done(function (data) {
 					$('.pjSbVehicles').html(data);
-					$('.pj-loader').hide();
+					var $len = $(".pjSbOrdersList").find(".pjSbOrder").length;
+					if ($len > 0) {
+						$.post("index.php?controller=pjAdminSchedule&action=pjActionCheckDriverConfirmedJobs", $form.serialize()).done(function (data) {
+							if (data.status == 'ERR') {
+								$modalDriverConfirmJobs.modal('show');
+							}
+							$('.pj-loader').hide();
+						});
+					} else {
+						$('.pj-loader').hide();
+					}
 				});
 			});
 		}
@@ -308,7 +327,13 @@ var jQuery = jQuery || $.noConflict();
 		            });
 		        }
 				
-				$('#driver_name_' + $vehicle_id + '_' + $order).html($driver_name);
+				$('#btnCheckDriverJobStatus_' + $vehicle_id + '_' + $order).attr('data-driver_id', $driver_id);
+				
+				if ($driver_id > 0) {
+					$('#btnCheckDriverJobStatus_' + $vehicle_id + '_' + $order).show();
+				} else {
+					$('#btnCheckDriverJobStatus_' + $vehicle_id + '_' + $order).hide();
+				}
 			});
 			return false;
 		}).on("click", ".pjSbSendSmsToDriver", function (e) {
@@ -334,6 +359,46 @@ var jQuery = jQuery || $.noConflict();
 					validator = $modalSms.find("form").validate();
 				});
 			}
+		}).on("click", ".pjSbSendWhatsapp", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			var $this = $(this), 
+				$parent = $this.closest('td'),
+				$form = $('.pjSbScheduleForm'),
+				$vehicle_id = $this.attr('data-vehicle_id'),
+				$order = $this.attr('data-order'),
+				$driver_id = $parent.find('.pjSbDriverSelector').val(),
+				$date = $form.find('input[name="date"]').val();
+			if (parseInt($driver_id, 10) > 0) {
+				$.get("index.php?controller=pjAdminSchedule&action=pjActionSendWhatsapp", {
+					"vehicle_id": $vehicle_id,
+					"driver_id": $driver_id,
+					"date": $date,
+					"order": $order
+				}).done(function (data) {
+					$modalWhatsapp.find(".modal-content").html(data);
+					$modalWhatsapp.modal('show');
+					validator = $modalWhatsapp.find("form").validate({
+						rules: {
+							whatsapp_template: {
+					            require_from_group: [1, ".msg-group"]
+					        },
+					        whatsapp_message: {
+					            require_from_group: [1, ".msg-group"]
+					        }
+					    },
+					    messages: {
+					    	whatsapp_template: myLabel.dash_select_template_or_enter_message,
+					    	whatsapp_message: myLabel.dash_select_template_or_enter_message
+					    },
+					    groups: {
+					        messageGroup: "whatsapp_template whatsapp_message"
+					    },
+						onkeyup: false
+					});
+				});
+			}
 		}).on("click", ".btnSendSms", function (e) {
 			if (e && e.preventDefault) {
 				e.preventDefault();
@@ -341,6 +406,25 @@ var jQuery = jQuery || $.noConflict();
 			if ($modalSms.find("form").valid()) {
 				$.post("index.php?controller=pjAdminSchedule&action=pjActionSms", $modalSms.find("form").serialize()).done(function (data) {
 					$modalSms.modal('hide');
+				});
+			}
+		}).on("click", ".btnSendWhatsappMsg", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			if ($modalWhatsapp.find("form").valid()) {
+				$.post("index.php?controller=pjAdminSchedule&action=pjActionSendWhatsapp", $modalWhatsapp.find("form").serialize()).done(function (data) {
+					if (data.status == 'OK') {
+	            		$('.pjSbSendWhatsappMsg').find('.alert').html(data.text).removeClass('alert-danger').addClass('alert-success');
+	            		$modalWhatsapp.find("form").trigger("reset");
+	            	} else {
+	            		$('.pjSbSendWhatsappMsg').find('.alert').html(data.text).removeClass('alert-success').addClass('alert-danger');
+	            	}
+	            	$('.pjSbSendWhatsappMsg').show();
+	            	$('.pjSbSendWhatsappMsg').delay(5000).fadeOut('slow');
+	            	setTimeout(function() {
+	            		$modalWhatsapp.modal('hide');
+					}, 3000);
 				});
 			}
 		}).on("click", ".pjSbViewTurnover", function (e) {
@@ -367,7 +451,8 @@ var jQuery = jQuery || $.noConflict();
 			}
 			
 			var $this = $(this),
-				$booking_id = $this.attr('data-id');
+				$booking_id = $this.attr('data-id'),
+				$date = $('.pjSbScheduleForm').find('input[name="date"]').val();
 			swal({
 				title: myLabel.alert_title,
 				text: myLabel.alert_text,
@@ -379,7 +464,7 @@ var jQuery = jQuery || $.noConflict();
 				closeOnConfirm: false,
 				showLoaderOnConfirm: true
 			}, function () {
-				$.post('index.php?controller=pjAdminSchedule&action=pjActionUpdateBooking', {type: 'delete', booking_id: $booking_id}).done(function (data) {
+				$.post('index.php?controller=pjAdminSchedule&action=pjActionUpdateBooking', {type: 'delete', date: $date, booking_id: $booking_id}).done(function (data) {
 					if (!(data && data.status)) {
 						
 					}
@@ -490,12 +575,16 @@ var jQuery = jQuery || $.noConflict();
 			if (e && e.preventDefault) {
 				e.preventDefault();
 			}
-			$('#lock_orders').val(0);
-			$(this).hide();
-			$('.btnLockOrder').show();
-			$("ol.pjSbOrders").sortable('enable');
-			$("ol.pjSbOrders").removeClass('disabled');
-			return false;
+			if (myLabel.hasAccessUnlock) {
+				return false;
+			} else { 
+				$('#lock_orders').val(0);
+				$(this).hide();
+				$('.btnLockOrder').show();
+				$("ol.pjSbOrders").sortable('enable');
+				$("ol.pjSbOrders").removeClass('disabled');
+				return false;
+			}
 		}).on("change", ".pjSbDriverAddNotes", function (e) {
 			if (e && e.preventDefault) {
 				e.preventDefault();
@@ -613,6 +702,72 @@ var jQuery = jQuery || $.noConflict();
 		    $modalCheckFlights.data('flight_number', $flight_number).modal('show');
 		    
 			
+		}).on("click", ".btnAddNote", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			var $vehicle_id = $(this).attr('data-vehicle_id'),
+				$vehicle_order = $(this).attr('data-vehicle_order'),
+				$date = $('.pjSbScheduleForm').find('input[name="date"]').val();
+			$modalAddNote.modal('show');
+			$modalAddNote.find('input[name="vehicle_id"]').val($vehicle_id);
+			$modalAddNote.find('input[name="vehicle_order"]').val($vehicle_order);
+			$modalAddNote.find('input[name="date"]').val($date);
+			$modalAddNote.find('textarea[name="notes"]').val('');
+			validator = $modalAddNote.find("form").validate();
+		}).on("click", ".btnConfirmAddNote", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			if ($modalAddNote.find("form").valid()) {
+				var $form = $modalAddNote.find("form"),
+					$vehicle_id = $form.find('input[name="vehicle_id"]').val(),
+					$vehicle_order = $form.find('input[name="vehicle_order"]').val(),
+					$notes = $form.find('textarea[name="notes"]').val();
+				$.post("index.php?controller=pjAdminSchedule&action=pjActionAddNotesForVehicle", $form.serialize()).done(function (data) {
+					$modalAddNote.modal('hide');
+					if (data.status == 'OK') {
+						$('#pjSbVehicleNote_' + $vehicle_id + "_" + $vehicle_order).prepend('<div class="alert alert-warning alert-notes">'+data.text+'</div>');
+					}
+				});
+			}
+		}).on("change", "#whatsapp_template", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			let body = $(this).find(':selected').data('body');
+            if(body) {
+                // Đổ vào textarea
+                $('#whatsapp_message').val(body);
+                
+                // Tự động focus và cuộn textarea lên đầu nội dung
+                $('#whatsapp_message').focus();
+            } else {
+                $('#whatsapp_message').val('');
+            }
+		}).on("click", ".btnCheckDriverJobStatus", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			var $this = $(this), 
+				$form = $('.pjSbScheduleForm'),
+				$driver_id = $this.attr('data-driver_id'),
+				$date = $form.find('input[name="date"]').val();
+			if (parseInt($driver_id, 10) > 0) {
+				$.get("index.php?controller=pjAdminSchedule&action=pjActionGetDriverJobStatus", {
+					"driver_id": $driver_id,
+					"date": $date
+				}).done(function (data) {
+					$modalGetDriverJobStatus.find(".modal-body").html(data);
+					$modalGetDriverJobStatus.modal('show');
+				});
+			}
+		});
+		
+		$modalWhatsapp.on('shown.bs.modal', function(){
+			var $form = $modalWhatsapp.find("form"),
+				$provider_id = $form.find('select[name="provider_id"]').val();
+			loadTemplates($provider_id);
 		});
 
 		$modalCheckFlights.on('shown.bs.modal', function(){
@@ -803,11 +958,17 @@ var jQuery = jQuery || $.noConflict();
 			                type: 'assign_vehicle', 
 			                vehicle_id: vehicle_id, 
 			                vehicle_order: vehicle_order, 
-			                booking_ids: booking_ids 
+			                booking_ids: booking_ids,
+			                date: $('.pjSbScheduleForm').find('input[name="date"]').val()
 			            }).done(function (data) {
 			                // Bỏ highlight sau khi hoàn tất
 			                $('.pjSbOrder').removeClass('selected');
 			                $('.txtAssignOrders').html('');
+			                
+			                if (data.text != undefined && data.text.length > 0) {
+				                $('#modalCapacityWarning').find(".modal-body").html(data.text);
+				                $('#modalCapacityWarning').modal('show');
+			                }
 			            });
 			        });
 			    },
@@ -829,6 +990,29 @@ var jQuery = jQuery || $.noConflict();
 					getSchedule($('.pjSbScheduleForm'), 1);
 				}
 			}
+			
+			if ($('.btnLockOrder').length > 0) {
+				$('.btnLockOrder').trigger('click');
+			}
+			
+			$modalDriverConfirmJobs.on('shown.bs.modal', function (e) {
+				//var $date = $('.pjSbScheduleForm').find('input[name="date"]').val();
+			}).on("click", ".btnDriverConfirmTheJobs", function (e) {
+				if (e && e.preventDefault) {
+					e.preventDefault();
+				}
+				var $date = $('.pjSbScheduleForm').find('input[name="date"]').val();
+				$.post('index.php?controller=pjAdminSchedule&action=pjActionDriverConfirmedJobs', {driver_confirmed_job: 1, date: $date}).done(function (data) {
+					if (!(data && data.status)) {
+						
+					}
+					switch (data.status) {
+						case "OK":
+							$modalDriverConfirmJobs.modal('hide');
+							break;
+					}
+				});
+			});
 			
 			if (myLabel.show_popup != undefined && parseInt(myLabel.show_popup, 10) == 1) {
 				swal({
@@ -1415,5 +1599,15 @@ var jQuery = jQuery || $.noConflict();
 				}
 			});
 		});
+		
+		function loadTemplates($provider_id) {
+			$('#whatsapp_template').empty();
+			$('#whatsapp_template').append(`<option value="" data-body="">${myLabel.select_template}</option>`);
+	        $.getJSON('index.php?controller=pjAdminSchedule&action=pjActionGetTemplates&provider_id=' + $provider_id, function(data) {
+	            data.forEach(t => {
+	                $('#whatsapp_template').append(`<option value="${t.value}" data-body="${t.body}">${t.name}</option>`);
+	            });
+	        });
+	    }
 	});
 })(jQuery);

@@ -37,6 +37,23 @@
 				<tr>
 					<?php foreach ($tpl['vehicle_arr'] as $i => $veh) { ?>
 						<td class="<?php echo $i%2 == 0 ? 'odd' : 'even';?>">
+							<?php if (!$controller->isDriver()) { 
+							    $first_driver_id = isset($tpl['driver_vehicle_arr'][$veh['id']][1]) ? $tpl['driver_vehicle_arr'][$veh['id']][1] : 0;
+							    ?>
+								<div align="center">
+									<a href="javascript:void(0);" style="display: <?php echo (int)$first_driver_id > 0 ? '' : 'none';?>" id="btnCheckDriverJobStatus_<?php echo $veh['id'];?>_1" class="btn btn-primary btn-sm btnCheckDriverJobStatus <?php echo isset($tpl['driver_job_status_arr'][$first_driver_id]) && $tpl['driver_job_status_arr'][$first_driver_id] == 'T' ? 'buttonStatusGreen' : 'buttonStatusOrange';?>" data-driver_id="<?php echo $first_driver_id;?>"><?php __('btnJobStatus');?></a>
+									<a href="javascript:void(0);" class="btn btn-primary btn-outline btn-sm btnAddNote" data-vehicle_id="<?php echo $veh['id'];?>" data-vehicle_order="1"><i class="fa fa-plus"></i> <?php __('btnAddNote');?></a>
+								</div>
+    							<div id="pjSbVehicleNote_<?php echo $veh['id'];?>_1">
+    								<?php if (isset($tpl['vehicle_note_arr'][$veh['id']])) { ?>
+        								<?php foreach ($tpl['vehicle_note_arr'][$veh['id']] as $note) { ?>
+        									<?php if ((int)$note['vehicle_order'] == 1) { ?>
+            									<div class="alert alert-warning alert-notes"><?php echo nl2br($note['notes']);?></div>
+            								<?php } ?>
+        								<?php } ?>
+        							<?php } ?>
+    							</div>
+    						<?php } ?>
 							<ol class="pjSbOrders list-unstyled" data-vehicle_id="<?php echo $veh['id'];?>" data-vehicle_order="1">
 							<?php if (isset($tpl['schedule_arr'][$veh['id']]) && count($tpl['schedule_arr'][$veh['id']]) > 0) { ?>
 								<?php foreach ($tpl['schedule_arr'][$veh['id']] as $order) { 
@@ -172,8 +189,10 @@
                             					<?php } ?>
                             					<?php if (!empty($order['empty_travel_arrival_time'])) { ?>
                             						<div class="text-danger">Arrival Time at Pick-up: <?php echo pjSanitize::html($order['empty_travel_arrival_time']);?></div>
-                            					<?php }*/ ?>
-                            					
+                            					<?php }
+                            					<div class="text-danger">Booking ID: <?php echo pjSanitize::html($order['id']);?></div>
+                            					<div class="text-danger">Booking Ref ID: <?php echo pjSanitize::html($order['ref_id']);?></div>
+                            					*/ ?>
 											</div>
 											<br class="pjSbClearBoth"/>
 										</div>
@@ -201,8 +220,13 @@
 									?>
 								</select>
 							</div>
-							<div class="text-center"><button class="btn btn-primary pjSbSendSmsToDriver" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="1"><?php __('btnSendSmsToDriver');?></button></div>
-							<div class="text-center"><button class="btn btn-primary pjSbViewTurnover" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="1"><?php __('btnViewTurnover');?></button></div>
+							<div class="text-center">
+								<button class="btn btn-primary btn-sm pjSbSendSmsToDriver" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="1"><?php __('btnSendSmsToDriver');?></button>
+								<?php if ($tpl['option_arr']['o_enable_whatsapp_fearure'] == 'Yes') { ?>
+									<button class="btn btn-primary btn-sm pjSbSendWhatsapp" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="1"><?php __('btnSendWhatsapp');?></button>
+								<?php } ?>
+							</div>
+							<div class="text-center"><button class="btn btn-primary btn-sm pjSbViewTurnover" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="1"><?php __('btnViewTurnover');?></button></div>
 						</td>
 					<?php } ?>
 				</tr>
@@ -242,6 +266,25 @@
 				<tr>
 					<?php foreach ($tpl['vehicle_arr'] as $i => $veh) { ?>
 						<td class="<?php echo $i%2 == 0 ? 'odd' : 'even';?>">
+							<?php if (!$controller->isDriver()) { 
+							    $second_driver_id = isset($tpl['driver_vehicle_arr'][$veh['id']][2]) ? $tpl['driver_vehicle_arr'][$veh['id']][2] : 0;
+							    ?>
+								<div align="center">
+									<a href="javascript:void(0);" style="display: <?php echo (int)$second_driver_id > 0 ? '' : 'none';?>" id="btnCheckDriverJobStatus_<?php echo $veh['id'];?>_2" class="btn btn-primary btn-sm btnCheckDriverJobStatus <?php echo isset($tpl['driver_job_status_arr'][$second_driver_id]) && $tpl['driver_job_status_arr'][$second_driver_id] == 'T' ? 'buttonStatusGreen' : 'buttonStatusOrange';?>" data-driver_id="<?php echo $second_driver_id;?>"><?php __('btnJobStatus');?></a>
+									<a href="javascript:void(0);" class="btn btn-primary btn-outline btn-sm btnAddNote" data-vehicle_order="2" data-vehicle_id="<?php echo $veh['id'];?>"><i class="fa fa-plus"></i> <?php __('btnAddNote');?></a>
+								</div>
+    							<div id="pjSbVehicleNote_<?php echo $veh['id'];?>_2">
+    								<?php if (isset($tpl['vehicle_note_arr'][$veh['id']])) { ?>
+        								<?php foreach ($tpl['vehicle_note_arr'][$veh['id']] as $note) { ?>
+        									<?php if ((int)$note['vehicle_order'] == 2) { ?>
+        										<div class="alert alert-warning alert-notes"><?php echo nl2br($note['notes']);?></div>
+        									<?php } ?>
+        								<?php } ?>
+        							<?php } ?>
+    							</div>
+    						<?php } ?>
+    						
+    						
 							<ol class="pjSbOrders list-unstyled" data-vehicle_id="<?php echo $veh['id'];?>"  data-vehicle_order="2">
 							<?php if (isset($tpl['schedule_arr'][$veh['id']]) && count($tpl['schedule_arr'][$veh['id']]) > 0) { ?>
 								<?php foreach ($tpl['schedule_arr'][$veh['id']] as $order) { 
@@ -382,8 +425,13 @@
 									?>
 								</select>
 							</div>
-							<div class="text-center"><button class="btn btn-primary pjSbSendSmsToDriver" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="2"><?php __('btnSendSmsToDriver');?></button></div>
-							<div class="text-center"><button class="btn btn-primary pjSbViewTurnover" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="2"><?php __('btnViewTurnover');?></button></div>
+							<div class="text-center">
+								<button class="btn btn-primary btn-sm pjSbSendSmsToDriver" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="2"><?php __('btnSendSmsToDriver');?></button>
+								<?php if ($tpl['option_arr']['o_enable_whatsapp_fearure'] == 'Yes') { ?>
+									<button class="btn btn-primary btn-sm pjSbSendWhatsapp" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="2"><?php __('btnSendWhatsapp');?></button>
+								<?php } ?>
+							</div>
+							<div class="text-center"><button class="btn btn-primary btn-sm pjSbViewTurnover" type="button" data-vehicle_id="<?php echo $veh['id'];?>" data-order="2"><?php __('btnViewTurnover');?></button></div>
 						</td>
 					<?php } ?>
 				</tr>

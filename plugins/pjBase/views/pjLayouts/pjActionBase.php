@@ -7,6 +7,9 @@
     	<link rel="apple-touch-icon" sizes="128x128" href="https://driver.alpstria.com/app/web/upload/logos/icon.png">
     	<link rel="icon" sizes="192x192" href="https://driver.alpstria.com/app/web/upload/logos/icon.png">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+        <meta http-equiv="Pragma" content="no-cache">
+        <meta http-equiv="Expires" content="0">
         <title><?php __('script_name') ?></title>
         <?php
         $cnt = count($controller->getCss());

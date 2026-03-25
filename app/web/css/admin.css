@@ -252,7 +252,8 @@ body.dragging, body.dragging * {
 	max-height: unset;
 	overflow: unset;
 }
-.pjSbSendSmsToDriver{
+.pjSbSendSmsToDriver,
+.pjSbSendWhatsapp{
 	margin-top: 5px;
 }
 .pjSbLastUpdate{
@@ -1124,6 +1125,43 @@ li.pjSbOrder.dragging-multiple::after {
 #modalCheckFlights .flight-card .st-gray    { background-color: #6c757d; color: #fff; } /* GateClosed, Departed */
 #modalCheckFlights .flight-card .st-red     { background-color: #dc3545; color: #fff; } /* Delayed, Canceled, Diverted */
 #modalCheckFlights .flight-card .st-orange  { background-color: #fd7e14; color: #fff; } /* Unknown, Uncertain */
+
+.alert-notes{
+	padding: 5px !important;
+  	margin-bottom: 5px !important;
+}
+
+#modalDriverConfirmJobs .modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - (0.5rem * 2)); /* Khoảng cách mặc định của BS3 */
+    justify-content: center;
+}
+
+#modalDriverConfirmJobs .modal-dialog .modal-body{
+	border-radius: 10px;
+}
+.btnCheckDriverJobStatus.buttonStatusGreen,
+.btnCheckDriverJobStatus.buttonStatusGreen:hover,
+.btnCheckDriverJobStatus.buttonStatusGreen:focus{
+	background-color: #0a5114;
+  	border-color: #0a5114;
+  	color: #FFFFFF;
+}
+.btnCheckDriverJobStatus.buttonStatusOrange,
+.btnCheckDriverJobStatus.buttonStatusOrange:hover,
+.btnCheckDriverJobStatus.buttonStatusOrange:focus{
+	background-color: orange;
+  	border-color: orange;
+  	color: #FFFFFF;
+}
+
+/* Đảm bảo nội dung không bị dính vào mép trên trên mobile */
+@media (min-width: 768px) {
+    #modalDriverConfirmJobs .modal-dialog {
+        min-height: calc(100% - (30px * 2));
+    }
+}
 
 @media only screen and ( max-width: 767px ) {
 	#modalCheckFlights .flightsContainer .tblflights{

@@ -17,6 +17,13 @@
 				<?php } ?>
 			</div>
 		</div>
+		<?php 
+		if ($controller->_get->check('date') && $controller->_get->toString('date') != "") {
+		    $date = $controller->_get->toString('date');
+		} else {
+		    $date = date($tpl['option_arr']['o_date_format']);
+		}
+		?>
 		<div class="col-lg-3 col-md-4 col-sm-3 col-xs-7">
 			<div class="form-group">
 				<div class="input-group date"
@@ -24,7 +31,7 @@
                      data-date-autoclose="true"
                      data-date-format="<?php echo $jqDateFormat ?>"
                      data-date-week-start="<?php echo (int) $tpl['option_arr']['o_week_start'] ?>">
-					<input type="text" name="date" id="date" class="form-control" value="<?php echo date($tpl['option_arr']['o_date_format']); ?>" autocomplete="off">
+					<input type="text" name="date" id="date" class="form-control" value="<?php echo $date;?>" autocomplete="off">
 					<span class="input-group-addon">
 						<span class="glyphicon glyphicon-calendar"></span>
 					</span>
@@ -56,8 +63,8 @@
 				}
 				echo __('lblLastUpdate', true).': '.$last_update;
 				?> 
-				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncAllData"><?php __('btnSynchronizeData');?></a>
-				<a class="btn btn-primary" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData"><?php __('btnUpdateBookings');?></a>
+				<a class="btn btn-primary btnSyncAllData" data-href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&action=pjActionSyncAllData" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncAllData&amp;date=<?php echo date($tpl['option_arr']['o_date_format']); ?>"><?php __('btnSynchronizeData');?></a>
+				<a class="btn btn-primary btnSycGeneralData" data-href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&action=pjActionSyncGeneralData" href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionSyncGeneralData&amp;date=<?php echo date($tpl['option_arr']['o_date_format']); ?>"><?php __('btnUpdateBookings');?></a>
 			</div>
 		</div>
 		<div class="col-xs-12 text-center visible-md visible-sm visible-xs">

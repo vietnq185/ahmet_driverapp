@@ -4,7 +4,7 @@
 	</div><!-- /.panel-heading -->
 
 	<div class="panel-body">
-		<form action="" method="post" id="frmCreate">
+		<form action="" method="post" id="frmCreate" enctype="multipart/form-data">
 			<input type="hidden" name="add_provider" value="1" />
 			<div class="form-group">
 				<label class="control-label"><?php __('lblProviderName');?>:</label>			
@@ -17,6 +17,33 @@
 					<input type="text" name="url" id="url" class="form-control required" maxlength="100" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
 				</div>
 			</div>	
+			<div class="form-group">
+				<label class="control-label"><?php __('lblWhatsAppName');?>:</label>			
+				<input type="text" class="form-control" name="whatsapp_name" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+			</div>
+			<div class="form-group">
+				<label class="control-label"><?php __('lblWhatsAppPhoneNumberID');?>:</label>			
+				<input type="text" class="form-control" name="whatsapp_phone_number_id" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+			</div>
+			
+			<div class="form-group">
+				<label class="control-label"><?php __('lblWhatsAppPermanentAccessToken');?>:</label>			
+				<input type="text" class="form-control" name="whatsapp_permanent_access_token" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+			</div>
+			
+			<div class="form-group">
+				<label class="control-label"><?php __('lblProviderNameSignLogo');?></label><br/>
+				<div class="fileinput fileinput-new" data-provides="fileinput">
+					<span class="btn btn-primary btn-outline btn-file">
+						<span class="fileinput-new"><i class="fa fa-upload m-r-xs"></i> <?php __('btn_select_image'); ?></span>
+						<span class="fileinput-exists"><i class="fa fa-upload m-r-xs"></i> <?php __('btn_change_image'); ?></span>
+						<input type="file" name="name_sign_logo" class="" data-msg-required="<?php __('plugin_base_this_field_is_required');?>">
+					</span>
+					<span class="fileinput-filename"></span>
+					<a href="#" class="close fileinput-exists" data-dismiss="fileinput" style="float: none">x</a>
+				</div>
+			</div>
+			
 			<div class="form-group">
 				<label class="control-label"><?php __('lblStatus');?>:</label>			
 				<div class="clearfix">

@@ -174,7 +174,12 @@
                                         <?php } ?>
                                     </div>
                                 </div>
-                                <?php
+                                <?php if ($option['key'] == 'o_pusher_secret') { ?>
+                                	<div class="form-group">
+                                		<label class="col-sm-3 control-label"><?php __('plugin_base_opt_o_whatsapp_webhook_url'); ?></label>
+                                		<div class="col-sm-9"><?php echo PJ_INSTALL_URL;?>webhook.php</div>
+                                	</div>
+                                <?php } 
                             }
                             ?>
                             <div class="hr-line-dashed"></div>

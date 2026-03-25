@@ -39,6 +39,11 @@ var jQuery = jQuery || $.noConflict();
 		}
 
 		if ($("#grid").length > 0 && datagrid) {
+			function formatImage(val, obj) {
+				var src = val ? val : 'app/web/img/backend/225x150.png';
+				return ['<img src="', src, '" style="width: 84px" />'].join("");
+			}
+			
 			var buttons = [];
 			if (pjGrid.hasAccessUpdate) {
 				buttons.push({type: "edit", url: "index.php?controller=pjAdminProviders&action=pjActionUpdate&id={:id}"});
@@ -59,14 +64,14 @@ var jQuery = jQuery || $.noConflict();
 			}
 			var $grid = $("#grid").datagrid({
 				buttons: buttons,
-		          columns: [
+		          columns: [{text: myLabel.provider_logo, type: "text", sortable: true, editable: false, renderer: formatImage},
 							{text: myLabel.provider_name, type: "text", sortable: true, editable: pjGrid.hasAccessUpdate},
 							{text: myLabel.provider_url, type: "text", sortable: true, editable: pjGrid.hasAccessUpdate},
 							{text: myLabel.provider_status, type: "toggle", sortable: true, editable: pjGrid.hasAccessUpdate, positiveLabel: myLabel.active, positiveValue: "T", negativeLabel: myLabel.inactive, negativeValue: "F"}
 				          ],
 				dataUrl: "index.php?controller=pjAdminProviders&action=pjActionGet" + pjGrid.queryString,
 				dataType: "json",
-				fields: ['name', 'url', 'status'],
+				fields: ['name_sign_logo', 'name', 'url', 'status'],
 				paginator: {
 					actions: actions,
 					gotoPage: true,
@@ -216,6 +221,36 @@ var jQuery = jQuery || $.noConflict();
 				$(".boxFormProvider").html("");
 			}
 			return false;
+		}).on("click", ".btnDeleteImage", function (e) {
+			if (e && e.preventDefault) {
+				e.preventDefault();
+			}
+			
+			var id = $(this).attr('rev');
+			var $this = $(this);
+			swal({
+				title: myLabel.alert_delete_logo_title,
+				text: myLabel.alert_delete_logo_text,
+				type: "warning",
+				showCancelButton: true,
+				confirmButtonColor: "#DD6B55",
+				confirmButtonText: myLabel.btn_delete,
+				cancelButtonText: myLabel.btn_cancel,
+				closeOnConfirm: false,
+				showLoaderOnConfirm: true
+			}, function () {
+				$.post($this.attr("href"), {id: id}).done(function (data) {
+					if (!(data && data.status)) {
+						
+					}
+					switch (data.status) {
+					case "OK":
+						swal.close();
+						$('.provider-logo').remove();
+						break;
+					}
+				});
+			});
 		});
 	});
 })(jQuery);

@@ -39,10 +39,15 @@
 			echo implode(" ", $name_arr);
 		}
 	} 
-	if (!empty($tpl['option_arr']['o_name_sign_logo']) && is_file($tpl['option_arr']['o_name_sign_logo']))
+	if (isset($tpl['provider_arr']['name_sign_logo']) && !empty($tpl['provider_arr']['name_sign_logo']) && is_file($tpl['provider_arr']['name_sign_logo'])) 
+	{
+	    ?>
+	    <div><img src="<?php echo PJ_INSTALL_URL.$tpl['provider_arr']['name_sign_logo'];?>" class="img-responsive" /></div>
+	    <?php 
+	} elseif (!empty($tpl['option_arr']['o_name_sign_logo']) && is_file($tpl['option_arr']['o_name_sign_logo']))
 	{
 		?>
-		<div><img src="<?php echo PJ_INSTALL_URL.$tpl['option_arr']['o_name_sign_logo']?>" class="img-responsive" /></div>
+		<div><img src="<?php echo PJ_INSTALL_URL.$tpl['option_arr']['o_name_sign_logo'];?>" class="img-responsive" /></div>
 		<?php 
 	}
 	?>

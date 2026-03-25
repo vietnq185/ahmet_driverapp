@@ -38,7 +38,7 @@ $short_days = __('short_days', true);
                                 	<div class="form-group">
                                         <label><?php __('lblSelectVehicle');?></label>
                                         <select name="vehicle_id" id="vehicle_id" class="form-control select-item required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
-                                            <option value="">-- <?php __('lblChooseVehicle');?> --</option>
+                                            <option value="all"><?php __('lblAllVehicles');?></option>
                                             <?php foreach ($tpl['vehicle_arr'] as $val) { ?>
                                             	<option value="<?php echo $val['id'];?>"><?php echo pjSanitize::html($val['name']);?> | <?php echo pjSanitize::html($val['registration_number']);?></option>
                                             <?php } ?>

@@ -75,7 +75,32 @@ class pjAdmin extends pjAppController
 		    'pjAdminSchedule::getVehicleFromAPI' => 'pjAdminSchedule::pjActionIndex',
 		    'pjAdminSchedule::pjActionCheckVehiclesStatus' => 'pjAdminSchedule::pjActionIndex',
 		    
-		    'pjAdminTracking::pjActionGetVehicles' => 'pjAdminTracking::pjActionIndex'
+		    'pjAdminTracking::pjActionGetVehicles' => 'pjAdminTracking::pjActionIndex',
+		    
+		    'pjAdminWhatsappChat::pjActionGetHistory' => 'pjAdminWhatsappChat::pjActionIndex',
+		    'pjAdminWhatsappChat::pjActionSend' => 'pjAdminWhatsappChat::pjActionIndex',
+		    'pjAdminWhatsappChat::pjActionGetTemplates' => 'pjAdminWhatsappChat::pjActionIndex',
+		    'pjAdminWhatsappChat::pjActionMarkAsRead' => 'pjAdminWhatsappChat::pjActionIndex',
+		    'pjAdminWhatsappChat::pjActionGetDrivers' => 'pjAdminWhatsappChat::pjActionIndex',
+		    
+		    'pjAdmin::pjActionGetTemplates' => 'pjAdmin::pjActionIndex',
+		    'pjAdmin::pjActionSendWhatsapp' => 'pjAdmin::pjActionIndex',
+		    'pjAdmin::pjActionGetTemplates' => 'pjAdminSchedule::pjActionIndex',
+		    
+		    'pjAdminLogs::pjActionGet' => 'pjAdminLogs::pjActionIndex',
+		    
+		    'pjAdminPartners::pjActionDownloadFile' => 'pjAdminPartners::pjActionIndex',
+		    'pjAdminPartners::pjActionDownloadReport' => 'pjAdminPartners::pjActionIndex',
+		    'pjAdminPartners::pjActionDownloadContract' => 'pjAdminPartners::pjActionIndex',
+		    
+		    'pjAdminPartners::pjActionGetReport' => 'pjAdminPartners::pjActionIndex',
+		    'pjAdminPartners::pjActionReportForm' => 'pjAdminPartners::pjActionIndex',
+		    'pjAdminPartners::pjActionGenerateBilling' => 'pjAdminPartners::pjActionIndex',
+		    'pjAdminPartners::pjActionSaveCustomPrice' => 'pjAdminPartners::pjActionUpdate',
+		    'pjAdminSchedule::pjActionDriverConfirmedJobs' => 'pjAdminSchedule::pjActionIndex',
+		    'pjAdminSchedule::pjActionCheckDriverConfirmedJobs' => 'pjAdminSchedule::pjActionIndex',
+		    'pjAdminSchedule::pjActionGetDriverJobStatus' => 'pjAdminSchedule::pjActionIndex',
+		    'pjAdminProviders::pjActionDeleteImage' => 'pjAdminProviders::pjActionIndex'
 		);
 		if ($_REQUEST['controller'] == 'pjAdminOptions' && isset($_REQUEST['next_action'])) {
 			$inherits_arr['pjAdminOptions::pjActionUpdate'] = 'pjAdminOptions::'.$_REQUEST['next_action'];
@@ -261,7 +286,12 @@ class pjAdmin extends pjAppController
         ->getData();
         $this->set('driver_arr', $driver_arr);
         
+        $provider_arr = pjProviderModel::factory()->where('t1.status', 'T')->orderBy('t1.whatsapp_name ASC')->findAll()->getData();
+        $this->set('provider_arr', $provider_arr);
+        
         $this->appendJs('jsapi', 'https://www.google.com/', TRUE);
+        $this->appendJs('jquery.validate.min.js', PJ_THIRD_PARTY_PATH . 'validate/');
+        $this->appendJs('additional-methods.js', PJ_THIRD_PARTY_PATH . 'validate/');
         $this->appendJs('pjAdmin.js');
         $this->appendJs('pjAdminDashboard.js');
     }
@@ -425,5 +455,141 @@ class pjAdmin extends pjAppController
         
         pjAppController::jsonResponse($result);
     }	
+    
+    public function pjActionGetTemplates() {
+        $this->setAjax(true);
+        $provider_id = $this->_get->toInt('provider_id');
+        //$provider_id = 4;
+        $provider_arr = pjProviderModel::factory()->find($provider_id)->getData();
+        $token = $provider_arr['whatsapp_permanent_access_token'];
+        $wabaId = $this->option_arr['o_whatsapp_business_account_id'];
+        
+        $url = "https://graph.facebook.com/v18.0/$wabaId/message_templates?limit=100";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $token"]);
+        $response = curl_exec($ch);
+        $data = json_decode($response, true);
+        
+        $templates = [];
+        if (isset($data['data'])) {
+            foreach ($data['data'] as $tpl) {
+                if ($tpl['status'] === 'APPROVED') {
+                    $bodyText = "";
+                    // Meta trả về components là một mảng, phải tìm đúng type = BODY
+                    foreach ($tpl['components'] as $component) {
+                        if ($component['type'] === 'BODY') {
+                            $bodyText = $component['text'];
+                            break;
+                        }
+                    }
+                    $templates[] = [
+                        'name' => $tpl['name'],
+                        'value' => $tpl['name'].'~:~'.$tpl['language'],
+                        'language' => $tpl['language'],
+                        'body' => $bodyText
+                    ];
+                }
+            }
+        }
+        pjAppController::jsonResponse($templates);
+    }
+    
+    public function pjActionSendWhatsapp() {
+        $this->setAjax(true);
+        
+        $post = $this->_post->raw();
+        $message = $post['whatsapp_message'];
+        $provider_id = $post['provider_id'];
+        //$provider_id = 4;
+        $provider_arr = pjProviderModel::factory()->find($provider_id)->getData();
+        
+        $accessToken = $provider_arr['whatsapp_permanent_access_token'];
+        $phoneNumberId = $provider_arr['whatsapp_phone_number_id'];
+        
+        $pjMainDriverModel = pjMainDriverModel::factory();
+        
+        if ($this->_post->toString('driver_id') == 'own_drivers_today') {
+            $today = date('Y-m-d');
+            $pjMainDriverModel->where('t1.type_of_driver', 'own')->where('t1.id IN (SELECT `driver_id` FROM `'.pjDriverVehicleModel::factory()->getTable().'` WHERE `date`="'.$today.'")');
+        } elseif ($this->_post->toString('driver_id') == 'own_drivers_tomorrow') {
+            $tomorrow = date('Y-m-d', strtotime('+1 day'));
+            $pjMainDriverModel->where('t1.type_of_driver', 'own')->where('t1.id IN (SELECT `driver_id` FROM `'.pjDriverVehicleModel::factory()->getTable().'` WHERE `date`="'.$tomorrow.'")');
+        } else {
+            $pjMainDriverModel->where('t1.id', $this->_post->toInt('driver_id'));
+        }
+        $arr = $pjMainDriverModel->where('t1.phone != ""')->findAll()->getData();
+        if ($arr) {
+            $url = "https://graph.facebook.com/v18.0/$phoneNumberId/messages";
+            foreach ($arr as $val) {
+                $driver_id = $val['id'];
+                $driver_phone = $val['phone'];
+                $driver_phone = ltrim($driver_phone, '0+');
+                if (!empty($post['whatsapp_template'])) {
+                    list($name, $lang) = explode('~:~', $post['whatsapp_template']);
+                    
+                    $date = date($this->option_arr['o_date_format']);
+                    $driver_name = $val['name'];
+                    $data_replace = [
+                        'driver_name' => $driver_name,
+                        'date'     => $date
+                    ];
+                    $mappedParams = pjAppController::getWhatsappTemplateParameters($name, $data_replace);
+                    $data = [
+                        "messaging_product" => "whatsapp",
+                        "to" => $driver_phone,
+                        "type" => "template",
+                        "template" => [
+                            "name" => $name,
+                            "language" => [ "code" => $lang ],
+                            "components" => [
+                                [
+                                    "type" => "body",
+                                    "parameters" => $mappedParams
+                                ]
+                            ]
+                        ]
+                    ];
+                    
+                    $search = array('{{driver_name}}', '{{drivername}}', '{{date}}');
+                    $replace = array($driver_name, $driver_name, $date);
+                    $message = str_replace($search, $replace, $message);
+                } else {
+                    $data = [
+                        "messaging_product" => "whatsapp",
+                        "to" => $driver_phone,
+                        "type" => "text",
+                        "text" => ["body" => $message]
+                    ];
+                }
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    "Authorization: Bearer $accessToken",
+                    "Content-Type: application/json"
+                ]);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                
+                $res = curl_exec($ch);
+                curl_close($ch);
+                $res = json_decode($res, true);
+                if (isset($res['messages'][0]['id'])) {
+                    $data_insert = array(
+                        'wa_message_id' => $res['messages'][0]['id'],
+                        'provider_id' => $provider_id,
+                        'driver_phone' => $driver_phone,
+                        'direction' => 'sent',
+                        'content' => $message
+                    );
+                    pjWhatsappChatHistoryModel::factory()->reset()->setAttributes($data_insert)->insert();
+                    // success
+                } else {
+                    // failed
+                }
+            }
+        }
+        pjAppController::jsonResponse(array('status' => 'OK', 'text' => __('dash_message_sent_successfully', true)));
+    }
 }
 ?>

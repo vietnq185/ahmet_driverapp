@@ -117,10 +117,22 @@ class pjAdminReports extends pjAdmin
 	        $pjBookingModel = pjBookingModel::factory();
 	    }
 	    $pjBookingModel->where('t1.status !=', 'cancelled')->whereNotIn('t1.driver_status', array(4,5));
-	    $pjBookingModel->where(sprintf("(DATE(t1.booking_date) BETWEEN '%1\$s' AND '%2\$s')", $date_from, $date_to));
+	    
 	    if($driver_id > 0)
 	    {
-	        $pjBookingModel->where('t1.vehicle_id IN (SELECT `vehicle_id` FROM `'.pjDriverVehicleModel::factory()->getTable().'` WHERE `driver_id`='.$driver_id.' AND `date` BETWEEN "'.$date_from.'" AND "'.$date_to.'")');
+	        $driver_vehicle_arr = pjDriverVehicleModel::factory()
+	        ->where('t1.driver_id', (int)$driver_id)
+	        ->where('t1.date BETWEEN "'.$date_from.'" AND "'.$date_to.'"')
+	        ->findAll()->getDataPair('id', 'date');
+	        
+	        if ($driver_vehicle_arr) {
+	            $pjBookingModel->whereIn('DATE(t1.booking_date)', array_values($driver_vehicle_arr));
+	            $pjBookingModel->where('t1.vehicle_id IN (SELECT `vehicle_id` FROM `'.pjDriverVehicleModel::factory()->getTable().'` WHERE `id` IN ('.implode(",", array_keys($driver_vehicle_arr)).'))');
+	        } else {
+	            $pjBookingModel->where('t1.id', 0);
+	        }
+	    } else {
+	        $pjBookingModel->where(sprintf("(DATE(t1.booking_date) BETWEEN '%1\$s' AND '%2\$s')", $date_from, $date_to));
 	    }
 	    if(!empty($vehicle_id))
 	    {

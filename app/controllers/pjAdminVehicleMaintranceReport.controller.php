@@ -37,8 +37,10 @@ class pjAdminVehicleMaintranceReport extends pjAdmin
 	    $this->setAjax(true);
 	    $pjVehicleMaintranceServiceModel = pjVehicleMaintranceServiceModel::factory()
 	       ->join('pjVehicleMaintrance', 't2.id=t1.foreign_id', 'inner')
-	       ->join('pjMultiLang', "t3.model='pjVehicleMaintranceServiceType' AND t3.foreign_id=t1.service_type_id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
-	       ->where('t2.vehicle_id', $this->_post->toInt('vehicle_id'));
+	       ->join('pjMultiLang', "t3.model='pjVehicleMaintranceServiceType' AND t3.foreign_id=t1.service_type_id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer');
+	       if ($this->_post->check('vehicle_id') && $this->_post->toInt('vehicle_id') > 0) {
+	           $pjVehicleMaintranceServiceModel->where('t2.vehicle_id', $this->_post->toInt('vehicle_id'));
+	       }
 	    
 	    $from_date = date('Y-m-d');
 	    $to_date = date('Y-m-d');

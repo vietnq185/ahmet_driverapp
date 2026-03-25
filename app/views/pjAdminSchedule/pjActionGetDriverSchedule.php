@@ -3,7 +3,7 @@
 		<?php echo ($tpl['date'] == date('Y-m-d') ? __('lblToday', true) : __('lblScheduleDate', true)).': '.date($tpl['option_arr']['o_date_format'], strtotime($tpl['date']));?>
 	</div>
 	<div class="col-xs-12 pjSbDriverSchedueTitle">
-		<?php echo __('lblScheduleVehicle', true).': '.((isset($tpl['vehicle_arr']) && $tpl['vehicle_arr']) ? pjSanitize::html(@$tpl['vehicle_arr']['name']) : __('lblNotAssigned', true));?>
+		<?php echo __('lblScheduleVehicle', true).': '.((isset($tpl['vehicle_arr']) && $tpl['vehicle_arr']) ? pjSanitize::html(@$tpl['vehicle_arr']['name'].' | '.@$tpl['vehicle_arr']['registration_number']) : __('lblNotAssigned', true));?>
 	</div>
 </div>
 <ul class="pjSbOrdersList list-unstyled row">

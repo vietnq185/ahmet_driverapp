@@ -30,6 +30,9 @@ $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_da
              	<ul class="nav nav-tabs" role="tablist">
              		<li role="presentation" class="active"><a class="nav-tab-sms" href="#tab-sms" aria-controls="sms" role="tab" data-toggle="tab"><?php __('dash_sms');?></a></li>
     				<li role="presentation"><a class="nav-tab-popup" href="#tab-popup" aria-controls="popup" role="tab" data-toggle="tab"><?php __('dash_popup');?></a></li>
+    				<?php if ($tpl['option_arr']['o_enable_whatsapp_fearure'] == 'Yes') { ?>
+    					<li role="presentation"><a class="nav-tab-popup" href="#tab-whatsapp" aria-controls="whatsapp" role="tab" data-toggle="tab"><?php __('dash_whatsapp');?></a></li>
+    				<?php } ?>
     			</ul>
     			<div class="tab-content">
     				<div role="tabpanel" class="tab-pane active" id="tab-sms">
@@ -98,6 +101,59 @@ $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_da
     						</form>
     					</div>
     				</div>
+    				<?php if ($tpl['option_arr']['o_enable_whatsapp_fearure'] == 'Yes') { ?>
+        				<div role="tabpanel" class="tab-pane" id="tab-whatsapp">
+        					<div class="panel-body">
+        						<h3 class="text-center"><?php __('dash_send_whatsapp_message');?></h3>
+        						<form action="" method="post" id="frmSendWhatsapp">
+        							<input type="hidden" name="send_whatsapp" value="1" />
+        							<div class="form-group" style="display: none;">
+                        				<label class="control-label"><?php __('dash_whatsapp_provider');?>:</label>			
+                        				<select id="provider_id" name="provider_id" class="form-control">
+                        					<?php foreach ($tpl['provider_arr'] as $k => $val) { ?>
+                                            	<option value="<?php echo $val['id'];?>" <?php echo $k == 0 ? 'selected="selected"' : '';?>><?php echo pjSanitize::html($val['whatsapp_name']);?></option>
+                                            <?php } ?>
+                                        </select>
+                        			</div>
+                        			
+                        			<div class="form-group">
+                        				<label class="control-label"><?php __('dash_choose_driver');?>:</label>			
+                        				<select name="driver_id" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>">
+                        					<option value="">-- <?php __('lblChoose');?> --</option>
+                        					<option value="own_drivers_today"><?php __('dash_sms_own_drivers_today');?></option>
+                        					<option value="own_drivers_tomorrow"><?php __('dash_sms_own_drivers_tomorrow');?></option>
+                        					<?php foreach ($tpl['driver_arr'] as $val) { ?>
+                        						<option value="<?php echo $val['id'];?>"><?php echo pjSanitize::html($val['name']);?></option>
+                        					<?php } ?>
+                        				</select>
+                        			</div>
+                        			
+                        			<div class="form-group">
+                        				<label class="control-label"><?php __('dash_whatsapp_templates');?>:</label>			
+                        				<select id="whatsapp_template" name="whatsapp_template" class="form-control msg-group">
+                                            <option value="">-- <?php __('lblSelectTemplate');?> --</option>
+                                        </select>
+                        			</div>
+                        			
+                        			<div class="form-group">
+                        				<label class="control-label"><?php __('dash_message');?>:</label>			
+                        				<textarea rows="5" name="whatsapp_message" id="whatsapp_message" class="form-control msg-group" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>"></textarea>
+                        			</div>
+                        			
+                        			<div class="pjSbSendWhatsappMsg" style="display: none;">
+                        				<div class="alert"></div>
+                        			</div>
+                        			
+                        			<div class="m-t-lg">
+                        				<button type="submit" class="ladda-button btn btn-primary btn-lg btn-phpjabbers-loader pull-left" data-style="zoom-in">
+                        					<span class="ladda-label"><?php __('btnSend', false, true); ?></span>
+                        					<?php include $controller->getConstant('pjBase', 'PLUGIN_VIEWS_PATH') . 'pjLayouts/elements/button-animation.php'; ?>
+                        				</button>
+                        			</div><!-- /.m-b-lg -->
+        						</form>
+        					</div>
+        				</div>
+    				<?php } ?>
     			</div><!-- /.tab-content -->
     		</div><!-- /.tabs-container tabs-reservations m-b-lg -->
          </div><!-- /.col-lg-3 col-sm-6 -->
@@ -127,5 +183,6 @@ $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_da
 
 <script type="text/javascript">
 var myLabel = myLabel || {};
-
+myLabel.select_template = "-- <?php __('lblSelectTemplate');?> --";
+myLabel.dash_select_template_or_enter_message = "<?php __('dash_select_template_or_enter_message');?>";
 </script>

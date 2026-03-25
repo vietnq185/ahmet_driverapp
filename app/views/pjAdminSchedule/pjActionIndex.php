@@ -66,6 +66,12 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	    </div>
 	</div>
 	
+	<div class="modal inmodal fade" id="modalWhatsapp" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog">
+	        <div class="modal-content"></div>
+	    </div>
+	</div>
+	
 	<div class="modal inmodal fade" id="modalTurnover" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
 	    <div class="modal-dialog">
 	        <div class="modal-content"></div>
@@ -93,6 +99,37 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	<div class="modal inmodal fade" id="modalChangePickupTime" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
 	    <div class="modal-dialog modal-sm">
 	        <div class="modal-content"></div>
+	    </div>
+	</div>
+	
+	<div class="modal inmodal fade" id="modalDriverConfirmJobs" data-backdrop="static" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog modal-sm">
+	        <div class="modal-content">
+                  <div class="modal-body">
+                  	<div class="row">
+        				<div class="col-xs-12 text-center">
+                			<button class="btn btn-primary btnDriverConfirmTheJobs" type="button"><?php __('btnConfirmTheJobs');?></button>
+                    	</div>
+                	</div>
+                  </div>
+	        </div>
+	    </div>
+	</div>
+	
+	<div class="modal inmodal fade" id="modalGetDriverJobStatus" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog modal-sm">
+	        <div class="modal-content">
+	        	<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"><?php __('btnJobStatus');?></h4>
+                  </div>
+                  <div class="modal-body">
+                  	
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php __('btnClose');?></button>
+                  </div>
+	        </div>
 	    </div>
 	</div>
 	
@@ -232,6 +269,55 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	        </div>
 	    </div>
 	</div>
+	
+	
+	<div class="modal inmodal fade" id="modalCapacityWarning" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog modal-md">
+	        <div class="modal-content">
+	        	<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"><?php __('infoCapacityWarningTitle');?></h4>
+                  </div>
+                  <div class="modal-body">
+                  	
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal"><?php __('btnClose');?></button>
+                  </div>
+	        </div>
+	    </div>
+	</div>
+	
+	<div class="modal inmodal fade" id="modalAddNote" tabindex="-1" role="dialog" aria-hidden="true" style="display: none;">
+	    <div class="modal-dialog modal-md">
+	        <div class="modal-content">
+	        	<div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalAddNoteLabel"><?php __('infoAddNoteTitle');?></h4>
+                  </div>
+                  <div class="modal-body">
+                  	<form action="" method="post" class="" id="frmAddNote">
+    					<input type="hidden" name="add_note" value="1" />
+    					<input type="hidden" name="vehicle_id" value="" />
+    					<input type="hidden" name="vehicle_order" value="" />
+    					<input type="hidden" name="date" value="" />
+                      	<div class="form-group">
+                      		<textarea rows="5" name="notes" class="form-control required" data-msg-required="<?php __('plugin_base_this_field_is_required', false, true);?>"></textarea>
+            			</div>
+            			<div class="row">
+            				<div class="col-xs-12">
+                    			<div class="form-group">
+                    				<div class="pull-left"><button class="btn btn-primary btnConfirmAddNote" type="button"><?php __('btnSave');?></button></div>
+                    				<div class="pull-right"><button type="button" class="btn btn-default" data-dismiss="modal"><?php __('btnClose');?></button></div>
+                              	</div>
+                        	</div>
+                    	</div>
+                  	</form>
+                  </div>
+	        </div>
+	    </div>
+	</div>
+	
                 
 	<div id="popupMessage" style="display: none;"><?php echo isset($tpl['popup_message']) ? implode('<br/>', $tpl['popup_message']) : '';?></div>
 	<script type="text/javascript">
@@ -271,4 +357,8 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	myLabel.install_url = "<?php echo PJ_INSTALL_URL;?>";
 
 	myLabel.loading_info = "<?php __('lblLoadingFlightData');?>";
+	myLabel.hasAccessUnlock = <?php echo !pjAuth::factory('pjAdminSchedule', 'pjActionLockAssignments')->hasAccess() || $_SESSION['admin_user']['id'] == 1 ? 'false' : 'true';?>;
+	myLabel.dash_select_template_or_enter_message = "<?php __('dash_select_template_or_enter_message');?>";
+	myLabel.select_template = "-- <?php __('lblSelectTemplate');?> --";
+	myLabel.driver_confirmed_job = "<?php echo $tpl['driver_confirmed_job'];?>";
 	</script>

@@ -36,12 +36,17 @@ class pjAdminSchedule extends pjAdmin
         ->getData();
         $this->set('vehicle_arr', $vehicle_arr);
         
+        $date = date('Y-m-d');
+        $this->set('date', $date);
+        $driver_confirmed_job = 1;
         if ($this->isDriver()) {
             $popup_message = pjDriverPopupModel::factory()->where('t1.driver_id', $this->getUserId())->where('t1.is_displayed', 0)->findAll()->getDataPair(null, 'message');
             $this->set('popup_message', $popup_message);
+            
+            $driver_confirmed_job = $this->isDriverConfirmedJobs($this->getUserId(), $date);
         }
+        $this->set('driver_confirmed_job', $driver_confirmed_job);
         
-        $this->set('date', date('Y-m-d'));
         $this->appendCss('css/select2.min.css', PJ_THIRD_PARTY_PATH . 'select2/');
         $this->appendJs('js/select2.full.min.js', PJ_THIRD_PARTY_PATH . 'select2/');
         
@@ -55,8 +60,69 @@ class pjAdminSchedule extends pjAdmin
         
         $this->appendJs('jquery.datagrid.js', PJ_FRAMEWORK_LIBS_PATH . 'pj/js/');
         $this->appendJs('jquery-sortable.js');
-        $this->appendJs('jquery.validate.min.js', PJ_THIRD_PARTY_PATH . 'validate/')
+        $this->appendJs('jquery.validate.min.js', PJ_THIRD_PARTY_PATH . 'validate/');
+        $this->appendJs('additional-methods.js', PJ_THIRD_PARTY_PATH . 'validate/')
         ->appendJs('pjAdminSchedule.js');
+    }
+    
+    private function isDriverConfirmedJobs($driver_id, $date) {
+        $arr = pjDriverJobStatusModel::factory()
+            ->where('t1.driver_id', $driver_id)
+            ->where('t1.date', $date)
+            ->limit(1)
+            ->findAll()->getDataIndex(0);
+        if ($arr && $arr['status'] == 'T') {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    
+    public function pjActionDriverConfirmedJobs() {
+        $this->setAjax(true);
+        if ($this->_post->check('driver_confirmed_job')) {
+            $pjDriverJobStatusModel = pjDriverJobStatusModel::factory();
+            $date = pjDateTime::formatDate($this->_post->toString('date'), $this->option_arr['o_date_format']);
+            $arr = $pjDriverJobStatusModel->where('t1.driver_id', $this->getUserId())->where('t1.date', $date)->limit(1)->findAll()->getDataIndex(0);
+            if ($arr) {
+                $pjDriverJobStatusModel->reset()->set('id', $pjDriverJobStatusModel['id'])->modify(array('status' => 'T'));
+            } else {
+                $id = $pjDriverJobStatusModel->reset()->setAttributes(array('driver_id' => $this->getUserId(), 'date' => $date, 'status' => 'T'))->insert()->getInsertId();
+                if ($id !== false && (int)$id > 0) {
+                    pjAppController::jsonResponse(array('status' => 'OK'));
+                } else {
+                    pjAppController::jsonResponse(array('status' => 'ERR'));
+                }
+            }
+        }
+        pjAppController::jsonResponse(array('status' => 'OK'));
+    }
+    
+    public function pjActionCheckDriverConfirmedJobs() {
+        $this->setAjax(true);
+        $date = pjDateTime::formatDate($this->_post->toString('date'), $this->option_arr['o_date_format']);
+        $driver_confirmed_job = $this->isDriverConfirmedJobs($this->getUserId(), $date);
+        if ((int)$driver_confirmed_job == 1) {
+            pjAppController::jsonResponse(array('status' => 'OK'));
+        } else {
+            pjAppController::jsonResponse(array('status' => 'ERR'));
+        }
+    }
+    
+    public function pjActionGetDriverJobStatus() {
+        $this->setAjax(true);
+        
+        $driver_arr = pjMainDriverModel::factory()->find($this->_get->toInt('driver_id'))->getData();
+        $date = pjDateTime::formatDate($this->_get->toString('date'), $this->option_arr['o_date_format']);
+        $job_status_arr = pjDriverJobStatusModel::factory()
+        ->where('t1.driver_id', $this->_get->toInt('driver_id'))
+        ->where('t1.date', $date)
+        ->limit(1)
+        ->findAll()
+        ->getDataIndex(0);
+        
+        $this->set('driver_arr', $driver_arr)
+        ->set('job_status_arr', $job_status_arr);
     }
     
     private function getOrders($post=array()) {
@@ -163,62 +229,75 @@ class pjAdminSchedule extends pjAdmin
         $pjBookingModel->where("(DATE_FORMAT(t1.booking_date, '%Y-%m-%d')='$date')");
         $arr = $pjBookingModel
         ->select("t1.*, t2.content as fleet,
-                    (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
-					IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
-					IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
-					t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2,
-					IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
-					IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
-					t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
-					t6.title, t6.fname, t6.lname, t6.email,t6.phone, t10.content AS c_country_title, IF (t1.return_id > 0, '', t11.color) AS location_color")
-					->orderBy("t1.booking_date ASC")
-					->findAll()
-					->getData();
-					$booking_ids_arr = $booking_extras_arr = array();
-					foreach ($arr as $val) {
-					    $booking_ids_arr[] = $val['id'];
-					}
-					if ($booking_ids_arr) {
-					    $be_arr = pjBookingExtraModel::factory()->select('t1.*, t2.content AS name, t3.domain, t3.image_path')
-					    ->join('pjMultiLang', "t2.model='pjExtra' AND t2.foreign_id=t1.extra_id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
-					    ->join('pjExtra', 't3.id=t1.extra_id', 'left outer')
-					    ->whereIn('t1.booking_id', $booking_ids_arr)
-					    ->orderBy('t2.content ASC')
-					    ->findAll()
-					    ->getData();
-					    foreach ($be_arr as $val) {
-					        $booking_extras_arr[$val['booking_id']][] = $val;
-					    }
-					}
-					foreach ($arr as $i => $val) {
-					    $arr[$i]['extra_arr'] = isset($booking_extras_arr[$val['id']]) ? $booking_extras_arr[$val['id']] : array();
-					}
-					$booking_arr = array();
-					foreach ($arr as $val) {
-					    $booking_arr[$val['vehicle_id']][] = $val;
-					}
-					
-					$assigned_driver_arr = array();
-					$pjDriverVehicleModel = pjDriverVehicleModel::factory()
-					->join('pjMainDriver', 't2.id=t1.driver_id', 'left')
-					->where('t1.date', $date);
-					$dv_arr = $pjDriverVehicleModel->select('t1.*, t2.name AS driver_name')->findAll()->getData();
-					$driver_vehicle_arr = $assigned_driver_name_arr = array();
-					foreach ($dv_arr as $val) {
-					    $driver_vehicle_arr[$val['vehicle_id']][$val['order']] = $val['driver_id'];
-					    $assigned_driver_name_arr[$val['vehicle_id']][$val['order']] = $val['driver_name'];
-					    $assigned_driver_arr[$val['order']][] = $val['driver_id'];
-					}
-					
-					return array(
-					    'booking_arr' => $booking_arr,
-					    'vehicle_arr' => $vehicle_arr,
-					    'driver_arr' => $driver_arr,
-					    'driver_vehicle_arr' => $driver_vehicle_arr,
-					    'assigned_driver_name_arr' => $assigned_driver_name_arr,
-					    'date' => $date,
-					    'assigned_driver_arr' => $assigned_driver_arr
-					);
+        (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
+		IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
+		IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
+		t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2,
+		IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
+		IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
+		t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
+		t6.title, t6.fname, t6.lname, t6.email,t6.phone, t10.content AS c_country_title, IF (t1.return_id > 0, '', t11.color) AS location_color")
+		->orderBy("t1.booking_date ASC")
+		->findAll()
+		->getData();
+		$booking_ids_arr = $booking_extras_arr = array();
+		foreach ($arr as $val) {
+		    $booking_ids_arr[] = $val['id'];
+		}
+		if ($booking_ids_arr) {
+		    $be_arr = pjBookingExtraModel::factory()->select('t1.*, t2.content AS name, t3.domain, t3.image_path')
+		    ->join('pjMultiLang', "t2.model='pjExtra' AND t2.foreign_id=t1.extra_id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+		    ->join('pjExtra', 't3.id=t1.extra_id', 'left outer')
+		    ->whereIn('t1.booking_id', $booking_ids_arr)
+		    ->orderBy('t2.content ASC')
+		    ->findAll()
+		    ->getData();
+		    foreach ($be_arr as $val) {
+		        $booking_extras_arr[$val['booking_id']][] = $val;
+		    }
+		}
+		foreach ($arr as $i => $val) {
+		    $arr[$i]['extra_arr'] = isset($booking_extras_arr[$val['id']]) ? $booking_extras_arr[$val['id']] : array();
+		}
+		$booking_arr = array();
+		foreach ($arr as $val) {
+		    $booking_arr[$val['vehicle_id']][] = $val;
+		}
+		
+		$assigned_driver_arr = array();
+		$pjDriverVehicleModel = pjDriverVehicleModel::factory()
+		->join('pjMainDriver', 't2.id=t1.driver_id', 'left')
+		->where('t1.date', $date);
+		$dv_arr = $pjDriverVehicleModel->select('t1.*, t2.name AS driver_name')->findAll()->getData();
+		$driver_vehicle_arr = $assigned_driver_name_arr = array();
+		foreach ($dv_arr as $val) {
+		    $driver_vehicle_arr[$val['vehicle_id']][$val['order']] = $val['driver_id'];
+		    $assigned_driver_name_arr[$val['vehicle_id']][$val['order']] = $val['driver_name'];
+		    $assigned_driver_arr[$val['order']][] = $val['driver_id'];
+		}
+		
+		$note_arr = pjNoteModel::factory()->where('t1.status', 'T')->where('t1.date', $date)->orderBy('t1.id DESC')->findAll()->getData();
+		$vehicle_note_arr = array();
+		foreach ($note_arr as $note) {
+		    $vehicle_note_arr[$note['vehicle_id']][] = $note;
+		}
+		
+		$driver_job_status_arr = pjDriverJobStatusModel::factory()
+		->where('t1.date', $date)
+		->findAll()
+		->getDataPair('driver_id', 'status');
+		
+		return array(
+		    'booking_arr' => $booking_arr,
+		    'vehicle_arr' => $vehicle_arr,
+		    'driver_arr' => $driver_arr,
+		    'driver_vehicle_arr' => $driver_vehicle_arr,
+		    'assigned_driver_name_arr' => $assigned_driver_name_arr,
+		    'date' => $date,
+		    'assigned_driver_arr' => $assigned_driver_arr,
+		    'vehicle_note_arr' => $vehicle_note_arr,
+		    'driver_job_status_arr' => $driver_job_status_arr,
+		);
     }
     
     public function pjActionGetOrders() {
@@ -242,7 +321,9 @@ class pjAdminSchedule extends pjAdmin
             ->set('driver_vehicle_arr', $schedule_arr['driver_vehicle_arr'])
             ->set('date', $schedule_arr['date'])
             ->set('assigned_driver_arr', $schedule_arr['assigned_driver_arr'])
-            ->set('assigned_driver_name_arr', $schedule_arr['assigned_driver_name_arr']);
+            ->set('assigned_driver_name_arr', $schedule_arr['assigned_driver_name_arr'])
+            ->set('vehicle_note_arr', $schedule_arr['vehicle_note_arr'])
+            ->set('driver_job_status_arr', $schedule_arr['driver_job_status_arr']);
             
             $vehicle_from_api_arr = $this->getVehiclesFromAPI();
             $this->set('vehicle_from_api_arr', $vehicle_from_api_arr);
@@ -274,17 +355,72 @@ class pjAdminSchedule extends pjAdmin
                             $is_manual = 1;
                         }
                         
+                        $msg_arr = array();
                         if ($booking_ids = $this->_post->toArray('booking_ids')) {
-                            pjBookingModel::factory()->whereIn('id', $booking_ids)->modifyAll(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
+                            $original_booking_arr = pjBookingModel::factory()->select('t1.*, t2.content AS vehicle_name, t3.registration_number')
+                            ->join('pjMultiLang', "t2.model='pjVehicle' AND t2.foreign_id=t1.vehicle_id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+                            ->join('pjVehicle', 't3.id=t1.vehicle_id', 'left outer')
+                            ->whereIn('t1.id', $booking_ids)->findAll()->getData();
+                            
+                            $booking_uuids = array();
+                            $registration_number = '';
+                            foreach ($original_booking_arr as $ob) {
+                                $booking_uuids[] = $ob['uuid'];
+                                $registration_number = $ob['registration_number'];
+                            }
+                            
+                            
+                            pjBookingModel::factory()->reset()->whereIn('id', $booking_ids)->modifyAll(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
+                            
+                            if ($is_manual == 1) {
+                                $vehicle_arr = pjVehicleModel::factory()->select('t1.*, t2.content AS vehicle_name')
+                                ->join('pjMultiLang', "t2.model='pjVehicle' AND t2.foreign_id=t1.id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+                                ->find($this->_post->toInt('vehicle_id'))->getData();
+                                $booking_arr = pjBookingModel::factory()->reset()
+                                ->whereIn('t1.id', $booking_ids)
+                                ->where('t1.passengers > '.(int)$vehicle_arr['seats'])
+                                ->findAll()->getData();
+                                if ($booking_arr) {
+                                    foreach ($booking_arr as $booking) {
+                                        $msg_arr[] = sprintf(__('infoCapacityWarningDetails', true), '#'.$booking['id'], $booking['passengers'], $vehicle_arr['seats']);
+                                    }
+                                }
+                                $data_log = array(
+                                    'booking_id' => implode(",", $booking_ids),
+                                    'action' => "Bookings [".implode(",", $booking_uuids)."] assigned to vehicle [".$vehicle_arr["registration_number"]."]",
+                                    'user_id' => $this->getUserId()
+                                );
+                                if ($this->_post->check('date') && $this->_post->toString('date') != '') {
+                                    $data_log['booking_date'] = pjDateTime::formatDate($this->_post->toString('date'), $this->option_arr['o_date_format']);
+                                }
+                                if (count($original_booking_arr) == 1 && $original_booking_arr[0]['vehicle_id'] > 0) {
+                                    $data_log['action'] = "Booking [".$original_booking_arr[0]['id']."]: Vehicle reassigned. Old: [Vehicle ".$original_booking_arr[0]['registration_number']."] | New: [Vehicle ".$vehicle_arr['registration_number']."]";
+                                }
+                                pjLogModel::factory()->setAttributes($data_log)->insert();
+                            } else {
+                                $data_log = array(
+                                    'booking_id' => implode(",", $booking_ids),
+                                    'action' => "Unassigned Bookings [".implode(",", $booking_uuids)."] from vehicle [".$registration_number."]",
+                                    'user_id' => $this->getUserId()
+                                );
+                                if ($this->_post->check('date') && $this->_post->toString('date') != '') {
+                                    $data_log['booking_date'] = pjDateTime::formatDate($this->_post->toString('date'), $this->option_arr['o_date_format']);
+                                }
+                                pjLogModel::factory()->setAttributes($data_log)->insert();
+                            }
                         } else {
                             pjBookingModel::factory()->set('id', $this->_post->toInt('booking_id'))->modify(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
                         }
-                        pjAppController::jsonResponse(array('status' => 'OK'));
+                        
+                        pjAppController::jsonResponse(array('status' => 'OK', 'text' => implode("<br/>", $msg_arr)));
                         break;
                     case 'assign_driver':
                         $pjDriverVehicleModel = pjDriverVehicleModel::factory();
                         $date = pjDateTime::formatDate($this->_post->toString('date'), $this->option_arr['o_date_format']);
-                        $pjDriverVehicleModel
+                        
+                        $vehicle_arr = pjVehicleModel::factory()->find($this->_post->toInt('vehicle_id'))->getData();
+                        
+                         $pjDriverVehicleModel
                         ->where('vehicle_id', $this->_post->toInt('vehicle_id'))
                         ->where('date', $date)
                         ->where('`order`', $this->_post->toInt('order'))
@@ -301,11 +437,35 @@ class pjAdminSchedule extends pjAdmin
                             ->where('DATE(booking_date)', $date)
                             ->where('vehicle_order', $this->_post->toInt('order'))
                             ->modifyAll(array('app_driver_id' => $this->_post->toInt('driver_id')));
+                            
+                            $driver_arr = pjMainDriverModel::factory()->find($this->_post->toInt('driver_id'))->getData();
+                            $data_log = array(
+                                'action' => "Assign driver [".@$driver_arr['name']."] to vehicle [".@$vehicle_arr['registration_number']."] on [".$this->_post->toString('date')."]",
+                                'user_id' => $this->getUserId(),
+                                'booking_date' => $date
+                            );
+                            pjLogModel::factory()->setAttributes($data_log)->insert();
                         } else {
-                            pjBookingModel::factory()->where('vehicle_id', $this->_post->toInt('vehicle_id'))
+                            $data = pjBookingModel::factory()->reset()->select('t1.*, t2.name AS driver_name')
+                            ->join('pjMainDriver', 't2.id=t1.app_driver_id', 'left outer')
+                            ->where('vehicle_id', $this->_post->toInt('vehicle_id'))
+                            ->where('DATE(booking_date)', $date)
+                            ->where('vehicle_order', $this->_post->toInt('order'))
+                            ->limit(1)->findAll()->getDataIndex(0);
+                            
+                            pjBookingModel::factory()->reset()->where('vehicle_id', $this->_post->toInt('vehicle_id'))
                             ->where('DATE(booking_date)', $date)
                             ->where('vehicle_order', $this->_post->toInt('order'))
                             ->modifyAll(array('app_driver_id' => 0));
+                            
+                            $driver_arr = pjMainDriverModel::factory()->find($this->_post->toInt('driver_id'))->getData();
+                            
+                            $data_log = array(
+                                'action' => "Unassign driver [".@$data['driver_name']."] from vehicle [".@$vehicle_arr["registration_number"]."] on [".$this->_post->toString('date')."]",
+                                'user_id' => $this->getUserId(),
+                                'booking_date' => $date
+                            );
+                            pjLogModel::factory()->setAttributes($data_log)->insert();
                         }
                         
                         $vehicle_arr = pjVehicleModel::factory()->select('t1.*, t2.content AS name')
@@ -337,13 +497,37 @@ class pjAdminSchedule extends pjAdmin
                         ->set('assigned_driver_arr', $assigned_driver_arr);
                         break;
                     case 'delete':
+                        $arr = pjBookingModel::factory()->find($this->_post->toInt('booking_id'))->getData();
                         if (!$this->isDriver()) {
-                            pjBookingModel::factory()->set('id', $this->_post->toInt('booking_id'))->modify(array('admin_confirm_cancelled' => 1));
+                            pjBookingModel::factory()->reset()->set('id', $this->_post->toInt('booking_id'))->modify(array('admin_confirm_cancelled' => 1));
+                            $data_log = array(
+                                'booking_id' => $this->_post->toInt('booking_id'),
+                                'action' => "Admin confirmed cancellation for Booking [".$arr['uuid']."]",
+                                'user_id' => $this->getUserId(),
+                                'booking_date' => date('Y-m-d', strtotime($arr['booking_date']))
+                            );
+                            pjLogModel::factory()->setAttributes($data_log)->insert();
                         } else {
-                            pjBookingModel::factory()->set('id', $this->_post->toInt('booking_id'))->erase();
+                            pjBookingModel::factory()->reset()->set('id', $this->_post->toInt('booking_id'))->erase();
                             pjBookingExtraModel::factory()->where('booking_id', $this->_post->toInt('booking_id'))->eraseAll();
                             pjBookingPaymentModel::factory()->where('booking_id', $this->_post->toInt('booking_id'))->eraseAll();
+                            
+                            $data_log = array(
+                                'booking_id' => $this->_post->toInt('booking_id'),
+                                'action' => "Deleted Booking [".$arr['uuid']."]",
+                                'user_id' => $this->getUserId(),
+                                'booking_date' => date('Y-m-d', strtotime($arr['booking_date']))
+                            );
+                            pjLogModel::factory()->setAttributes($data_log)->insert();
                         }
+                        
+                        // If admin/driver deletes cancelled booking then locked its status in Booking System
+                        $pjHttp = new pjHttp();
+                        $booking_id = $arr['external_id'];
+                        $result = $pjHttp->curlRequest($arr['domain'].'/index.php?controller=pjApiSync&action=pjActionLockBookingStatus&booking_id='.$booking_id);
+                        $resp = $result->getResponse();
+                        $resp = json_decode($resp, true);
+                        
                         pjAppController::jsonResponse(array('status' => 'OK'));
                         break;
                 }
@@ -479,66 +663,76 @@ class pjAdminSchedule extends pjAdmin
         }
         set_time_limit(0);
         pjApiSync::pjActionPullGeneralData($this->option_arr);
-        pjUtil::redirect($_SERVER['PHP_SELF'] . "?controller=pjAdminSchedule&action=pjActionIndex");
+        $date = $this->_get->check('date') ? $this->_get->toString('date') : date($this->option_arr['o_date_format']);
+        pjUtil::redirect($_SERVER['PHP_SELF'] . "?controller=pjAdminSchedule&action=pjActionIndex&date=" . $date);
     }
     
     private function getDriverOrders($post=array()) {
+        $driver_arr = pjMainDriverModel::factory()->find($this->getUserId())->getData();
+        
         $pjBookingModel = pjBookingModel::factory()
         ->select("t1.*, t2.content as fleet,
-                (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
-				IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
-				IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
-				t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2,
-				IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
-				IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
-				t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
-				t6.title, t6.fname, t6.lname, t6.email,t6.phone, t10.content AS c_country_title, t11.color AS location_color")
-				->join('pjMultiLang', "t2.model='pjFleet' AND t2.foreign_id=t1.fleet_id AND t2.field='fleet' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
-				->join('pjMultiLang', "t3.model='pjLocation' AND t3.foreign_id=t1.location_id AND t3.field='pickup_location' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
-				->join('pjMultiLang', "t4.model='pjDropoff' AND t4.foreign_id=t1.dropoff_id AND t4.field='location' AND t4.locale='".$this->getLocaleId()."'", 'left outer')
-				->join('pjBooking', "t5.id=t1.return_id", 'left outer')
-				->join('pjClient', "t6.id=t1.client_id", 'left')
-				->join('pjMultiLang', "t7.model='pjAreaCoord' AND t7.foreign_id=t1.dropoff_place_id AND t7.field='place_name' AND t7.locale='".$this->getLocaleId()."'", 'left outer')
-				->join('pjAreaCoord', "t8.id=t1.dropoff_place_id", 'left')
-				->join('pjMultiLang', "t9.model='pjArea' AND t9.foreign_id=t8.area_id AND t9.field='name' AND t9.locale='".$this->getLocaleId()."'", 'left outer')
-				->join('pjMultiLang', "t10.model='pjBaseCountry' AND t10.foreign_id=t1.c_country AND t10.field='name' AND t10.locale='".$this->getLocaleId()."'", 'left outer')
-				->join('pjLocation', 't11.id=t1.location_id', 'left outer')
-				->where('t1.location_id!="" AND ((t1.dropoff_type="server" AND t1.dropoff_id!="") OR (t1.dropoff_type="google" AND t1.dropoff_place_id!=""))');
-				$date = pjDateTime::formatDate($post['date'], $this->option_arr['o_date_format']);
-				$pjBookingModel->where("(DATE_FORMAT(t1.booking_date, '%Y-%m-%d')='$date')");
-				$pjBookingModel->where('t1.vehicle_id IN (SELECT `vehicle_id` FROM `'.pjDriverVehicleModel::factory()->getTable().'` WHERE `driver_id`='.$this->getUserId().' AND `date`="'.$date.'" AND t1.vehicle_order=`order`)');
-				$order_arr = $pjBookingModel->orderBy("t1.booking_date ASC")
-				->findAll()
-				->getData();
-				$booking_ids_arr = $booking_extras_arr = array();
-				foreach ($order_arr as $val) {
-				    $booking_ids_arr[] = $val['id'];
-				}
-				if ($booking_ids_arr) {
-				    $be_arr = pjBookingExtraModel::factory()->select('t1.*, t2.content AS name')
-				    ->join('pjMultiLang', "t2.model='pjExtra' AND t2.foreign_id=t1.extra_id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
-				    ->whereIn('t1.booking_id', $booking_ids_arr)
-				    ->orderBy('t2.content ASC')
-				    ->findAll()
-				    ->getData();
-				    foreach ($be_arr as $val) {
-				        $booking_extras_arr[$val['booking_id']][] = $val;
-				    }
-				}
-				foreach ($order_arr as $i => $val) {
-				    $order_arr[$i]['extra_arr'] = isset($booking_extras_arr[$val['id']]) ? $booking_extras_arr[$val['id']] : array();
-				}
-				
-				$vehicle_arr = pjVehicleModel::factory()->select('t1.*, t3.content AS name')
-				->join('pjDriverVehicle', 't2.vehicle_id=t1.id', 'left outer')
-				->join('pjMultiLang', "t3.model='pjVehicle' AND t3.foreign_id=t1.id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
-				->where('t2.driver_id', $this->getUserId())
-				->where('t2.date', $date)
-				->limit(1)
-				->findAll()
-				->getDataIndex(0);
-				
-				return compact('order_arr', 'vehicle_arr');
+        (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
+		IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
+		IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
+		t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2,
+		IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
+		IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
+		t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
+		t6.title, t6.fname, t6.lname, t6.email,t6.phone, t10.content AS c_country_title, t11.color AS location_color")
+		->join('pjMultiLang', "t2.model='pjFleet' AND t2.foreign_id=t1.fleet_id AND t2.field='fleet' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+		->join('pjMultiLang', "t3.model='pjLocation' AND t3.foreign_id=t1.location_id AND t3.field='pickup_location' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
+		->join('pjMultiLang', "t4.model='pjDropoff' AND t4.foreign_id=t1.dropoff_id AND t4.field='location' AND t4.locale='".$this->getLocaleId()."'", 'left outer')
+		->join('pjBooking', "t5.id=t1.return_id", 'left outer')
+		->join('pjClient', "t6.id=t1.client_id", 'left')
+		->join('pjMultiLang', "t7.model='pjAreaCoord' AND t7.foreign_id=t1.dropoff_place_id AND t7.field='place_name' AND t7.locale='".$this->getLocaleId()."'", 'left outer')
+		->join('pjAreaCoord', "t8.id=t1.dropoff_place_id", 'left')
+		->join('pjMultiLang', "t9.model='pjArea' AND t9.foreign_id=t8.area_id AND t9.field='name' AND t9.locale='".$this->getLocaleId()."'", 'left outer')
+		->join('pjMultiLang', "t10.model='pjBaseCountry' AND t10.foreign_id=t1.c_country AND t10.field='name' AND t10.locale='".$this->getLocaleId()."'", 'left outer')
+		->join('pjLocation', 't11.id=t1.location_id', 'left outer')
+		->where('t1.location_id!="" AND ((t1.dropoff_type="server" AND t1.dropoff_id!="") OR (t1.dropoff_type="google" AND t1.dropoff_place_id!=""))');
+		$date = pjDateTime::formatDate($post['date'], $this->option_arr['o_date_format']);
+		$pjBookingModel->where("(DATE_FORMAT(t1.booking_date, '%Y-%m-%d')='$date')");
+		$pjBookingModel->where('t1.vehicle_id IN (SELECT `vehicle_id` FROM `'.pjDriverVehicleModel::factory()->getTable().'` WHERE `driver_id`='.$this->getUserId().' AND `date`="'.$date.'" AND t1.vehicle_order=`order`)');
+		
+		if ($driver_arr['type_of_driver'] == 'own' && $this->option_arr['o_driver_visibility_mode'] == 'scheduled') {
+		    $o_release_days_offset = (int)$this->option_arr['o_release_days_offset'];
+		    $o_release_time_threshold = $this->option_arr['o_release_time_threshold'];
+		    $pjBookingModel->where('NOW() >= TIMESTAMP(DATE_SUB(DATE(t1.booking_date), INTERVAL '.$o_release_days_offset.' DAY), "'.$o_release_time_threshold.'")');
+		}
+		
+		$order_arr = $pjBookingModel->orderBy("t1.booking_date ASC")
+		->findAll()
+		->getData();
+		$booking_ids_arr = $booking_extras_arr = array();
+		foreach ($order_arr as $val) {
+		    $booking_ids_arr[] = $val['id'];
+		}
+		if ($booking_ids_arr) {
+		    $be_arr = pjBookingExtraModel::factory()->select('t1.*, t2.content AS name')
+		    ->join('pjMultiLang', "t2.model='pjExtra' AND t2.foreign_id=t1.extra_id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+		    ->whereIn('t1.booking_id', $booking_ids_arr)
+		    ->orderBy('t2.content ASC')
+		    ->findAll()
+		    ->getData();
+		    foreach ($be_arr as $val) {
+		        $booking_extras_arr[$val['booking_id']][] = $val;
+		    }
+		}
+		foreach ($order_arr as $i => $val) {
+		    $order_arr[$i]['extra_arr'] = isset($booking_extras_arr[$val['id']]) ? $booking_extras_arr[$val['id']] : array();
+		}
+		
+		$vehicle_arr = pjVehicleModel::factory()->select('t1.*, t3.content AS name')
+		->join('pjDriverVehicle', 't2.vehicle_id=t1.id', 'left outer')
+		->join('pjMultiLang', "t3.model='pjVehicle' AND t3.foreign_id=t1.id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
+		->where('t2.driver_id', $this->getUserId())
+		->where('t2.date', $date)
+		->limit(1)
+		->findAll()
+		->getDataIndex(0);
+		
+		return compact('order_arr', 'vehicle_arr');
     }
     
     
@@ -559,43 +753,59 @@ class pjAdminSchedule extends pjAdmin
         if ($this->isXHR()) {
             $arr = pjBookingModel::factory()
             ->select("t1.*, t2.content as fleet,
-                    (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
-					IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
-					IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
-					t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2, t5.c_address AS c_address2, t5.c_destination_address AS c_destination_address2, t5.c_hotel as c_hotel2,
-					IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
-					IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
-					t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
-					t6.title, t6.fname, t6.lname, t6.email, t6.phone, t10.content AS c_country_title, t11.price AS duplicate_price")
-					->join('pjMultiLang', "t2.model='pjFleet' AND t2.foreign_id=t1.fleet_id AND t2.field='fleet' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
-					->join('pjMultiLang', "t3.model='pjLocation' AND t3.foreign_id=t1.location_id AND t3.field='pickup_location' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
-					->join('pjMultiLang', "t4.model='pjDropoff' AND t4.foreign_id=t1.dropoff_id AND t4.field='location' AND t4.locale='".$this->getLocaleId()."'", 'left outer')
-					->join('pjBooking', "t5.id=t1.return_id", 'left outer')
-					->join('pjClient', "t6.id=t1.client_id", 'left')
-					->join('pjMultiLang', "t7.model='pjAreaCoord' AND t7.foreign_id=t1.dropoff_place_id AND t7.field='place_name' AND t7.locale='".$this->getLocaleId()."'", 'left outer')
-					->join('pjAreaCoord', "t8.id=t1.dropoff_place_id", 'left')
-					->join('pjMultiLang', "t9.model='pjArea' AND t9.foreign_id=t8.area_id AND t9.field='name' AND t9.locale='".$this->getLocaleId()."'", 'left outer')
-					->join('pjMultiLang', "t10.model='pjBaseCountry' AND t10.foreign_id=t1.c_country AND t10.field='name' AND t10.locale='".$this->getLocaleId()."'", 'left outer')
-					->join('pjBooking', "t11.external_id=t1.external_id", 'left outer')
-					->find($this->_post->toInt('id'))
-					->getData();
-					$arr['extra_arr'] = pjBookingExtraModel::factory()->select('t1.*, t2.content AS name, t3.domain, t3.image_path')
-					->join('pjMultiLang', "t2.model='pjExtra' AND t2.foreign_id=t1.extra_id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
-					->join('pjExtra', 't3.id=t1.extra_id', 'left outer')
-					->where('t1.booking_id', $arr['id'])
-					->orderBy('t2.content ASC')
-					->findAll()
-					->getData();
-					$this->set('arr', $arr);
-					
-					$pjWhatsappMessageModel = pjWhatsappMessageModel::factory();
-					if ($this->isDriver()) {
-					    $pjWhatsappMessageModel->whereIn('t1.available_for', array('driver','both'));
-					} else {
-					    $pjWhatsappMessageModel->whereIn('t1.available_for', array('admin','both'));
-					}
-					$cnt_whatsapp_message = $pjWhatsappMessageModel->where('t1.status', 'T')->findCount()->getData();
-					$this->set('cnt_whatsapp_message', $cnt_whatsapp_message);
+            (IF (t1.return_id != '', (SELECT `uuid` FROM `".pjBookingModel::factory()->getTable()."` WHERE `id`=t1.return_id LIMIT 1), '')) AS return_uuid,
+			IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location,
+			IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS dropoff,
+			t5.uuid as uuid2, t5.dropoff_id as location_id2, t5.location_id AS dropoff_id2, t5.id as id2, t5.c_address AS c_address2, t5.c_destination_address AS c_destination_address2, t5.c_hotel as c_hotel2,
+			IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address)) AS location2,
+			IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS dropoff2,
+			t1.duration as duration2, t1.pickup_is_airport as return_pickup_is_airport, t1.dropoff_is_airport as return_dropoff_is_airport,
+			t6.title, t6.fname, t6.lname, t6.email, t6.phone, t10.content AS c_country_title, t11.price AS duplicate_price")
+			->join('pjMultiLang', "t2.model='pjFleet' AND t2.foreign_id=t1.fleet_id AND t2.field='fleet' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+			->join('pjMultiLang', "t3.model='pjLocation' AND t3.foreign_id=t1.location_id AND t3.field='pickup_location' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
+			->join('pjMultiLang', "t4.model='pjDropoff' AND t4.foreign_id=t1.dropoff_id AND t4.field='location' AND t4.locale='".$this->getLocaleId()."'", 'left outer')
+			->join('pjBooking', "t5.id=t1.return_id", 'left outer')
+			->join('pjClient', "t6.id=t1.client_id", 'left')
+			->join('pjMultiLang', "t7.model='pjAreaCoord' AND t7.foreign_id=t1.dropoff_place_id AND t7.field='place_name' AND t7.locale='".$this->getLocaleId()."'", 'left outer')
+			->join('pjAreaCoord', "t8.id=t1.dropoff_place_id", 'left')
+			->join('pjMultiLang', "t9.model='pjArea' AND t9.foreign_id=t8.area_id AND t9.field='name' AND t9.locale='".$this->getLocaleId()."'", 'left outer')
+			->join('pjMultiLang', "t10.model='pjBaseCountry' AND t10.foreign_id=t1.c_country AND t10.field='name' AND t10.locale='".$this->getLocaleId()."'", 'left outer')
+			->join('pjBooking', "t11.external_id=t1.external_id", 'left outer')
+			->find($this->_post->toInt('id'))
+			->getData();
+			$arr['extra_arr'] = pjBookingExtraModel::factory()->select('t1.*, t2.content AS name, t3.domain, t3.image_path')
+			->join('pjMultiLang', "t2.model='pjExtra' AND t2.foreign_id=t1.extra_id AND t2.field='name' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+			->join('pjExtra', 't3.id=t1.extra_id', 'left outer')
+			->where('t1.booking_id', $arr['id'])
+			->orderBy('t2.content ASC')
+			->findAll()
+			->getData();
+			$this->set('arr', $arr);
+			
+			$pjWhatsappMessageModel = pjWhatsappMessageModel::factory();
+			if ($this->isDriver()) {
+			    $pjWhatsappMessageModel->whereIn('t1.available_for', array('driver','both'));
+			} else {
+			    $pjWhatsappMessageModel->whereIn('t1.available_for', array('admin','both'));
+			}
+			$cnt_whatsapp_message = $pjWhatsappMessageModel->where('t1.status', 'T')->findCount()->getData();
+			$this->set('cnt_whatsapp_message', $cnt_whatsapp_message);
+			
+			$second_driver_arr = $ref_booking_arr = array();
+			if ($arr['ref_id'] == "") {
+			     $ref_booking_arr = pjBookingModel::factory()->reset()->where('t1.ref_id', $arr['id'])->limit(1)->findAll()->getDataIndex(0);
+			} elseif ($arr['ref_id'] != "") {
+			    $ref_booking_arr = pjBookingModel::factory()->reset()->where('t1.id', $arr['ref_id'])->limit(1)->findAll()->getDataIndex(0);
+			}
+			if ($ref_booking_arr) {
+			    $second_driver_arr = pjDriverVehicleModel::factory()->select('t1.*, t2.name, t2.phone')
+			    ->join('pjMainDriver', 't2.id=t1.driver_id', 'inner')
+			    ->where('t1.vehicle_id', $ref_booking_arr['vehicle_id'])
+			    ->where('t1.order', $ref_booking_arr['vehicle_order'])
+			    ->where('t1.date', date('Y-m-d', strtotime($ref_booking_arr['booking_date'])))
+			    ->limit(1)->findAll()->getDataIndex(0);
+			}
+			$this->set('second_driver_arr', $second_driver_arr);
         }
     }
     
@@ -617,6 +827,8 @@ class pjAdminSchedule extends pjAdmin
             ->findAll()
             ->getDataIndex(0);
             if ($arr) {
+                $provider_arr = pjProviderModel::factory()->where('t1.url', $arr['domain'])->limit(1)->findAll()->getDataIndex(0);
+                $this->set('provider_arr', $provider_arr);
                 $this->set('arr', $arr);
             } else {
                 $this->set('status', 2);
@@ -631,6 +843,7 @@ class pjAdminSchedule extends pjAdmin
         if ($this->isXHR()) {
             if ($this->_post->check('update_payment_status')) {
                 $pjBookingModel = pjBookingModel::factory();
+                $arr = $pjBookingModel->find($this->_post->toInt('id'))->getData();
                 $data = array();
                 if ($this->_post->toInt('payment_status') > 0) {
                     $data['driver_payment_status'] = $this->_post->toInt('payment_status');
@@ -638,7 +851,17 @@ class pjAdminSchedule extends pjAdmin
                     $data['driver_payment_status'] = ':NULL';
                 }
                 $data['is_enter_hale_cash_register'] = $this->_post->check('is_enter_hale_cash_register') ? $this->_post->toInt('is_enter_hale_cash_register') : 0; 
-                $pjBookingModel->set('id', $this->_post->toInt('id'))->modify($data);
+                $pjBookingModel->reset()->set('id', $this->_post->toInt('id'))->modify($data);
+                
+                $_driver_payment_status = __('_driver_payment_status', true);
+                $data_log = array(
+                    'booking_id' => $arr['id'],
+                    'action' => "Booking [".$arr['uuid']."]: Changed payment from [".@$_driver_payment_status[$arr['driver_payment_status']]."] to [".@$_driver_payment_status[$data['driver_payment_status']]."]",
+                    'user_id' => $this->getUserId(),
+                    'booking_date' => date('Y-m-d', strtotime($arr['booking_date']))
+                );
+                pjLogModel::factory()->setAttributes($data_log)->insert();
+                
                 if (in_array($this->_post->toInt('payment_status'), array(3,4,5,6))) {
                     $arr = $pjBookingModel->reset()
                     ->select("t1.*, t2.content as fleet, IF (t1.pickup_type='server', t3.content, t1.pickup_address) AS location, IF(t1.dropoff_type='server', CONCAT(t9.content,' - ', t7.content), t1.dropoff_address) AS dropoff,
@@ -667,7 +890,6 @@ class pjAdminSchedule extends pjAdmin
 					$notification = $pjNotificationModel->reset()->where('recipient', 'admin')->where('transport', 'email')->where('variant', 'change_payment_status')->limit(1)->findAll()->getDataIndex(0);
 					if((int) $notification['id'] > 0 && $notification['is_active'] == 1)
 					{
-					    $_driver_payment_status = __('_driver_payment_status', true);
 					    $driver_payment_status = sprintf(@$_driver_payment_status[$arr['driver_payment_status']], pjCurrency::formatPrice($arr['price'] + $arr['duplicate_price']));
 					    $resp = pjAppController::pjActionGetSubjectMessage($notification, $this->getLocaleId(), $this->getForeignId());
 					    $lang_message = $resp['lang_message'];
@@ -706,7 +928,17 @@ class pjAdminSchedule extends pjAdmin
         $this->setAjax(true);
         if ($this->isXHR()) {
             if ($this->_post->check('update_driver_status')) {
-                pjBookingModel::factory()->set('id', $this->_post->toInt('id'))->modify(array('driver_status' => $this->_post->toInt('driver_status')));
+                $arr = pjBookingModel::factory()->find($this->_post->toInt('id'))->getData();
+                pjBookingModel::factory()->reset()->set('id', $this->_post->toInt('id'))->modify(array('driver_status' => $this->_post->toInt('driver_status')));
+                
+                $_booking_driver_statuses = __('_booking_driver_statuses', true);
+                $data_log = array(
+                    'booking_id' => $arr['id'],
+                    'action' => "Booking [".$arr['uuid']."]: Changed booking status from [".@$_booking_driver_statuses[$arr['driver_status']]."] to [".@$_booking_driver_statuses[$this->_post->toInt('driver_status')]."]",
+                    'user_id' => $this->getUserId(),
+                    'booking_date' => date('Y-m-d', strtotime($arr['booking_date']))
+                );
+                pjLogModel::factory()->setAttributes($data_log)->insert();
             }
         }
         pjAppController::jsonResponse(array('status' => 'OK'));
@@ -975,6 +1207,15 @@ class pjAdminSchedule extends pjAdmin
             $arr = pjBookingModel::factory()->find($this->_post->toInt('id'))->getData();
             $booking_date = date('Y-m-d', strtotime($arr['booking_date'])).' '.pjDateTime::formatTime($this->_post->toString('new_pickup_time'), $this->option_arr['o_time_format'], 'H:i:s');
             pjBookingModel::factory()->reset()->set('id', $this->_post->toInt('id'))->modify(array('prev_booking_date' => $arr['booking_date'], 'booking_date' => $booking_date));
+            
+            $data_log = array(
+                'booking_id' => $arr['id'],
+                'action' => "Booking [".$arr['uuid']."]: Changed Pick-up time from [".date('H:i', strtotime($arr['booking_date']))."] to [".date('H:i', strtotime($booking_date))."]",
+                'user_id' => $this->getUserId(),
+                'booking_date' => date('Y-m-d', strtotime($arr['booking_date']))
+            );
+            pjLogModel::factory()->setAttributes($data_log)->insert();
+            
             self::jsonResponse(array('status' => 'OK', 'text' => 'Pick-up time has been updated!'));
         }
         
@@ -1512,6 +1753,187 @@ class pjAdminSchedule extends pjAdmin
         $arr = pjAppController::getMultipleFlights($listFlights, $date, $this->option_arr);
         $this->set('arr', $arr);
         $this->set('cnt', $cnt);
+    }
+    
+    public function pjActionSendWhatsapp()
+    {
+        $this->setAjax(true);
+        
+        if (!$this->isXHR())
+        {
+            self::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => 'Missing headers.'));
+        }
+        
+        if ($this->_post->check('send_whatsapp'))
+        {
+            $post = $this->_post->raw();
+            $message = $post['whatsapp_message'];
+            $provider_id = $post['provider_id'];
+            $driver_id = $post['driver_id'];
+            //$provider_id = 4;
+            $provider_arr = pjProviderModel::factory()->find($provider_id)->getData();
+            $driver_arr = pjMainDriverModel::factory()->find($driver_id)->getData();
+            
+            $date = isset($post['date']) ? $post['date'] : date($this->option_arr['o_date_format']);
+            $driver_name = @$driver_arr['name'];
+            
+            $accessToken = $provider_arr['whatsapp_permanent_access_token'];
+            $phoneNumberId = $provider_arr['whatsapp_phone_number_id'];
+            $arr = pjMainDriverModel::factory()->find($post['driver_id'])->getData();
+            if ($arr) {
+                $url = "https://graph.facebook.com/v18.0/$phoneNumberId/messages";
+                $driver_id = $arr['id'];
+                $driver_phone = $arr['phone'];
+                $driver_phone = ltrim($driver_phone, '0+');
+                if (!empty($post['whatsapp_template'])) {
+                    list($name, $lang) = explode('~:~', $post['whatsapp_template']);
+                    $data_replace = [
+                        'driver_name' => $driver_name,
+                        'date'     => $date
+                    ];
+                    $mappedParams = pjAppController::getWhatsappTemplateParameters($name, $data_replace);
+                    $data = [
+                        "messaging_product" => "whatsapp",
+                        "to" => $driver_phone,
+                        "type" => "template",
+                        "template" => [
+                            "name" => $name,
+                            "language" => [ "code" => $lang ],
+                            "components" => [
+                                [
+                                    "type" => "body",
+                                    "parameters" => $mappedParams
+                                ]
+                            ]
+                        ]
+                    ];
+                    
+                    $search = array('{{driver_name}}', '{{drivername}}', '{{date}}');
+                    $replace = array($driver_name, $driver_name, $date);
+                    $message = str_replace($search, $replace, $message);
+                } else {
+                    $data = [
+                        "messaging_product" => "whatsapp",
+                        "to" => $driver_phone,
+                        "type" => "text",
+                        "text" => ["body" => $message]
+                    ];
+                }
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, 1);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    "Authorization: Bearer $accessToken",
+                    "Content-Type: application/json"
+                ]);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                
+                $res = curl_exec($ch);
+                curl_close($ch);
+                $res = json_decode($res, true);
+                if (isset($res['messages'][0]['id'])) {
+                    $data_insert = array(
+                        'wa_message_id' => $res['messages'][0]['id'],
+                        'provider_id' => $provider_id,
+                        'driver_phone' => $driver_phone,
+                        'direction' => 'sent',
+                        'content' => $message
+                    );
+                    pjWhatsappChatHistoryModel::factory()->reset()->setAttributes($data_insert)->insert();
+                    // success
+                } else {
+                    // failed
+                }
+            }
+            pjAppController::jsonResponse(array('status' => 'OK', 'text' => __('dash_message_sent_successfully', true)));
+        }
+        
+        if (self::isGet() && $this->_get->check('driver_id') && $this->_get->toInt('driver_id') > 0 && $this->_get->check('vehicle_id') && $this->_get->toInt('vehicle_id') > 0)
+        {
+            $driver_arr = pjAuthUserModel::factory()->find($this->_get->toInt('driver_id'))->getData();
+            $this->set('driver_arr', $driver_arr);
+            
+            $provider_arr = pjProviderModel::factory()->where('t1.status', 'T')->orderBy('t1.whatsapp_name ASC')->findAll()->getData();
+            $this->set('provider_arr', $provider_arr);
+        } else {
+            exit;
+        }
+    }
+    
+    public function pjActionAddNotesForVehicle()
+    {
+        $this->setAjax(true);
+        
+        if (!$this->isXHR())
+        {
+            self::jsonResponse(array('status' => 'ERR', 'code' => 100, 'text' => 'Missing headers.'));
+        }
+        
+        if ($this->_post->check('add_note'))
+        {
+            $post = $this->_post->raw();
+            $data = array();
+            $data['status'] = 'T';
+            if (isset($post['date']) && !empty($post['date']))
+            {
+                $data['date'] = pjDateTime::formatDate($post['date'], $this->option_arr['o_date_format']);
+            }
+            $note_id = pjNoteModel::factory(array_merge($post, $data))->insert()->getInsertId();
+            if ($note_id !== false && (int) $note_id > 0)
+            {
+                self::jsonResponse(array('status' => 'OK', 'text' => nl2br($post['notes'])));
+            }
+            pjAppController::jsonResponse(array('status' => 'ERR'));
+        }
+        pjAppController::jsonResponse(array('status' => 'ERR'));
+    }
+    
+    public function pjActionGetTemplates() {
+        $this->setAjax(true);
+        $provider_id = $this->_get->toInt('provider_id');
+        //$provider_id = 4;
+        $provider_arr = pjProviderModel::factory()->find($provider_id)->getData();
+        $token = $provider_arr['whatsapp_permanent_access_token'];
+        $wabaId = $this->option_arr['o_whatsapp_business_account_id'];
+        
+        $url = "https://graph.facebook.com/v18.0/$wabaId/message_templates?limit=100";
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer $token"]);
+        $response = curl_exec($ch);
+        $data = json_decode($response, true);
+        
+        $templates = [];
+        if (isset($data['data'])) {
+            foreach ($data['data'] as $tpl) {
+                if ($tpl['status'] === 'APPROVED') {
+                    $bodyText = "";
+                    // Meta trả về components là một mảng, phải tìm đúng type = BODY
+                    foreach ($tpl['components'] as $component) {
+                        if ($component['type'] === 'BODY') {
+                            $bodyText = $component['text'];
+                            break;
+                        }
+                    }
+                    $templates[] = [
+                        'name' => $tpl['name'],
+                        'value' => $tpl['name'].'~:~'.$tpl['language'],
+                        'language' => $tpl['language'],
+                        'body' => $bodyText
+                    ];
+                }
+            }
+        }
+        pjAppController::jsonResponse($templates);
+    }
+    
+    public function pjActionUpdateBookingDateInLog(){
+        $arr = pjLogModel::factory()->findAll()->getData();
+        foreach ($arr as $val) {
+            pjLogModel::factory()->reset()->set('id', $val['id'])->modify(array('booking_date' => date('Y-m-d', strtotime($val['created']))));
+        }
+        echo "updated!!!";
+        exit;
     }
     
     public function pjActionChat(){

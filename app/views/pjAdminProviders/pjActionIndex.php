@@ -66,6 +66,7 @@ $get = $controller->_get->raw();
 	pjGrid.hasAccessDeleteSingle = <?php echo pjAuth::factory('pjAdminProviders', 'pjActionDelete')->hasAccess() ? 'true' : 'false';?>;
 	pjGrid.hasAccessDeleteMulti = <?php echo pjAuth::factory('pjAdminProviders', 'pjActionDeleteBulk')->hasAccess() ? 'true' : 'false';?>;
 	
+	myLabel.provider_logo = "<?php __('lblProviderLogo'); ?>";
 	myLabel.provider_name = "<?php __('lblProviderName'); ?>";
 	myLabel.provider_url = "<?php __('lblProviderURL'); ?>";
 	myLabel.vehicle_status = "<?php __('lblStatus'); ?>";
@@ -73,4 +74,9 @@ $get = $controller->_get->raw();
 	myLabel.inactive = "<?php __('filter_ARRAY_inactive'); ?>";
 	myLabel.delete_selected = "<?php __('delete_selected', false, true); ?>";
 	myLabel.delete_confirmation = "<?php __('delete_confirmation', false, true); ?>";
+
+	myLabel.alert_delete_logo_title = <?php x__encode('logo_image_dtitle');?>;
+	myLabel.alert_delete_logo_text = <?php x__encode('logo_image_dbody');?>;
+	myLabel.btn_delete = <?php x__encode('btnDelete'); ?>;
+	myLabel.btn_cancel = <?php x__encode('btnCancel'); ?>;
 	</script>
