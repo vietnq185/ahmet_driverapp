@@ -42,4 +42,13 @@ ServerSignature Off
   </FilesMatch>
 </IfModule>
 
+<IfModule mod_headers.c>
+    # Cấm cache các file logic và giao diện chính
+    <FilesMatch "\.(html|htm|js|css|php)$">
+        Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+        Header set Pragma "no-cache"
+        Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+    </FilesMatch>
+</IfModule>
+
 AddHandler application/x-httpd-php74 .php
