@@ -1,47 +1,27 @@
 <?php 
-$total_bookings = $total_amount = $total_paid = $total_cc = $total_cash = 0;
+$total_bookings = $total_amount = $total_paid = $total_cc = $total_cash = $total_paysafe = 0;
 foreach ($tpl['data']['report_arr'] as $val) {
     $total_bookings++;
     $price = $val['price'];
-    if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
-        if (isset($tpl['custom_amount_arr'][$val['id']]['total_cash']) && (float)$tpl['custom_amount_arr'][$val['id']]['total_cash'] > 0) {
-            $total_cash += $tpl['custom_amount_arr'][$val['id']]['total_cash'];
-            $price = $tpl['custom_amount_arr'][$val['id']]['total_cash'];
-        } else {
-            $total_cash += $val['price'];
-        }
-    } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
-        if (isset($tpl['custom_amount_arr'][$val['id']]['total_cc']) && (float)$tpl['custom_amount_arr'][$val['id']]['total_cc'] > 0) {
-            $total_cc += $tpl['custom_amount_arr'][$val['id']]['total_cc'];
-            $price = $tpl['custom_amount_arr'][$val['id']]['total_cc'];
-        } else {
-            $total_cc += $val['price'];
-        }
-    } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
-        if (isset($tpl['custom_amount_arr'][$val['id']]['total_paid']) && (float)$tpl['custom_amount_arr'][$val['id']]['total_paid'] > 0) {
-            $total_paid += $tpl['custom_amount_arr'][$val['id']]['total_paid'];
-            $price = $tpl['custom_amount_arr'][$val['id']]['total_paid'];
-        } else {
-            $total_paid += $val['price'];
-        }
-    } elseif ($val['payment_method'] == 'cash'){
-        if (isset($tpl['custom_amount_arr'][$val['id']]['total_cash']) && (float)$tpl['custom_amount_arr'][$val['id']]['total_cash'] > 0) {
-            $total_cash += $tpl['custom_amount_arr'][$val['id']]['total_cash'];
-            $price = $tpl['custom_amount_arr'][$val['id']]['total_cash'];
-        } else {
-            $total_cash += $val['price'];
-        }
-    } elseif ($val['payment_method'] == 'creditcard_later'){
-        if (isset($tpl['custom_amount_arr'][$val['id']]['total_cc']) && (float)$tpl['custom_amount_arr'][$val['id']]['total_cc'] > 0) {
-            $total_cc += $tpl['custom_amount_arr'][$val['id']]['total_cc'];
-            $price = $tpl['custom_amount_arr'][$val['id']]['total_cc'];
-        } else {
-            $total_cc += $val['price'];
-        }
+    if (isset($tpl['custom_amount_arr'][$val['id']]) && $tpl['custom_amount_arr'][$val['id']]) {
+        $total_cash += $tpl['custom_amount_arr'][$val['id']]['total_cash'];
+        $total_cc += $tpl['custom_amount_arr'][$val['id']]['total_cc'];
+        $total_paysafe += $tpl['custom_amount_arr'][$val['id']]['total_paysafe'];
+        $total_paid += $tpl['custom_amount_arr'][$val['id']]['total_paid'];
+        $price = (float)$tpl['custom_amount_arr'][$val['id']]['total_cash'] + (float)$tpl['custom_amount_arr'][$val['id']]['total_cc'] + (float)$tpl['custom_amount_arr'][$val['id']]['total_paysafe'] + (float)$tpl['custom_amount_arr'][$val['id']]['total_paid'];
     } else {
-        if (isset($tpl['custom_amount_arr'][$val['id']]['total_paid']) && (float)$tpl['custom_amount_arr'][$val['id']]['total_paid'] > 0) {
-            $total_paid += $tpl['custom_amount_arr'][$val['id']]['total_paid'];
-            $price = $tpl['custom_amount_arr'][$val['id']]['total_paid'];
+        if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
+            $total_cash += $val['price'];
+        } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
+            $total_cc += $val['price'];
+        } elseif (in_array($val['payment_method'], array('cash','creditcard_later')) && !empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+            $total_paysafe += $val['price'];
+        } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+            $total_paid += $val['price'];
+        } elseif ($val['payment_method'] == 'cash'){
+            $total_cash += $val['price'];
+        } elseif ($val['payment_method'] == 'creditcard_later'){
+            $total_cc += $val['price'];
         } else {
             $total_paid += $val['price'];
         }
@@ -51,15 +31,16 @@ foreach ($tpl['data']['report_arr'] as $val) {
 $commission_pct = (float)$tpl['data']['partner_arr']['commission_pct'];
 $commission = ($total_amount*$commission_pct)/100;
 //Billing Amount=(Paid by partner)−(Commission) - (Paid bookings we made)
-$billing_amount = $total_paid - $commission;
+$billing_amount = $total_paid + $total_paysafe - $commission;
 ?>
 <div class="billing-summary-box">
     <h3 class="text-warning"><?php __('lblReportBillingTotal');?></h3>
     <div class="row text-center grey-box">
         <div class="col-md-2"><strong><?php __('lblReportBillingTotalBookings');?>:</strong><br><?php echo $total_bookings;?></div>
-        <div class="col-md-3"><strong><?php __('lblReportBillingTotalAmount');?>:</strong><br><?php echo pjCurrency::formatPrice($total_amount);?></div>
+        <div class="col-md-2"><strong><?php __('lblReportBillingTotalAmount');?>:</strong><br><?php echo pjCurrency::formatPrice($total_amount);?></div>
         <div class="col-md-2"><strong><?php __('lblReportBillingPaid');?>:</strong><br><?php echo pjCurrency::formatPrice($total_paid);?></div>
-        <div class="col-md-3"><strong><?php __('lblReportBillingCreditCard');?>:</strong><br><?php echo pjCurrency::formatPrice($total_cc);?></div>
+        <div class="col-md-2"><strong><?php __('lblReportBillingCreditCard');?>:</strong><br><?php echo pjCurrency::formatPrice($total_cc);?></div>
+        <div class="col-md-2"><strong>Paysafe QR Code:</strong><br><?php echo pjCurrency::formatPrice($total_paysafe);?></div>
         <div class="col-md-2"><strong><?php __('lblReportBillingCash');?>:</strong><br><?php echo pjCurrency::formatPrice($total_cash);?></div>
     </div>
 </div>
@@ -76,45 +57,31 @@ $billing_amount = $total_paid - $commission;
                 <th><?php __('lblReportBillingFromTo');?></th>
                 <th><?php __('lblReportBillingPaid');?></th>
                 <th><?php __('lblReportBillingCreditCard');?></th>
+                <th>Paysafe QR Code</th>
                 <th><?php __('lblReportBillingCash');?></th>
             </tr>
         </thead>
         <tbody>
         	<?php foreach ($tpl['data']['report_arr'] as $order) { 
-        	    $paid = $cc = $cash = 0;
-        	    if (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(1,5))) {
-        	        if (isset($tpl['custom_amount_arr'][$order['id']]['total_cash']) && (float)$tpl['custom_amount_arr'][$order['id']]['total_cash'] > 0) {
-        	            $cash = $tpl['custom_amount_arr'][$order['id']]['total_cash'];
-        	        } else {
-        	            $cash = $order['price'];
-        	        }
-        	    } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(2,6))){
-        	        if (isset($tpl['custom_amount_arr'][$order['id']]['total_cc']) && (float)$tpl['custom_amount_arr'][$order['id']]['total_cc'] > 0) {
-        	            $cc = $tpl['custom_amount_arr'][$order['id']]['total_cc'];
-        	        } else {
-        	            $cc = $order['price'];
-        	        }
-        	    } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
-        	        if (isset($tpl['custom_amount_arr'][$order['id']]['total_paid']) && (float)$tpl['custom_amount_arr'][$order['id']]['total_paid'] > 0) {
-        	            $paid = $tpl['custom_amount_arr'][$order['id']]['total_paid'];
-        	        } else {
-        	            $paid = $order['price'];
-        	        }
-        	    } elseif ($order['payment_method'] == 'cash'){
-        	        if (isset($tpl['custom_amount_arr'][$order['id']]['total_cash']) && (float)$tpl['custom_amount_arr'][$order['id']]['total_cash'] > 0) {
-        	            $cash = $tpl['custom_amount_arr'][$order['id']]['total_cash'];
-        	        } else {
-        	            $cash = $order['price'];
-        	        }
-        	    } elseif ($order['payment_method'] == 'creditcard_later'){
-        	        if (isset($tpl['custom_amount_arr'][$order['id']]['total_cc']) && (float)$tpl['custom_amount_arr'][$order['id']]['total_cc'] > 0) {
-        	            $cc = $tpl['custom_amount_arr'][$order['id']]['total_cc'];
-        	        } else {
-        	            $cc = $order['price'];
-        	        }
+        	    $paid = $cc = $cash = $paysafe = 0;
+        	    if (isset($tpl['custom_amount_arr'][$order['id']]) && $tpl['custom_amount_arr'][$order['id']]) {
+        	        $cash = $tpl['custom_amount_arr'][$order['id']]['total_cash'];
+        	        $cc = $tpl['custom_amount_arr'][$order['id']]['total_cc'];
+        	        $paysafe = $tpl['custom_amount_arr'][$order['id']]['total_paysafe'];
+        	        $paid = $tpl['custom_amount_arr'][$order['id']]['total_paid'];
         	    } else {
-        	        if (isset($tpl['custom_amount_arr'][$order['id']]['total_paid']) && (float)$tpl['custom_amount_arr'][$order['id']]['total_paid'] > 0) {
-        	            $paid = $tpl['custom_amount_arr'][$order['id']]['total_paid'];
+        	        if (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(1,5))) {
+        	            $cash = $order['price'];
+        	        } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(2,6))){
+        	            $cc = $order['price'];
+        	        } elseif (in_array($order['payment_method'], array('cash','creditcard_later')) && !empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
+        	            $paysafe = $order['price'];
+        	        } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
+        	            $paid = $order['price'];
+        	        } elseif ($order['payment_method'] == 'cash'){
+        	            $cash = $order['price'];
+        	        } elseif ($order['payment_method'] == 'creditcard_later'){
+        	            $cc = $order['price'];
         	        } else {
         	            $paid = $order['price'];
         	        }
@@ -138,6 +105,12 @@ $billing_amount = $total_paid - $commission;
                     <td>
 						<div class="input-group width-150">
                             <input type="text" class="form-control text-right save-price-trigger" data-booking_id="<?php echo $order['id'];?>" data-name="total_cc" name="total_cc[<?php echo $order['id'];?>]" value="<?php echo $cc;?>">
+                            <span class="input-group-addon">€</span>
+                        </div>
+					</td>
+					<td>
+						<div class="input-group width-150">
+                            <input type="text" class="form-control text-right save-price-trigger" data-booking_id="<?php echo $order['id'];?>" data-name="total_paysafe" name="total_paysafe[<?php echo $order['id'];?>]" value="<?php echo $paysafe;?>">
                             <span class="input-group-addon">€</span>
                         </div>
 					</td>
@@ -166,7 +139,7 @@ $billing_amount = $total_paid - $commission;
         <div class="calc-row">
             <span><?php __('lblReportBillingPaidBookingsMadeByPartner');?>:</span>
             <div class="input-group width-150">
-                <input type="text" class="form-control text-right calc-trigger" name="paid_by_partner_amount" value="<?php echo number_format($total_paid, 2, '.', '');?>">
+                <input type="text" class="form-control text-right calc-trigger" name="paid_by_partner_amount" value="<?php echo number_format($total_paid + $total_paysafe, 2, '.', '');?>">
                 <span class="input-group-addon">€</span>
             </div>
         </div>

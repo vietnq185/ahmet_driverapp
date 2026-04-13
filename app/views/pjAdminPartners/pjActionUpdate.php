@@ -17,7 +17,7 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
             <div class="col-sm-12">
                 <h2><?php __('infoUpdatePartnerTitle');?></h2>
                 <ol class="breadcrumb">
-					<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminPartners&amp;action=pjActionIndex"><?php __('menuPartners');?></a></li>
+					<li><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminPartners&amp;action=pjActionIndex"><?php __('MenuPartners');?></a></li>
 					<li class="active">
 						<strong><?php __('infoUpdatePartnerTitle');?></strong>
 					</li>

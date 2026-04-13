@@ -39,8 +39,16 @@ $message = str_replace('confirmation', 'confirm', $message);
 			{
 				?>
 				<div class="notification-area<?php echo $tpl['arr']['is_active'] && $is_ready ? NULL : ' hidden'; ?>">
+					<?php if ($controller->_get->toString('variant') == 'change_payment_status') { ?>
+    					<div class="form-group">
+    						<label class="control-label"><?php __('opt_o_admin_change_payment_status_email');?></label>
+    						<div>
+    							<input type="text" name="o_admin_change_payment_status_email" class="form-control email" value="<?php echo pjSanitize::html($tpl['option_arr']['o_admin_change_payment_status_email']); ?>">
+    						</div>
+    					</div>
+					<?php } ?>
 					<div class="form-group">
-						<label class="control-label"><?php __('notifications_subject'); ?></label>
+						<label class="control-label">Subject</label>
 						<?php
 						foreach ($tpl['lp_arr'] as $v)
 						{
@@ -57,7 +65,7 @@ $message = str_replace('confirmation', 'confirm', $message);
 					</div>
 			
 					<div class="form-group">
-						<label class="control-label"><?php __('notifications_message'); ?></label>
+						<label class="control-label">Body</label>
 						<?php
 						foreach ($tpl['lp_arr'] as $v)
 						{
@@ -80,7 +88,7 @@ $message = str_replace('confirmation', 'confirm', $message);
 				?>
 				<div class="notification-area<?php echo $tpl['arr']['is_active'] && $is_ready ? NULL : ' hidden'; ?>">
 					<div class="form-group">
-						<label class="control-label"><?php __('notifications_message'); ?></label>
+						<label class="control-label">Body</label>
 						<?php
 						foreach ($tpl['lp_arr'] as $v)
 						{

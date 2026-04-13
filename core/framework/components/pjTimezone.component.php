@@ -54,6 +54,7 @@ class pjTimezone
     public function setDatabaseTimezone($offset="+0:00")
     {
         pjAppModel::factory()->prepare("SET SESSION time_zone = :offset;")->exec(compact('offset'));
+        pjAppModel::factory()->prepare("SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));");
     }
     
     /**

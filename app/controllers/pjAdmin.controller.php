@@ -14,6 +14,10 @@ class pjAdmin extends pjAppController
 	
 	public $requireLogin = true;
 	
+	public $vehicle_base_lat = '47.2576489';
+	public $vehicle_base_lng = '11.3513075';
+	public $threshold = 1; // Ngưỡng 1000 mét
+	
 	public function __construct($requireLogin=null)
 	{
 		$this->setLayout('pjActionAdmin');
@@ -250,12 +254,14 @@ class pjAdmin extends pjAppController
             ->where('t1.status !=', 'cancelled')
             ->whereNotIn('t1.driver_status', array(4,5))
             ->findAll()->getData();
-        $total_paid_today = $total_cc_today = $total_cash_today = 0;
+        $total_paid_today = $total_cc_today = $total_paysafe_today = $total_cash_today = 0;
         foreach ($today_booking_arr as $val) {
             if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
                 $total_cash_today += $val['price'];
             } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
                 $total_cc_today += $val['price'];
+            } elseif (in_array($val['payment_method'], array('cash','creditcard_later')) && !empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+                $total_paysafe_today += $val['price'];
             } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
                 $total_paid_today += $val['price'];
             } elseif ($val['payment_method'] == 'cash'){
@@ -272,10 +278,10 @@ class pjAdmin extends pjAppController
         ->set('total_amount_today', $amount_today_arr['total_amount'])
         ->set('total_own_amount_today', $amount_own_vehicles_arr['total_amount'])
         ->set('total_partner_amount_today', $amount_partner_vehicles_arr['total_amount'])    
-        
-        ->set('total_paid_toay', $total_paid_today)
-        ->set('total_cc_toay', $total_cc_today)
-        ->set('total_cash_toay', $total_cash_today);
+        ->set('total_paid_today', $total_paid_today)
+        ->set('total_cc_today', $total_cc_today)
+        ->set('total_cash_today', $total_cash_today)
+        ->set('total_paysafe_today', $total_paysafe_today);
         
         $driver_arr = pjMainDriverModel::factory()->select('t1.id, t1.name, t1.email, t1.phone')
         ->where('t1.status', 'T')
@@ -294,6 +300,134 @@ class pjAdmin extends pjAppController
         $this->appendJs('additional-methods.js', PJ_THIRD_PARTY_PATH . 'validate/');
         $this->appendJs('pjAdmin.js');
         $this->appendJs('pjAdminDashboard.js');
+    }
+    
+    public function pjActionGetMetric() {
+        $this->setAjax(true);
+        
+        $today = date('Y-m-d');
+        
+        $top_driver_arr = pjBookingModel::factory()->reset()->select('t1.app_driver_id, t2.name AS driver_name, SUM(t1.price) as total_revenue')
+        ->join('pjMainDriver', 't2.id=t1.app_driver_id', 'inner')
+        ->join('pjVehicle', 't3.id=t1.vehicle_id', 'inner')
+        ->where('t3.type', 'own')
+        ->where('DATE(t1.booking_date)', $today)
+        ->where('t1.status !=', 'cancelled')
+        ->groupBy('t1.app_driver_id')
+        ->orderBy('total_revenue DESC')
+        ->limit(1)
+        ->findAll()
+        ->getDataIndex(0);
+        
+        $cnt_bookings_arr = pjBookingModel::factory()->reset()->select('COUNT(*) AS cnt_bookings')
+        ->join('pjVehicle', 't2.id=t1.vehicle_id', 'inner')
+        ->where('t2.type', 'own')
+        ->where('DATE(t1.booking_date)', $today)
+        ->where('t1.status !=', 'cancelled')
+        ->limit(1)
+        ->findAll()
+        ->getDataIndex(0);
+        
+        $top_destination_arr = pjBookingModel::factory()->reset()->select("
+            (IF(t1.return_id IS NOT NULL AND t1.return_id>0, (IF (t1.pickup_type='server', t3.content, t1.pickup_address)), (IF(t1.platform='oldsystem', t4.content, IF(t1.dropoff_type='server', CONCAT(t8.content,' - ', t6.content), t1.dropoff_address))))) AS `destination`,
+            COUNT(*) AS cnt_bookings
+        ")
+        ->join('pjMultiLang', "t2.model='pjFleet' AND t2.foreign_id=t1.fleet_id AND t2.field='fleet' AND t2.locale='".$this->getLocaleId()."'", 'left outer')
+        ->join('pjMultiLang', "t3.model='pjLocation' AND t3.foreign_id=t1.location_id AND t3.field='pickup_location' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
+        ->join('pjMultiLang', "t4.model='pjDropoff' AND t4.foreign_id=t1.dropoff_id AND t4.field='location' AND t4.locale='".$this->getLocaleId()."'", 'left outer')
+        ->join('pjBooking', "t5.id=t1.return_id", 'left outer')
+        ->join('pjMultiLang', "t6.model='pjAreaCoord' AND t6.foreign_id=t1.dropoff_place_id AND t6.field='place_name' AND t6.locale='".$this->getLocaleId()."'", 'left outer')
+        ->join('pjAreaCoord', "t7.id=t1.dropoff_place_id", 'left')
+        ->join('pjMultiLang', "t8.model='pjArea' AND t8.foreign_id=t7.area_id AND t8.field='name' AND t8.locale='".$this->getLocaleId()."'", 'left outer')
+        ->join('pjVehicle', 't9.id=t1.vehicle_id', 'inner')
+        ->where('t9.type', 'own')
+        ->where('DATE(t1.booking_date)', $today)
+        ->where('t1.status !=', 'cancelled')
+        ->groupBy('1')
+        ->orderBy('2 DESC')
+        ->limit(1)
+        ->findAll()->getDataIndex(0);
+        
+        $arr = pjBookingModel::factory()->reset()
+        ->select("t1.vehicle_id, t1.distance, t1.pickup_lat, t1.pickup_lng, t1.dropoff_lat, t1.dropoff_lng, t2.registration_number, t3.content AS vehicle_name")
+        ->join('pjVehicle', 't2.id=t1.vehicle_id', 'inner')
+        ->join('pjMultiLang', "t3.model='pjVehicle' AND t3.foreign_id=t2.id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
+        ->where("DATE(t1.booking_date)='".$today."'")
+        ->where("t1.status !='cancelled'")
+        //->where('t2.type', 'own')
+        ->orderBy("t1.vehicle_id ASC, t1.booking_date ASC")
+        ->findAll()->getData();
+        $bookings = array();
+        foreach ($arr as $booking) {
+            $bookings[$booking['vehicle_id']][] = $booking;
+        }
+        $results = [];
+        $lastCoords = []; // Lưu tọa độ điểm kết thúc của xe trước đó
+        
+        foreach ($bookings as $vehId => $val) {
+            $lastBooking = end($val);
+            foreach ($val as $b) {
+                if (!isset($lastCoords[$vehId])) {
+                    $prevLat = $this->vehicle_base_lat;
+                    $prevLng = $this->vehicle_base_lng;
+                    $results[$vehId]['total_driven_km'] = 0;
+                    $results[$vehId]['vehicle_name'] = pjSanitize::clean($b['vehicle_name'].' | '.$b['registration_number']);
+                } else {
+                    $prevLat = $lastCoords[$vehId]['lat'];
+                    $prevLng = $lastCoords[$vehId]['lng'];
+                }
+                
+                $emptyRunData = pjAppController::calcEmptyRunDistance($prevLat, $prevLng, (float)$b['pickup_lat'], (float)$b['pickup_lng'], $this->option_arr);
+                $emptyRun = 0;
+                if ($emptyRunData) {
+                    $emptyRun = $emptyRunData['distance'] / 1000;
+                }
+                
+                $results[$vehId]['total_driven_km'] += ($emptyRun + (float)$b['distance']);
+                
+                $lastCoords[$vehId] = ['lat' => $b['dropoff_lat'], 'lng' => $b['dropoff_lng']];
+            }
+            // Tính khoảng cách đường chim bay từ điểm trả cuối về Base
+            $distanceToBase = pjAppController::calcEmptyRunDistance(
+                (float)$lastBooking['dropoff_lat'],
+                (float)$lastBooking['dropoff_lng'],
+                $this->vehicle_base_lat,
+                $this->vehicle_base_lng,
+                $this->option_arr
+                );
+            // Nếu khoảng cách lớn hơn 100m mới cần tính thêm chặng về
+            if ($distanceToBase && $distanceToBase['distance'] > $this->threshold) {
+                $results[$vehId]['total_driven_km'] += $distanceToBase['distance'] / 1000;
+            }
+        }
+        
+        $total_distance = 0;
+        $max_vehicle = array();
+        if ($results) {
+            uasort($results, function($a, $b) {
+                return $b['total_driven_km'] <=> $a['total_driven_km'];
+            });
+            $idx = 0;
+            foreach ($results as $vehId => $val) {
+                $total_distance += $val['total_driven_km'];
+                if ($idx == 0) {
+                    $val['total_driven_km'] = round($val['total_driven_km']);
+                    $max_vehicle = $val;
+                }
+                $idx++;
+            }
+            $total_distance = round($total_distance);
+        }
+        
+        $data = array(
+            'top_driver_arr' => $top_driver_arr ? $top_driver_arr : array(),
+            'total_bookings' => $cnt_bookings_arr ? $cnt_bookings_arr['cnt_bookings'] : 0,
+            'top_destination_arr' => $top_destination_arr ? $top_destination_arr : array(),
+            'total_distance' => $total_distance,
+            'max_vehicle' => $max_vehicle
+        );
+        
+        pjAppController::jsonResponse($data);
     }
     
     public function pjActionSendSms()

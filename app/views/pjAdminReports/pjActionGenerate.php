@@ -6,8 +6,9 @@ foreach ($tpl['provider_arr'] as $pro) {
     $sum_report_per_provider[$pro['url']]['total_cash'] = 0;
     $sum_report_per_provider[$pro['url']]['total_cc'] = 0;
     $sum_report_per_provider[$pro['url']]['total_paid'] = 0;
+    $sum_report_per_provider[$pro['url']]['total_paysafe'] = 0;
 }
-$total_amount = $total_paid = $total_cc = $total_cash = 0;
+$total_amount = $total_paid = $total_cc = $total_cash = $total_paysafe = 0;
 foreach ($tpl['order_arr'] as $val) {
     $total_amount += $val['price'];
     $sum_report_per_provider[$val['domain']]['total_amount'] += $val['price'];
@@ -18,6 +19,9 @@ foreach ($tpl['order_arr'] as $val) {
     } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
         $total_cc += $val['price'];
         $sum_report_per_provider[$val['domain']]['total_cc'] += $val['price'];
+    } elseif (in_array($val['payment_method'], array('cash','creditcard_later')) && !empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+        $total_paysafe += $val['price'];
+        $sum_report_per_provider[$val['domain']]['total_paysafe'] += $val['price'];
     } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
         $total_paid += $val['price'];
         $sum_report_per_provider[$val['domain']]['total_paid'] += $val['price'];
@@ -35,7 +39,7 @@ foreach ($tpl['order_arr'] as $val) {
 ?>
 <h2 class="text-warning"><?php __('lblReportTotal');?></h2>
 <div class="row">
-    <div class="col-lg-3 col-md-3 col-xs-6">
+    <div class="col-lg-2 col-md-4 col-xs-6">
         <div class="form-group">
             <label class="control-label"><?php __('lblTotalBookings'); ?>:</label>
 
@@ -43,7 +47,7 @@ foreach ($tpl['order_arr'] as $val) {
         </div><!-- /.form-group -->
     </div>
 
-    <div class="col-lg-3 col-md-3 col-xs-6">
+    <div class="col-lg-2 col-md-4 col-xs-6">
         <div class="form-group">
             <label class="control-label"><?php __('lblTotalAmount'); ?>:</label>
 
@@ -51,7 +55,7 @@ foreach ($tpl['order_arr'] as $val) {
         </div><!-- /.form-group -->
     </div>
 
-    <div class="col-lg-2 col-md-2 col-xs-6">
+    <div class="col-lg-2 col-md-4 col-xs-6">
         <div class="form-group">
             <label class="control-label"><?php __('report_paid'); ?>:</label>
 
@@ -59,7 +63,7 @@ foreach ($tpl['order_arr'] as $val) {
         </div><!-- /.form-group -->
     </div>
 
-    <div class="col-lg-2 col-md-2 col-xs-6">
+    <div class="col-lg-2 col-md-4 col-xs-6">
         <div class="form-group">
             <label class="control-label"><?php __('report_creditcard'); ?>:</label>
 
@@ -67,7 +71,15 @@ foreach ($tpl['order_arr'] as $val) {
         </div><!-- /.form-group -->
     </div>
     
-    <div class="col-lg-2 col-md-2 col-xs-6">
+    <div class="col-lg-2 col-md-4 col-xs-6">
+        <div class="form-group">
+            <label class="control-label">Paysafe QR Code:</label>
+
+            <div><?php echo pjCurrency::formatPrice($total_paysafe);?></div>
+        </div><!-- /.form-group -->
+    </div>
+    
+    <div class="col-lg-2 col-md-4 col-xs-6">
         <div class="form-group">
             <label class="control-label"><?php __('report_cash'); ?>:</label>
 
@@ -80,7 +92,7 @@ foreach ($tpl['order_arr'] as $val) {
 	<div class="hr-line-dashed"></div>
 	<h2 class="text-warning"><?php echo __('lblReportProvider', true).' '.pjSanitize::html($pro['name']);?></h2>
     <div class="row">
-        <div class="col-lg-3 col-md-3 col-xs-6">
+        <div class="col-lg-2 col-md-4 col-xs-6">
             <div class="form-group">
                 <label class="control-label"><?php __('lblTotalBookings'); ?>:</label>
     
@@ -88,7 +100,7 @@ foreach ($tpl['order_arr'] as $val) {
             </div><!-- /.form-group -->
         </div>
     
-        <div class="col-lg-3 col-md-3 col-xs-6">
+        <div class="col-lg-2 col-md-4 col-xs-6">
             <div class="form-group">
                 <label class="control-label"><?php __('lblTotalAmount'); ?>:</label>
     
@@ -96,7 +108,7 @@ foreach ($tpl['order_arr'] as $val) {
             </div><!-- /.form-group -->
         </div>
     
-        <div class="col-lg-2 col-md-2 col-xs-6">
+        <div class="col-lg-2 col-md-4 col-xs-6">
             <div class="form-group">
                 <label class="control-label"><?php __('report_paid'); ?>:</label>
     
@@ -104,7 +116,7 @@ foreach ($tpl['order_arr'] as $val) {
             </div><!-- /.form-group -->
         </div>
     
-        <div class="col-lg-2 col-md-2 col-xs-6">
+        <div class="col-lg-2 col-md-4 col-xs-6">
             <div class="form-group">
                 <label class="control-label"><?php __('report_creditcard'); ?>:</label>
     
@@ -112,7 +124,15 @@ foreach ($tpl['order_arr'] as $val) {
             </div><!-- /.form-group -->
         </div>
         
-        <div class="col-lg-2 col-md-2 col-xs-6">
+        <div class="col-lg-2 col-md-4 col-xs-6">
+            <div class="form-group">
+                <label class="control-label">Paysafe QR Code:</label>
+    
+                <div><?php echo pjCurrency::formatPrice($sum_report_per_provider[$pro['url']]['total_paysafe']);?></div>
+            </div><!-- /.form-group -->
+        </div>
+        
+        <div class="col-lg-2 col-md-4 col-xs-6">
             <div class="form-group">
                 <label class="control-label"><?php __('report_cash'); ?>:</label>
     
@@ -133,6 +153,7 @@ foreach ($tpl['order_arr'] as $val) {
                     <th><?php __('report_from_to');?></th>
                     <th class="text-right"><?php __('report_paid');?></th>
                     <th class="text-right"><?php __('report_creditcard');?></th>
+                    <th class="text-right">Paysafe QR Code</th>
     				<th class="text-right"><?php __('report_cash');?></th>
                 </tr>
             </thead>
@@ -140,11 +161,13 @@ foreach ($tpl['order_arr'] as $val) {
                 <?php
     			foreach($tpl['order_arr'] as $v)
     			{
-    			    $paid = $cc = $cash = 0;
+    			    $paid = $cc = $cash = $paysafe = 0;
     			    if (!empty($v['driver_payment_status']) && in_array($v['driver_payment_status'], array(1,5))) {
     			        $cash = $v['price'];
     			    } elseif (!empty($v['driver_payment_status']) && in_array($v['driver_payment_status'], array(2,6))){
     			        $cc = $v['price'];
+    			    } elseif (in_array($v['payment_method'], array('cash','creditcard_later')) && !empty($v['driver_payment_status']) && in_array($v['driver_payment_status'], array(8))){
+    			        $paysafe = $v['price'];
     			    } elseif (!empty($v['driver_payment_status']) && in_array($v['driver_payment_status'], array(8))){
     			        $paid = $v['price'];
     			    } elseif ($v['payment_method'] == 'cash'){
@@ -160,6 +183,7 @@ foreach ($tpl['order_arr'] as $val) {
     					<td><?php echo (int)$v['return_id'] > 0 ? pjSanitize::html($v['location2']) : pjSanitize::html($v['location']);?> - <?php echo (int)$v['return_id'] > 0 ? pjSanitize::html($v['dropoff2']) : pjSanitize::html($v['dropoff']);?></td>
     					<td class="text-right"><?php echo pjCurrency::formatPrice($paid);?></td>
     					<td class="text-right"><?php echo pjCurrency::formatPrice($cc);?></td>
+    					<td class="text-right"><?php echo pjCurrency::formatPrice($paysafe);?></td>
     					<td class="text-right"><?php echo pjCurrency::formatPrice($cash);?></td>
     				</tr>
     				<?php

@@ -31,6 +31,7 @@
 					<?php foreach ($tpl['vehicle_arr'] as $i => $veh) { ?>
 						<td class="<?php echo $i%2 == 0 ? 'odd' : 'even';?> <?php echo $veh['schedule_status'] == 'T' ? ' pjSbOrdersVehicleActive' : ' pjSbOrdersVehicleInactive';?>" align="center">
 							<h3 class="driverName" id="driver_name_<?php echo $veh['id'];?>_1"><?php echo isset($tpl['assigned_driver_name_arr'][$veh['id']][1]) ? pjSanitize::html($tpl['assigned_driver_name_arr'][$veh['id']][1]) : __('lblNoSelected', true);?></h3>
+							<h4 class="text-warning pjVehicleDdrivenKm_<?php echo $veh['id'];?>" style="margin-bottom: 0;"><?php echo isset($tpl['vehicle_driven_km_arr'][$veh['id']]) ? $tpl['vehicle_driven_km_arr'][$veh['id']]['total_driven_km'] : 0;?> km</h4>
 						</td>
 					<?php } ?>
 				</tr>
@@ -260,6 +261,7 @@
 					<?php foreach ($tpl['vehicle_arr'] as $i => $veh) { ?>
 						<td class="<?php echo $i%2 == 0 ? 'odd' : 'even';?>  <?php echo $veh['schedule_status'] == 'T' ? ' pjSbOrdersVehicleActive' : ' pjSbOrdersVehicleInactive';?>" align="center">
 							<h3 class="driverName" id="driver_name_<?php echo $veh['id'];?>_2"><?php echo isset($tpl['assigned_driver_name_arr'][$veh['id']][2]) ? pjSanitize::html($tpl['assigned_driver_name_arr'][$veh['id']][2]) : __('lblNoSelected', true);?></h3>
+							<h4 class="text-warning pjVehicleDdrivenKm_<?php echo $veh['id'];?>" style="margin-bottom: 0;"><?php echo isset($tpl['vehicle_driven_km_arr'][$veh['id']]) ? $tpl['vehicle_driven_km_arr'][$veh['id']]['total_driven_km'] : 0;?> km</h4>
 						</td>
 					<?php } ?>
 				</tr>

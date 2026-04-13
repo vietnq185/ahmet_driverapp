@@ -1,7 +1,127 @@
+<style>
+    /* Container chung cho Grid */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+/* Base Card Style */
+.metric-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px; /* Tăng padding để box thoáng hơn */
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: transform 0.2s ease;
+    border-left: 6px solid #ccc; 
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px; /* Tăng chiều cao tối thiểu */
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Định dạng tiêu đề nhỏ phía trên */
+.m-title {
+    font-size: 1.2rem; /* Tăng từ 0.75rem */
+    font-weight: 800;  /* Tăng độ đậm */
+    color: #4a5568;    /* Màu đậm hơn (Slate Gray) */
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 12px;
+}
+
+/* Định dạng giá trị chính (Số lớn) */
+.m-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: #1a202c;
+}
+
+.m-value small {
+    font-size: 1.1rem;
+    color: #718096;
+    margin-left: 6px;
+    font-weight: 600;
+}
+
+/* Định dạng dòng chú thích phía dưới */
+.m-comp {
+    font-size: 1.5rem;
+    color: #4a5568;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #edf2f7; /* Đường kẻ rõ hơn */
+    font-weight: 500;
+}
+
+.m-comp span {
+    font-weight: 700;
+    color: #2d3748; 
+}
+#op-top-dest {
+    font-size: 1.2rem; /* Size vừa phải cho địa chỉ dài */
+    font-weight: 700;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Giới hạn tối đa 2 dòng */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Custom Colors cho từng loại Box */
+.border-driver { border-left-color: #2ecc71; } /* Xanh lá - Tài xế */
+.border-km { border-left-color: #3498db; }     /* Xanh dương - KM */
+.border-vehicle { border-left-color: #9b59b6; } /* Tím - Xe */
+.border-dest { border-left-color: #e74c3c; }    /* Đỏ - Điểm đến */
+
+/* Utility class cho Grid */
+.span-3 { grid-column: span 3; }
+
+/* Responsive cho Mobile */
+@media (max-width: 768px) {
+    .span-3 { grid-column: span 12; }
+}
+</style>
 <?php
 $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_date_format']);
 ?>
 <div class="wrapper wrapper-content animated fadeInRight">
+	
+	<div class="row">
+    	<div class="col-xs-12">
+    		<div class="grid" style="margin-top: 20px;">
+                <div class="card span-3 metric-card" style="border-left-color: #2ecc71;">
+                    <div class="m-title">Top Driver Today</div>
+                    <div class="m-value" style="font-size: 22px;"><span id="op-driver-id">-</span></div>
+                    <div class="m-comp">Revenue: <?php echo pjCurrency::getCurrencySign($tpl['option_arr']['o_currency'], false);?><span id="op-driver-rev">0</span></div>
+                </div>
+            
+                <div class="card span-3 metric-card" style="border-left-color: #3498db;">
+                    <div class="m-title">Total Distance (Own)</div>
+                    <div class="m-value"><span id="op-total-km">0</span> <small>KM</small></div>
+                    <div class="m-comp">Bookings: <span id="op-total-km-bookings">0</span></div>
+                </div>
+            
+                <div class="card span-3 metric-card" style="border-left-color: #9b59b6;">
+                    <div class="m-title">Most Used Vehicle</div>
+                    <div class="m-value" style="font-size: 18px;"><span id="op-veh-id">-</span></div>
+                    <div class="m-comp">Total: <span id="op-veh-km">0</span> KM</div>
+                </div>
+            
+                <div class="card span-3 metric-card" style="border-left-color: #e74c3c;">
+                    <div class="m-title">Top Destination</div>
+                    <div class="m-value" style="font-size: 16px; line-height: 1.2; height: 40px; overflow: hidden;" id="op-top-dest">-</div>
+                    <div class="m-comp">Bookings: <span id="op-top-dest-bookings">0</span></div>
+                </div>
+            </div>
+    	</div>
+    </div>
+    <div class="hr-line-dashed"></div>
+    
     <div class="row">
          <div class="col-lg-3 col-sm-6">
          	<div class="ibox float-e-margins">
@@ -14,9 +134,10 @@ $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_da
          			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_total_bookings_own_vehicles'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_own_amount_today']);?></span></p>
          			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_total_bookings_partner_vehicles'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_partner_amount_today']);?></span></p>
          			<hr />   
-         			<p class="clearfix"><span class="pull-left"><?php __('dash_paid'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_paid_toay']);?></span></p>
-         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_credit_card'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_cc_toay']);?></span></p>
-         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_cash'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_cash_toay']);?></span></p>
+         			<p class="clearfix"><span class="pull-left"><?php __('dash_paid'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_paid_today']);?></span></p>
+         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_credit_card'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_cc_today']);?></span></p>
+         			<p class="clearfix"><span class="pull-left padding-sm">Paysafe QR Code</span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_paysafe_today']);?></span></p>
+         			<p class="clearfix"><span class="pull-left padding-sm"><?php __('dash_cash'); ?></span><span class="pull-right"><?php echo pjCurrency::formatPrice((float)$tpl['total_cash_today']);?></span></p>
          			<?php if(pjAuth::factory('pjAdminSchedule', 'pjActionIndex')->hasAccess()) { ?>
              			<p>
              				<a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminSchedule&amp;action=pjActionIndex" class="btn btn-primary btn-block" target="_blank"><?php __('btnSchedule');?></a>
@@ -172,7 +293,7 @@ $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_da
     							</div>
     						</div>
     						<input type="hidden" name="today_ts" id="today_ts" value="<?php echo time();?>" />
-    						<div id="chart-1" style="height: 450px"></div>
+    						<div id="chart-1" style="height: 290px"></div>
     					</div>
     				</div>
     			</div><!-- /.tab-content -->

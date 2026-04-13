@@ -19,6 +19,7 @@ class pjPartnerReportBookingAmountModel extends pjAppModel
 		array('name' => 'total_cash', 'type' => 'decimal', 'default' => ':NULL'),
 	    array('name' => 'total_cc', 'type' => 'decimal', 'default' => ':NULL'),
 	    array('name' => 'total_paid', 'type' => 'decimal', 'default' => ':NULL'),
+	    array('name' => 'total_paysafe', 'type' => 'decimal', 'default' => ':NULL'),
 		array('name' => 'created', 'type' => 'datetime', 'default' => ':NOW()')
 	);
 	

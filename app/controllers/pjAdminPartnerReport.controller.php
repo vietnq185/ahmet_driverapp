@@ -58,7 +58,7 @@ class pjAdminPartnerReport extends pjAdmin
 	        $partner_arr = pjPartnerModel::factory()->findAll()->getDataPair('id', null);
 	    }
 	    
-	    $total_bookings = $total_amount = $total_paid = $total_cc = $total_cash = $total_comm = 0;
+	    $total_bookings = $total_amount = $total_paid = $total_cc = $total_paysafe = $total_cash = $total_comm = 0;
 	    if ($partner_ids) {
 	        $tblPartnerVehicle = pjPartnerVehicleModel::factory()->getTable();
 	        $pjPartnerReportBookingAmountModel = pjPartnerReportBookingAmountModel::factory();
@@ -111,6 +111,9 @@ class pjAdminPartnerReport extends pjAdmin
     		      if (!isset($partner_arr[$partner_id]['total_cc'])) {
     		          $partner_arr[$partner_id]['total_cc'] = 0;
     		      }
+    		      if (!isset($partner_arr[$partner_id]['total_paysafe'])) {
+    		          $partner_arr[$partner_id]['total_paysafe'] = 0;
+    		      }
     		      if (!isset($partner_arr[$partner_id]['total_cash'])) {
     		          $partner_arr[$partner_id]['total_cash'] = 0;
     		      }
@@ -123,62 +126,49 @@ class pjAdminPartnerReport extends pjAdmin
     		          
     		          $partner_arr[$partner_id]['total_bookings'] += 1;
     		          
-    		          if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
-    		              if (isset($custom_amount_arr[$val['id']]['total_cash']) && (float)$custom_amount_arr[$val['id']]['total_cash'] > 0) {
-    		                  $price = $custom_amount_arr[$val['id']]['total_cash'];
-    		                  $total_cash += $price;
-    		                  $partner_arr[$partner_id]['total_cash'] += $price;
-    		              } else {
+    		          if (isset($custom_amount_arr[$val['id']]) && $custom_amount_arr[$val['id']]) {
+    		              $cash = $custom_amount_arr[$val['id']]['total_cash'];
+    		              $cc = $custom_amount_arr[$val['id']]['total_cc'];
+    		              $paysafe = $custom_amount_arr[$val['id']]['total_paysafe'];
+    		              $paid = $custom_amount_arr[$val['id']]['total_paid'];
+    		              
+    		              $price = (float)$cash + (float)$cc + (float)$paysafe + (float)$paid;
+    		              
+    		              $total_cash += $cash;
+    		              $partner_arr[$partner_id]['total_cash'] += $cash;
+    		              
+    		              $total_cc += $cc;
+    		              $partner_arr[$partner_id]['total_cc'] += $cc;
+    		              
+    		              $total_paid += $paid;
+    		              $partner_arr[$partner_id]['total_paid'] += $paid;
+    		              
+    		              $total_paysafe += $paysafe;
+    		              $partner_arr[$partner_id]['total_paysafe'] += $paysafe;
+    		          } else {
+    		              if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
     		                  $total_cash += $val['price'];
     		                  $partner_arr[$partner_id]['total_cash'] += $val['price'];
-    		              }
-    		          } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
-    		              if (isset($custom_amount_arr[$val['id']]['total_cc']) && (float)$custom_amount_arr[$val['id']]['total_cc'] > 0) {
-    		                  $price = $custom_amount_arr[$val['id']]['total_cc'];
-    		                  $total_cc += $price;
-    		                  $partner_arr[$partner_id]['total_cc'] += $price;
-    		              } else {
+    		              } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
     		                  $total_cc += $val['price'];
     		                  $partner_arr[$partner_id]['total_cc'] += $val['price'];
-    		              }
-    		          } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
-    		              if (isset($custom_amount_arr[$val['id']]['total_paid']) && (float)$custom_amount_arr[$val['id']]['total_paid'] > 0) {
-    		                  $price = $custom_amount_arr[$val['id']]['total_paid'];
-    		                  $total_paid += $price;
-    		                  $partner_arr[$partner_id]['total_paid'] += $price;
-    		              } else {
+    		              } elseif (in_array($val['payment_method'], array('cash','creditcard_later')) && !empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+    		                  $total_paysafe += $val['price'];
+    		                  $partner_arr[$partner_id]['total_paysafe'] += $val['price'];
+    		              } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
     		                  $total_paid += $val['price'];
     		                  $partner_arr[$partner_id]['total_paid'] += $val['price'];
-    		              }
-    		          } elseif ($val['payment_method'] == 'cash'){
-    		              if (isset($custom_amount_arr[$val['id']]['total_cash']) && (float)$custom_amount_arr[$val['id']]['total_cash'] > 0) {
-    		                  $price = $custom_amount_arr[$val['id']]['total_cash'];
-    		                  $total_cash += $price;
-    		                  $partner_arr[$partner_id]['total_cash'] += $price;
-    		              } else {
+    		              } elseif ($val['payment_method'] == 'cash'){
     		                  $total_cash += $val['price'];
     		                  $partner_arr[$partner_id]['total_cash'] += $val['price'];
-    		              }
-    		          } elseif ($val['payment_method'] == 'creditcard_later'){
-    		              if (isset($custom_amount_arr[$val['id']]['total_cc']) && (float)$custom_amount_arr[$val['id']]['total_cc'] > 0) {
-    		                  $price = $custom_amount_arr[$val['id']]['total_cc'];
-    		                  $total_cc += $price;
-    		                  $partner_arr[$partner_id]['total_cc'] += $price;
-    		              } else {
+    		              } elseif ($val['payment_method'] == 'creditcard_later'){
     		                  $total_cc += $val['price'];
     		                  $partner_arr[$partner_id]['total_cc'] += $val['price'];
-    		              }
-    		          } else {
-    		              if (isset($custom_amount_arr[$val['id']]['total_paid']) && (float)$custom_amount_arr[$val['id']]['total_paid'] > 0) {
-    		                  $price = $custom_amount_arr[$val['id']]['total_paid'];
-    		                  $total_paid += $price;
-    		                  $partner_arr[$partner_id]['total_paid'] += $price;
     		              } else {
     		                  $total_paid += $val['price'];
     		                  $partner_arr[$partner_id]['total_paid'] += $val['price'];
     		              }
     		          }
-    		          
     		          $total_amount += $price;
     		          $partner_arr[$partner_id]['total_amount'] += $price;
     		      }

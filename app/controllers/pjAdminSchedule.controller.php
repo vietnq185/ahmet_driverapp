@@ -8,11 +8,12 @@ class pjAdminSchedule extends pjAdmin
 {
     public $vehicle_base_lat = '47.2576489';
     public $vehicle_base_lng = '11.3513075';
+    public $max_distance_km = 100; // Giới hạn khoảng cách Haversine (Lọc sơ bộ)
+    public $threshold = 1; // Ngưỡng 1000 mét
     public $vehicle_base_address = 'Innsbruck Airport, Fürstenweg 180, A-6020 Innsbruck, Tirol, Austria';
     public $buffer_time_seconds = 300; // 5 phút là thời gian nghỉ cố định/chuẩn bị xe sau mỗi lần Drop-off
     public $max_wait_time_seconds = 7200; // 2 giờ chờ tối đa
     public $min_gap_fill_seconds = 2700; // 45 phút tối thiểu để lấp đầy khoảng trống
-    public $max_distance_km = 100; // Giới hạn khoảng cách Haversine (Lọc sơ bộ)
     public $defaultCaptcha = 'admin_captcha';
     
     public function pjActionIndex()
@@ -287,6 +288,8 @@ class pjAdminSchedule extends pjAdmin
 		->findAll()
 		->getDataPair('driver_id', 'status');
 		
+		$vehicle_driven_km_arr = $this->getVehicleDrivenKm($date);
+		
 		return array(
 		    'booking_arr' => $booking_arr,
 		    'vehicle_arr' => $vehicle_arr,
@@ -297,7 +300,92 @@ class pjAdminSchedule extends pjAdmin
 		    'assigned_driver_arr' => $assigned_driver_arr,
 		    'vehicle_note_arr' => $vehicle_note_arr,
 		    'driver_job_status_arr' => $driver_job_status_arr,
+		    'vehicle_driven_km_arr' => $vehicle_driven_km_arr
 		);
+    }
+    
+    protected function getVehicleDrivenKm($date, $vehicle_ids_arr=array()) {
+        $pjBookingModel = pjBookingModel::factory();
+        if ($vehicle_ids_arr) {
+            $pjBookingModel->whereIn('t1.vehicle_id', $vehicle_ids_arr);
+        }
+        $arr = $pjBookingModel
+        ->select("t1.vehicle_id, t1.distance, t1.pickup_lat, t1.pickup_lng, t1.dropoff_lat, t1.dropoff_lng")
+        ->where("DATE(t1.booking_date)='".$date."'")
+        ->where("t1.status !='cancelled'")
+        ->where('t1.vehicle_id > 0')
+        ->orderBy("t1.vehicle_id ASC, t1.booking_date ASC")
+        ->findAll()->getData();
+        
+        $bookings = array();
+        foreach ($arr as $booking) {
+            $bookings[$booking['vehicle_id']][] = $booking;
+        }
+        $results = [];
+        $lastCoords = []; // Lưu tọa độ điểm kết thúc của xe trước đó
+        
+        foreach ($bookings as $vehId => $val) {
+            $lastBooking = end($val);
+            foreach ($val as $b) {
+                if (!isset($lastCoords[$vehId])) {
+                    $prevLat = $this->vehicle_base_lat; 
+                    $prevLng = $this->vehicle_base_lng;
+                    $results[$vehId]['total_driven_km'] = 0;
+                } else {
+                    $prevLat = $lastCoords[$vehId]['lat'];
+                    $prevLng = $lastCoords[$vehId]['lng'];
+                }
+                
+                $emptyRunData = pjAppController::calcEmptyRunDistance($prevLat, $prevLng, (float)$b['pickup_lat'], (float)$b['pickup_lng'], $this->option_arr);
+                $emptyRun = 0;
+                if ($emptyRunData) {
+                    $emptyRun = $emptyRunData['distance'] / 1000;
+                }
+                
+                $results[$vehId]['total_driven_km'] += ($emptyRun + (float)$b['distance']);
+                
+                $lastCoords[$vehId] = ['lat' => $b['dropoff_lat'], 'lng' => $b['dropoff_lng']];
+            }
+            
+            // Tính khoảng cách đường chim bay từ điểm trả cuối về Base
+            $distanceToBase = pjAppController::calcEmptyRunDistance(
+                (float)$lastBooking['dropoff_lat'],
+                (float)$lastBooking['dropoff_lng'],
+                $this->vehicle_base_lat,
+                $this->vehicle_base_lng,
+                $this->option_arr
+            );
+            // Nếu khoảng cách lớn hơn 100m mới cần tính thêm chặng về
+            if ($distanceToBase && $distanceToBase['distance'] > $this->threshold) {
+                $results[$vehId]['total_driven_km'] += $distanceToBase['distance'] / 1000;
+            }
+        }
+        if ($results) {
+            foreach ($results as $vehId => $val) {
+                $results[$vehId]['total_driven_km'] = round($val['total_driven_km']);
+            }
+        }
+        return $results;
+    }
+    
+    public function pjActionGetVehicleDrivenKm() {
+        $date = $date = pjDateTime::formatDate($this->_post->toString('date'), $this->option_arr['o_date_format']);
+        $vehicle_ids = $this->_post->toString('vehicle_ids');
+        if (!empty($vehicle_ids)) {
+            $vehicle_ids_arr = explode("-", $vehicle_ids);
+        } else {
+            $vehicle_ids_arr = array();
+        }
+        $arr = $this->getVehicleDrivenKm($date, $vehicle_ids_arr);
+        if ($vehicle_ids_arr) {
+            $data = array();
+            foreach ($vehicle_ids_arr as $vehicle_id) {
+                $data[$vehicle_id] = isset($arr[$vehicle_id]) ? $arr[$vehicle_id] : array();
+            }
+            pjAppController::jsonResponse($data);
+        } else {
+            pjAppController::jsonResponse($arr);
+        }
     }
     
     public function pjActionGetOrders() {
@@ -323,7 +411,8 @@ class pjAdminSchedule extends pjAdmin
             ->set('assigned_driver_arr', $schedule_arr['assigned_driver_arr'])
             ->set('assigned_driver_name_arr', $schedule_arr['assigned_driver_name_arr'])
             ->set('vehicle_note_arr', $schedule_arr['vehicle_note_arr'])
-            ->set('driver_job_status_arr', $schedule_arr['driver_job_status_arr']);
+            ->set('driver_job_status_arr', $schedule_arr['driver_job_status_arr'])
+            ->set('vehicle_driven_km_arr', $schedule_arr['vehicle_driven_km_arr']);
             
             $vehicle_from_api_arr = $this->getVehiclesFromAPI();
             $this->set('vehicle_from_api_arr', $vehicle_from_api_arr);
@@ -351,8 +440,12 @@ class pjAdminSchedule extends pjAdmin
                 switch ($this->_post->toString('type')) {
                     case 'assign_vehicle':
                         $is_manual = 0;
+                        $app_driver_id = 0;
+                        $vehicle_ids = array();
                         if($this->_post->toInt('vehicle_id') > 0){
                             $is_manual = 1;
+                            $app_driver_id = $this->_post->check('driver_id') ? $this->_post->toInt('driver_id') : 0;
+                            $vehicle_ids[] = $this->_post->toInt('vehicle_id');
                         }
                         
                         $msg_arr = array();
@@ -367,10 +460,19 @@ class pjAdminSchedule extends pjAdmin
                             foreach ($original_booking_arr as $ob) {
                                 $booking_uuids[] = $ob['uuid'];
                                 $registration_number = $ob['registration_number'];
+                                if ((int)$ob['vehicle_id'] > 0) {
+                                    $vehicle_ids[] = (int)$ob['vehicle_id'];
+                                }
                             }
                             
-                            
-                            pjBookingModel::factory()->reset()->whereIn('id', $booking_ids)->modifyAll(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
+                            pjBookingModel::factory()->reset()->whereIn('id', $booking_ids)->modifyAll(
+                                array(
+                                    'is_manual' => $is_manual, 
+                                    'vehicle_id' => $this->_post->toInt('vehicle_id'), 
+                                    'vehicle_order' => $this->_post->toInt('vehicle_order'),
+                                    'app_driver_id' => $app_driver_id
+                                )
+                            );
                             
                             if ($is_manual == 1) {
                                 $vehicle_arr = pjVehicleModel::factory()->select('t1.*, t2.content AS vehicle_name')
@@ -412,7 +514,7 @@ class pjAdminSchedule extends pjAdmin
                             pjBookingModel::factory()->set('id', $this->_post->toInt('booking_id'))->modify(array('is_manual' => $is_manual, 'vehicle_id' => $this->_post->toInt('vehicle_id'), 'vehicle_order' => $this->_post->toInt('vehicle_order')));
                         }
                         
-                        pjAppController::jsonResponse(array('status' => 'OK', 'text' => implode("<br/>", $msg_arr)));
+                        pjAppController::jsonResponse(array('status' => 'OK', 'vehicle_ids' => implode("-", $vehicle_ids), 'text' => implode("<br/>", $msg_arr)));
                         break;
                     case 'assign_driver':
                         $pjDriverVehicleModel = pjDriverVehicleModel::factory();
@@ -885,10 +987,11 @@ class pjAdminSchedule extends pjAdmin
 					
 					$pjNotificationModel = pjNotificationModel::factory();
 					$Email = self::getMailer($this->option_arr);
-					$admin_emails = pjAppController::getAllAdminEmails();
+					//$admin_emails = pjAppController::getAllAdminEmails();
 					
+					$to_email = $this->option_arr['o_admin_change_payment_status_email'];
 					$notification = $pjNotificationModel->reset()->where('recipient', 'admin')->where('transport', 'email')->where('variant', 'change_payment_status')->limit(1)->findAll()->getDataIndex(0);
-					if((int) $notification['id'] > 0 && $notification['is_active'] == 1)
+					if((int) $notification['id'] > 0 && $notification['is_active'] == 1 && !empty($to_email))
 					{
 					    $driver_payment_status = sprintf(@$_driver_payment_status[$arr['driver_payment_status']], pjCurrency::formatPrice($arr['price'] + $arr['duplicate_price']));
 					    $resp = pjAppController::pjActionGetSubjectMessage($notification, $this->getLocaleId(), $this->getForeignId());
@@ -908,13 +1011,10 @@ class pjAdminSchedule extends pjAdmin
 					        if (!empty($subject) && !empty($message))
 					        {
 					            $message = pjUtil::textToHtml($message);
-					            foreach($admin_emails as $email)
-					            {
-					                $Email
-					                ->setTo($email)
-					                ->setSubject($subject)
-					                ->send($message);
-					            }
+					            $Email
+					            ->setTo($to_email)
+					            ->setSubject($subject)
+					            ->send($message);
 					        }
 					    }
 					}

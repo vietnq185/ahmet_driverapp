@@ -296,8 +296,10 @@ var jQuery = jQuery || $.noConflict();
 	    }
 		
 		function generateBilling() {
+			$('.pj-loader-modal').show();
 	    	$.post("index.php?controller=pjAdminPartners&action=pjActionGenerateBilling", $modalAddReport.find("form").serialize()).done(function (data) {
 	    		$modalAddReport.find('.report-billing-data').html(data);
+	    		$('.pj-loader-modal').hide();
 			});
 	    }
 		

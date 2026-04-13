@@ -307,6 +307,8 @@ var jQuery = jQuery || $.noConflict();
 				$order = $this.attr('data-order'),
 				$driver_id = $this.val(),
 				$date = $form.find('input[name="date"]').val();
+			//driver_name_88_1
+			$('#driver_name_' + $vehicle_id + '_' + $order).html($driver_name);
 			$.post("index.php?controller=pjAdminSchedule&action=pjActionUpdateBooking", {
 				"type": "assign_driver",
 				"vehicle_id": $vehicle_id, 
@@ -934,6 +936,8 @@ var jQuery = jQuery || $.noConflict();
 			            var $targetContainer = $item.closest('ol.pjSbOrders');
 			            var vehicle_id = $targetContainer.attr('data-vehicle_id');
 			            var vehicle_order = $targetContainer.attr('data-vehicle_order');
+			            var driver_id = $('.pjSbDriverContainer-' + vehicle_id + '-' + vehicle_order).find('.pjSbDriverSelector').val();
+			            var date = $('.pjSbScheduleForm').find('input[name="date"]').val();
 			            
 			            // 1. Lấy tất cả các item đang được chọn theo đúng thứ tự trên DOM
 			            var $selectedItems = $('.pjSbOrder.selected');
@@ -959,7 +963,8 @@ var jQuery = jQuery || $.noConflict();
 			                vehicle_id: vehicle_id, 
 			                vehicle_order: vehicle_order, 
 			                booking_ids: booking_ids,
-			                date: $('.pjSbScheduleForm').find('input[name="date"]').val()
+			                driver_id: driver_id,
+			                date: date
 			            }).done(function (data) {
 			                // Bỏ highlight sau khi hoàn tất
 			                $('.pjSbOrder').removeClass('selected');
@@ -969,6 +974,8 @@ var jQuery = jQuery || $.noConflict();
 				                $('#modalCapacityWarning').find(".modal-body").html(data.text);
 				                $('#modalCapacityWarning').modal('show');
 			                }
+			                
+			                getVehicleDrivenKm(date, data.vehicle_ids);
 			            });
 			        });
 			    },
@@ -980,6 +987,21 @@ var jQuery = jQuery || $.noConflict();
 			    }
 			});
 
+		}
+		
+		function getVehicleDrivenKm($date, $vehicle_ids) {
+			$.post("index.php?controller=pjAdminSchedule&action=pjActionGetVehicleDrivenKm", {
+                vehicle_ids: $vehicle_ids, 
+                date: $date
+            }).done(function (data) {
+            	$.each(data, function(vehicle_id, info) {
+            	    if (info && info.total_driven_km !== undefined) {
+            	    	$('.pjVehicleDdrivenKm_' + vehicle_id).html(info.total_driven_km + ' km');
+            	    } else {
+            	    	$('.pjVehicleDdrivenKm_' + vehicle_id).html('0 km');
+            	    }
+            	});
+            });
 		}
 		
 		$(document).ready(function() {

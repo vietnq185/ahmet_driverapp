@@ -95,6 +95,21 @@ img.ui-datepicker-trigger {
     position: absolute;
     top: 0px;
 }
+.pj-loader-modal{
+	display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    /* Bỏ height: 100% nếu nó gây lỗi, dùng các tọa độ 0 ở trên để kéo dãn */
+    z-index: 9999;
+    background: rgba(255, 255, 255, 0.5) url("../img/backend/pj-preloader.gif") no-repeat center center;
+    
+    /* Quan trọng: Nếu thẻ cha quá dài, hãy giới hạn nó theo viewport */
+    max-height: 100vh;
+}
 .panel.ibox-content{padding: 0;}
 
 .select2-container .select2-selection--multiple{

@@ -10,6 +10,8 @@ class pjAppController extends pjBaseAppController
 
 	private $layoutRange = array(1, 2);
 	
+	public $max_distance_km = 100; // Giới hạn khoảng cách Haversine (Lọc sơ bộ)
+	
     public function pjActionCheckInstall()
     {
         $this->setLayout('pjActionEmpty');
@@ -486,6 +488,71 @@ class pjAppController extends pjBaseAppController
     {
         $filename = is_null($filename) ? 'chat.log' : $filename;
         @file_put_contents($filename, $content . "\r\n", FILE_APPEND|FILE_TEXT);
+    }
+    
+    public static function calcEmptyRunDistance($lat1, $lng1, $lat2, $lng2, $option_arr) {
+        $hashKey = hash('sha256', "{$lat1},{$lng1},{$lat2},{$lng2}");
+        $cachedData = pjApiCacheDistanceModel::factory()->reset()
+        ->where('hash_key', $hashKey)
+        ->limit(1)
+        ->findAll()
+        ->getDataIndex(0);
+        
+        if ($cachedData) {
+            return [
+                'duration' => (int)$cachedData['duration_sec'], // giây
+                'distance' => (int)$cachedData['distance_meters']  // mét
+            ];
+        }
+        
+        // Bước 1: Tính Haversine trước
+        /* $hDist = pjAppController::calcDistance($lat1, $lng1, $lat2, $lng2, 'km');
+        if ($hDist > 100) return null; */
+        
+        // Bước 2: Gọi Google API
+        $origin = "$lat1,$lng1";
+        $destination = "$lat2,$lng2";
+        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=$origin&destinations=$destination&key={$option_arr['o_google_api_key']}&units=metric&mode=driving";
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 5); // Timeout ngắn để tránh treo
+        $response = curl_exec($ch);
+        curl_close($ch);
+        
+        if ($response) {
+            $data = json_decode($response, true);
+            if (isset($data['rows'][0]['elements'][0]['status']) && $data['rows'][0]['elements'][0]['status'] === 'OK') {
+                $result = [
+                    'duration' => (int)$data['rows'][0]['elements'][0]['duration']['value'],
+                    'distance' => (int)$data['rows'][0]['elements'][0]['distance']['value']
+                ];
+                pjApiCacheDistanceModel::factory()->reset()->setAttributes([
+                    'hash_key' => $hashKey,
+                    'duration_sec' => (int)$data['rows'][0]['elements'][0]['duration']['value'],
+                    'distance_meters' => (int)$data['rows'][0]['elements'][0]['distance']['value'],
+                    'created' => date('Y-m-d H:i:s')
+                ])->insert();
+                return $result;
+            }
+        }
+        
+        // Fallback: Nếu API lỗi, dùng ước tính dựa trên Haversine để không làm dừng tiến trình
+        $estimate = [
+            'duration' => ($hDist / 50) * 3600, // Giả định 50km/h
+            'distance' => $hDist * 1000
+        ];
+        return $estimate;
+    }
+    
+    public static function calcDistance($lat1, $lon1, $lat2, $lon2, $unit = 'km') {
+        if (($lat1 == $lat2) && ($lon1 == $lon2)) return 0;
+        $theta = $lon1 - $lon2;
+        $dist = sin(deg2rad($lat1)) * sin(deg2rad($lat2)) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * cos(deg2rad($theta));
+        $dist = acos($dist); $dist = rad2deg($dist);
+        $miles = $dist * 60 * 1.1515;
+        return ($unit == "km") ? ($miles * 1.609344) : $miles;
     }
 }
 ?>

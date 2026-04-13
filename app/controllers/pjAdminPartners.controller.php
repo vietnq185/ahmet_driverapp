@@ -684,50 +684,29 @@ class pjAdminPartners extends pjAdmin
 	    $dateRange = date($this->option_arr['o_date_format'], strtotime($report_arr['date_from']))." - ".date($this->option_arr['o_date_format'], strtotime($report_arr['date_to']));
 	    $commissionRate = $report_arr['commission_pct'];
 	    
-	    $total_bookings = $total_amount = $total_paid = $total_cc = $total_cash = 0;
+	    $total_bookings = $total_amount = $total_paid = $total_cc = $total_paysafe = $total_cash = 0;
 	    foreach ($arr['report_arr'] as $val) {
 	        $total_bookings++;
 	        $price = $val['price'];
-	        
-	        if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
-	            if (isset($custom_amount_arr[$val['id']]['total_cash']) && (float)$custom_amount_arr[$val['id']]['total_cash'] > 0) {
-	                $total_cash += $custom_amount_arr[$val['id']]['total_cash'];
-	                $price = $custom_amount_arr[$val['id']]['total_cash'];
-	            } else {
-	                $total_cash += $val['price'];
-	            }
-	        } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
-	            if (isset($custom_amount_arr[$val['id']]['total_cc']) && (float)$custom_amount_arr[$val['id']]['total_cc'] > 0) {
-	                $total_cc += $custom_amount_arr[$val['id']]['total_cc'];
-	                $price = $custom_amount_arr[$val['id']]['total_cc'];
-	            } else {
-	                $total_cc += $val['price'];
-	            }
-	        } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
-	            if (isset($custom_amount_arr[$val['id']]['total_paid']) && (float)$custom_amount_arr[$val['id']]['total_paid'] > 0) {
-	                $total_paid += $custom_amount_arr[$val['id']]['total_paid'];
-	                $price = $custom_amount_arr[$val['id']]['total_paid'];
-	            } else {
-	                $total_paid += $val['price'];
-	            }
-	        } elseif ($val['payment_method'] == 'cash'){
-	            if (isset($custom_amount_arr[$val['id']]['total_cash']) && (float)$custom_amount_arr[$val['id']]['total_cash'] > 0) {
-	                $total_cash += $custom_amount_arr[$val['id']]['total_cash'];
-	                $price = $custom_amount_arr[$val['id']]['total_cash'];
-	            } else {
-	                $total_cash += $val['price'];
-	            }
-	        } elseif ($val['payment_method'] == 'creditcard_later'){
-	            if (isset($custom_amount_arr[$val['id']]['total_cc']) && (float)$custom_amount_arr[$val['id']]['total_cc'] > 0) {
-	                $total_cc += $custom_amount_arr[$val['id']]['total_cc'];
-	                $price = $custom_amount_arr[$val['id']]['total_cc'];
-	            } else {
-	                $total_cc += $val['price'];
-	            }
+	        if (isset($custom_amount_arr[$val['id']]) && $custom_amount_arr[$val['id']]) {
+	            $total_cash += $custom_amount_arr[$val['id']]['total_cash'];
+	            $total_cc += $custom_amount_arr[$val['id']]['total_cc'];
+	            $total_paysafe += $custom_amount_arr[$val['id']]['total_paysafe'];
+	            $total_paid += $custom_amount_arr[$val['id']]['total_paid'];
+	            $price = (float)$custom_amount_arr[$val['id']]['total_cash'] + (float)$custom_amount_arr[$val['id']]['total_cc'] + (float)$custom_amount_arr[$val['id']]['total_paysafe'] + (float)$custom_amount_arr[$val['id']]['total_paid'];
 	        } else {
-	            if (isset($custom_amount_arr[$val['id']]['total_paid']) && (float)$custom_amount_arr[$val['id']]['total_paid'] > 0) {
-	                $total_paid += $custom_amount_arr[$val['id']]['total_paid'];
-	                $price = $custom_amount_arr[$val['id']]['total_paid'];
+	            if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
+	                $total_cash += $val['price'];
+	            } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
+	                $total_cc += $val['price'];
+	            } elseif (in_array($val['payment_method'], array('cash','creditcard_later')) && !empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+	                $total_paysafe += $val['price'];
+	            } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+	                $total_paid += $val['price'];
+	            } elseif ($val['payment_method'] == 'cash'){
+	                $total_cash += $val['price'];
+	            } elseif ($val['payment_method'] == 'creditcard_later'){
+	                $total_cc += $val['price'];
 	            } else {
 	                $total_paid += $val['price'];
 	            }
@@ -784,6 +763,7 @@ class pjAdminPartners extends pjAdmin
             <td><span class="label">'.__('lblReportBillingTotalAmount', true).':</span><span class="value">'.pjCurrency::formatPrice($total_amount).'</span></td>
             <td><span class="label">'.__('lblReportBillingPaid', true).':</span><span class="value">'.pjCurrency::formatPrice($total_paid).'</span></td>
             <td><span class="label">'.__('lblReportBillingCreditCard', true).':</span><span class="value">'.pjCurrency::formatPrice($total_cc).'</span></td>
+            <td><span class="label">Paysafe QR Code:</span><span class="value">'.pjCurrency::formatPrice($total_paysafe).'</span></td>
             <td><span class="label">'.__('lblReportBillingCash', true).':</span><span class="value">'.pjCurrency::formatPrice($total_cash).'</span></td>
         </tr>
     </table>
@@ -797,7 +777,7 @@ class pjAdminPartners extends pjAdmin
             <td class="billing-right">
                 <table class="billing-table">
                     <tr><td class="text-label">'.__('lblReportBillingTotal', true).':</td><td class="text-value">'.pjCurrency::formatPrice($total_amount).'</td></tr>
-                    <tr><td class="text-label">'.__('lblReportBillingPaid', true).':</td><td class="text-value">'.pjCurrency::formatPrice($total_paid).'</td></tr>
+                    <tr><td class="text-label">'.__('lblReportBillingPaid', true).':</td><td class="text-value">'.pjCurrency::formatPrice($total_paid + $total_paysafe).'</td></tr>
                     <tr><td class="text-label">'.__('lblReportBillingCommission', true).' . ' . $commissionRate . '%:</td><td class="text-value" style="color: red;">-'.pjCurrency::formatPrice((float)$report_arr['commission_amount']).'</td></tr>
                     <tr><td class="text-label">'.__('lblReportBillingPaidBookingsWeMade', true).':</td><td class="text-value">'. ((float)$report_arr['paid_bookings_we_made'] >= 0 ? '+' : '-') .pjCurrency::formatPrice((float)$report_arr['paid_bookings_we_made']).'</td></tr>
                     <tr class="total-row">
@@ -816,45 +796,31 @@ class pjAdminPartners extends pjAdmin
                 <th>'.__('lblReportBillingFromTo', true).'</th>
                 <th class="text-right" align="right">'.__('lblReportBillingPaid', true).'</th>
                 <th class="text-right" align="right">'.__('lblReportBillingCreditCard', true).'</th>
+                <th class="text-right" align="right">Paysafe QR Code</th>
                 <th class="text-right" align="right">'.__('lblReportBillingCash', true).'</th>
             </tr>
         </thead>
         <tbody>';
 	    foreach ($arr['report_arr'] as $order) {
-	        $paid = $cc = $cash = 0;
-	        if (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(1,5))) {
-	            if (isset($custom_amount_arr[$order['id']]['total_cash']) && (float)$custom_amount_arr[$order['id']]['total_cash'] > 0) {
-	                $cash = $custom_amount_arr[$order['id']]['total_cash'];
-	            } else {
-	                $cash = $order['price'];
-	            }
-	        } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(2,6))){
-	            if (isset($custom_amount_arr[$order['id']]['total_cc']) && (float)$custom_amount_arr[$order['id']]['total_cc'] > 0) {
-	                $cc = $custom_amount_arr[$order['id']]['total_cc'];
-	            } else {
-	                $cc = $order['price'];
-	            }
-	        } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
-	            if (isset($custom_amount_arr[$order['id']]['total_paid']) && (float)$custom_amount_arr[$order['id']]['total_paid'] > 0) {
-	                $paid = $custom_amount_arr[$order['id']]['total_paid'];
-	            } else {
-	                $paid = $order['price'];
-	            }
-	        } elseif ($order['payment_method'] == 'cash'){
-	            if (isset($custom_amount_arr[$order['id']]['total_cash']) && (float)$custom_amount_arr[$order['id']]['total_cash'] > 0) {
-	                $cash = $custom_amount_arr[$order['id']]['total_cash'];
-	            } else {
-	                $cash = $order['price'];
-	            }
-	        } elseif ($order['payment_method'] == 'creditcard_later'){
-	            if (isset($custom_amount_arr[$order['id']]['total_cc']) && (float)$custom_amount_arr[$order['id']]['total_cc'] > 0) {
-	                $cc = $custom_amount_arr[$order['id']]['total_cc'];
-	            } else {
-	                $cc = $order['price'];
-	            }
+	        $paid = $cc = $cash = $paysafe = 0;
+	        if (isset($custom_amount_arr[$order['id']]) && $custom_amount_arr[$order['id']]) {
+	            $cash = $custom_amount_arr[$order['id']]['total_cash'];
+	            $cc = $custom_amount_arr[$order['id']]['total_cc'];
+	            $paysafe = $custom_amount_arr[$order['id']]['total_paysafe'];
+	            $paid = $custom_amount_arr[$order['id']]['total_paid'];
 	        } else {
-	            if (isset($custom_amount_arr[$order['id']]['total_paid']) && (float)$custom_amount_arr[$order['id']]['total_paid'] > 0) {
-	                $paid = $custom_amount_arr[$order['id']]['total_paid'];
+	            if (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(1,5))) {
+	                $cash = $order['price'];
+	            } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(2,6))){
+	                $cc = $order['price'];
+	            } elseif (in_array($order['payment_method'], array('cash','creditcard_later')) && !empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
+	                $paysafe = $order['price'];
+	            } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
+	                $paid = $order['price'];
+	            } elseif ($order['payment_method'] == 'cash'){
+	                $cash = $order['price'];
+	            } elseif ($order['payment_method'] == 'creditcard_later'){
+	                $cc = $order['price'];
 	            } else {
 	                $paid = $order['price'];
 	            }
@@ -870,6 +836,7 @@ class pjAdminPartners extends pjAdmin
                 <td>'.$from_to.'</td>
                 <td class="text-right">'.pjCurrency::formatPrice($paid).'</td>
                 <td class="text-right">'.pjCurrency::formatPrice($cc).'</td>
+                <td class="text-right">'.pjCurrency::formatPrice($paysafe).'</td>
                 <td class="text-right">'.pjCurrency::formatPrice($cash).'</td>
             </tr>';
 	    }
@@ -895,9 +862,6 @@ class pjAdminPartners extends pjAdmin
 	    
 	    $partner_arr = pjPartnerModel::factory()->find($this->_get->toInt('partner_id'))->getData();
 	    
-	    /* $report_arr = pjPartnerReportModel::factory()->select('t1.*, t2.name AS partner_name, t2.commission_pct')
-	    ->join('pjPartner', 't2.id=t1.partner_id', 'inner')
-	    ->find($this->_get->toInt('id'))->getData(); */
 	    $partner_id = $this->_post->toInt('partner_id');
 	    $date_from = pjDateTime::formatDate($this->_post->toString('date_from'), $this->option_arr['o_date_format']);
 	    $date_to = pjDateTime::formatDate($this->_post->toString('date_to'), $this->option_arr['o_date_format']);
@@ -938,55 +902,33 @@ class pjAdminPartners extends pjAdmin
 	    $dateRange = date($this->option_arr['o_date_format'], strtotime($date_from))." - ".date($this->option_arr['o_date_format'], strtotime($date_to));
 	    $commissionRate = $this->_post->toFloat('commission_pct');
 	    
-	    $total_bookings = $total_amount = $total_paid = $total_cc = $total_cash = 0;
+	    $total_bookings = $total_amount = $total_paid = $total_cc = $total_paysafe = $total_cash = 0;
 	    foreach ($arr['report_arr'] as $val) {
 	        $total_bookings++;
 	        $price = $val['price'];
-	        
-	        if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
-	            if (isset($custom_amount_arr[$val['id']]['total_cash']) && (float)$custom_amount_arr[$val['id']]['total_cash'] > 0) {
-	                $total_cash += $custom_amount_arr[$val['id']]['total_cash'];
-	                $price = $custom_amount_arr[$val['id']]['total_cash'];
-	            } else {
-	                $total_cash += $val['price'];
-	            }
-	        } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
-	            if (isset($custom_amount_arr[$val['id']]['total_cc']) && (float)$custom_amount_arr[$val['id']]['total_cc'] > 0) {
-	                $total_cc += $custom_amount_arr[$val['id']]['total_cc'];
-	                $price = $custom_amount_arr[$val['id']]['total_cc'];
-	            } else {
-	                $total_cc += $val['price'];
-	            }
-	        } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
-	            if (isset($custom_amount_arr[$val['id']]['total_paid']) && (float)$custom_amount_arr[$val['id']]['total_paid'] > 0) {
-	                $total_paid += $custom_amount_arr[$val['id']]['total_paid'];
-	                $price = $custom_amount_arr[$val['id']]['total_paid'];
-	            } else {
-	                $total_paid += $val['price'];
-	            }
-	        } elseif ($val['payment_method'] == 'cash'){
-	            if (isset($custom_amount_arr[$val['id']]['total_cash']) && (float)$custom_amount_arr[$val['id']]['total_cash'] > 0) {
-	                $total_cash += $custom_amount_arr[$val['id']]['total_cash'];
-	                $price = $custom_amount_arr[$val['id']]['total_cash'];
-	            } else {
-	                $total_cash += $val['price'];
-	            }
-	        } elseif ($val['payment_method'] == 'creditcard_later'){
-	            if (isset($custom_amount_arr[$val['id']]['total_cc']) && (float)$custom_amount_arr[$val['id']]['total_cc'] > 0) {
-	                $total_cc += $custom_amount_arr[$val['id']]['total_cc'];
-	                $price = $custom_amount_arr[$val['id']]['total_cc'];
-	            } else {
-	                $total_cc += $val['price'];
-	            }
+	        if (isset($custom_amount_arr[$val['id']]) && $custom_amount_arr[$val['id']]) {
+	            $total_cash += $custom_amount_arr[$val['id']]['total_cash'];
+	            $total_cc += $custom_amount_arr[$val['id']]['total_cc'];
+	            $total_paysafe += $custom_amount_arr[$val['id']]['total_paysafe'];
+	            $total_paid += $custom_amount_arr[$val['id']]['total_paid'];
+	            $price = (float)$custom_amount_arr[$val['id']]['total_cash'] + (float)$custom_amount_arr[$val['id']]['total_cc'] + (float)$custom_amount_arr[$val['id']]['total_paysafe'] + (float)$custom_amount_arr[$val['id']]['total_paid'];
 	        } else {
-	            if (isset($custom_amount_arr[$val['id']]['total_paid']) && (float)$custom_amount_arr[$val['id']]['total_paid'] > 0) {
-	                $total_paid += $custom_amount_arr[$val['id']]['total_paid'];
-	                $price = $custom_amount_arr[$val['id']]['total_paid'];
+	            if (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(1,5))) {
+	                $total_cash += $val['price'];
+	            } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(2,6))){
+	                $total_cc += $val['price'];
+	            } elseif (in_array($val['payment_method'], array('cash','creditcard_later')) && !empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+	                $total_paysafe += $val['price'];
+	            } elseif (!empty($val['driver_payment_status']) && in_array($val['driver_payment_status'], array(8))){
+	                $total_paid += $val['price'];
+	            } elseif ($val['payment_method'] == 'cash'){
+	                $total_cash += $val['price'];
+	            } elseif ($val['payment_method'] == 'creditcard_later'){
+	                $total_cc += $val['price'];
 	            } else {
 	                $total_paid += $val['price'];
 	            }
 	        }
-	        
 	        $total_amount += $price;
 	    }
 	    
@@ -1039,6 +981,7 @@ class pjAdminPartners extends pjAdmin
             <td><span class="label">'.__('lblReportBillingTotalAmount', true).':</span><span class="value">'.pjCurrency::formatPrice($total_amount).'</span></td>
             <td><span class="label">'.__('lblReportBillingPaid', true).':</span><span class="value">'.pjCurrency::formatPrice($total_paid).'</span></td>
             <td><span class="label">'.__('lblReportBillingCreditCard', true).':</span><span class="value">'.pjCurrency::formatPrice($total_cc).'</span></td>
+            <td><span class="label">Paysafe QR Code:</span><span class="value">'.pjCurrency::formatPrice($total_paysafe).'</span></td>
             <td><span class="label">'.__('lblReportBillingCash', true).':</span><span class="value">'.pjCurrency::formatPrice($total_cash).'</span></td>
         </tr>
     </table>
@@ -1052,7 +995,7 @@ class pjAdminPartners extends pjAdmin
             <td class="billing-right">
                 <table class="billing-table">
                     <tr><td class="text-label">'.__('lblReportBillingTotal', true).':</td><td class="text-value">'.pjCurrency::formatPrice($total_amount).'</td></tr>
-                    <tr><td class="text-label">'.__('lblReportBillingPaid', true).':</td><td class="text-value">'.pjCurrency::formatPrice($total_paid).'</td></tr>
+                    <tr><td class="text-label">'.__('lblReportBillingPaid', true).':</td><td class="text-value">'.pjCurrency::formatPrice($total_paid + $total_paysafe).'</td></tr>
                     <tr><td class="text-label">'.__('lblReportBillingCommission', true).' . ' . $commissionRate . '%:</td><td class="text-value" style="color: red;">-'.pjCurrency::formatPrice((float)$report_arr['commission_amount']).'</td></tr>
                     <tr><td class="text-label">'.__('lblReportBillingPaidBookingsWeMade', true).':</td><td class="text-value">'. ((float)$this->_post->toFloat('paid_bookings_we_made') >= 0 ? '+' : '-') .pjCurrency::formatPrice((float)$this->_post->toFloat('paid_bookings_we_made')).'</td></tr>
                     <tr class="total-row">
@@ -1071,45 +1014,31 @@ class pjAdminPartners extends pjAdmin
                 <th>'.__('lblReportBillingFromTo', true).'</th>
                 <th class="text-right" align="right">'.__('lblReportBillingPaid', true).'</th>
                 <th class="text-right" align="right">'.__('lblReportBillingCreditCard', true).'</th>
+                <th class="text-right" align="right">Paysafe QR Code</th>
                 <th class="text-right" align="right">'.__('lblReportBillingCash', true).'</th>
             </tr>
         </thead>
         <tbody>';
 	    foreach ($arr['report_arr'] as $order) {
-	        $paid = $cc = $cash = 0;
-	        if (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(1,5))) {
-	            if (isset($custom_amount_arr[$order['id']]['total_cash']) && (float)$custom_amount_arr[$order['id']]['total_cash'] > 0) {
-	                $cash = $custom_amount_arr[$order['id']]['total_cash'];
-	            } else {
-	                $cash = $order['price'];
-	            }
-	        } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(2,6))){
-	            if (isset($custom_amount_arr[$order['id']]['total_cc']) && (float)$custom_amount_arr[$order['id']]['total_cc'] > 0) {
-	                $cc = $custom_amount_arr[$order['id']]['total_cc'];
-	            } else {
-	                $cc = $order['price'];
-	            }
-	        } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
-	            if (isset($custom_amount_arr[$order['id']]['total_paid']) && (float)$custom_amount_arr[$order['id']]['total_paid'] > 0) {
-	                $paid = $custom_amount_arr[$order['id']]['total_paid'];
-	            } else {
-	                $paid = $order['price'];
-	            }
-	        } elseif ($order['payment_method'] == 'cash'){
-	            if (isset($custom_amount_arr[$order['id']]['total_cash']) && (float)$custom_amount_arr[$order['id']]['total_cash'] > 0) {
-	                $cash = $custom_amount_arr[$order['id']]['total_cash'];
-	            } else {
-	                $cash = $order['price'];
-	            }
-	        } elseif ($order['payment_method'] == 'creditcard_later'){
-	            if (isset($custom_amount_arr[$order['id']]['total_cc']) && (float)$custom_amount_arr[$order['id']]['total_cc'] > 0) {
-	                $cc = $custom_amount_arr[$order['id']]['total_cc'];
-	            } else {
-	                $cc = $order['price'];
-	            }
+	        $paid = $cc = $cash = $paysafe = 0;
+	        if (isset($custom_amount_arr[$order['id']]) && $custom_amount_arr[$order['id']]) {
+	            $cash = $custom_amount_arr[$order['id']]['total_cash'];
+	            $cc = $custom_amount_arr[$order['id']]['total_cc'];
+	            $paysafe = $custom_amount_arr[$order['id']]['total_paysafe'];
+	            $paid = $custom_amount_arr[$order['id']]['total_paid'];
 	        } else {
-	            if (isset($custom_amount_arr[$order['id']]['total_paid']) && (float)$custom_amount_arr[$order['id']]['total_paid'] > 0) {
-	                $paid = $custom_amount_arr[$order['id']]['total_paid'];
+	            if (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(1,5))) {
+	                $cash = $order['price'];
+	            } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(2,6))){
+	                $cc = $order['price'];
+	            } elseif (in_array($order['payment_method'], array('cash','creditcard_later')) && !empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
+	                $paysafe = $order['price'];
+	            } elseif (!empty($order['driver_payment_status']) && in_array($order['driver_payment_status'], array(8))){
+	                $paid = $order['price'];
+	            } elseif ($order['payment_method'] == 'cash'){
+	                $cash = $order['price'];
+	            } elseif ($order['payment_method'] == 'creditcard_later'){
+	                $cc = $order['price'];
 	            } else {
 	                $paid = $order['price'];
 	            }
@@ -1125,6 +1054,7 @@ class pjAdminPartners extends pjAdmin
                 <td>'.$from_to.'</td>
                 <td class="text-right">'.pjCurrency::formatPrice($paid).'</td>
                 <td class="text-right">'.pjCurrency::formatPrice($cc).'</td>
+                <td class="text-right">'.pjCurrency::formatPrice($paysafe).'</td>
                 <td class="text-right">'.pjCurrency::formatPrice($cash).'</td>
             </tr>';
 	    }

@@ -20,8 +20,6 @@ class pjAdminAISchedule extends pjAdmin
     public $max_distance_km = 200;                   // Giới hạn lọc sơ bộ 100km
     public $force_start_from_base = true;            // Mặc định khởi hành từ Base mỗi ngày
     
-    private $google_api_key = 'YOUR_GOOGLE_MAPS_API_KEY'; 
-    
     public function pjActionIndex()
     {
         $this->checkLogin();
@@ -115,8 +113,7 @@ class pjAdminAISchedule extends pjAdmin
         // Bước 2: Gọi Google API
         $origin = "$lat1,$lng1";
         $destination = "$lat2,$lng2";
-        $apiKey = $this->google_api_key;
-        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=$origin&destinations=$destination&key={$this->option_arr['o_google_api_key']}&units=metric";
+        $url = "https://maps.googleapis.com/maps/api/distancematrix/json?origins=$origin&destinations=$destination&key={$this->option_arr['o_google_api_key']}&units=metric&mode=driving";
         
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_URL, $url);

@@ -360,6 +360,10 @@ class pjAdminOptions extends pjAdmin
 			pjBaseMultiLangModel::factory()->updateMultiLang($this->_post->toArray('i18n'), $this->getForeignId(), 'pjOption');
 		}
 		
+		if ($this->_post->check('o_admin_change_payment_status_email')) {
+		    pjOptionModel::factory()->where('`key`', 'o_admin_change_payment_status_email')->limit(1)->modifyAll(array('value' => $this->_post->toString('o_admin_change_payment_status_email')));
+		}
+		
 		self::jsonResponse(array('status' => 'OK', 'code' => 200, 'text' => 'Notification has been updated.'));
 	}
 	
