@@ -81,6 +81,88 @@
 /* Utility class cho Grid */
 .span-3 { grid-column: span 3; }
 
+.m-list-container {
+    margin-top: 10px;
+    min-height: 80px; /* Đảm bảo các card cao bằng nhau */
+}
+.m-item-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 4px;
+    border-bottom: 1px dashed #eee;
+    padding-bottom: 2px;
+}
+.m-item-row:last-child { border-bottom: none; }
+.m-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+    font-weight: 500;
+}
+.m-sub-value {
+    color: #555;
+    font-weight: bold;
+}
+.m-item-row-dest {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 6px;
+    padding-left: 8px;
+    border-left: 3px solid #e74c3c;
+    background: #fdf2f1; /* Thêm nền nhẹ để phân biệt các dòng địa chỉ dài */
+    padding-right: 5px;
+}
+
+.dest-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 10px;
+}
+
+.dest-count {
+    background: #e74c3c;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.m-value-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end; /* Căn lề dưới cho các con số trông đều nhau */
+    padding: 15px 0;
+    margin-bottom: 10px;
+}
+
+.m-value-item {
+    flex: 1;
+}
+
+.m-separator {
+    width: 1px;
+    height: 30px;
+    background: #eee;
+    margin: 0 15px;
+    align-self: center;
+}
+
+/* Đảm bảo font size không bị quá to khi có 2 cột */
+#op-total-km, #op-total-fuel-cost {
+    font-weight: bold;
+    letter-spacing: -1px;
+}
+
 /* Responsive cho Mobile */
 @media (max-width: 768px) {
     .span-3 { grid-column: span 12; }
@@ -93,30 +175,74 @@ $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_da
 	
 	<div class="row">
     	<div class="col-xs-12">
-    		<div class="grid" style="margin-top: 20px;">
-                <div class="card span-3 metric-card" style="border-left-color: #2ecc71;">
-                    <div class="m-title">Top Driver Today</div>
-                    <div class="m-value" style="font-size: 22px;"><span id="op-driver-id">-</span></div>
-                    <div class="m-comp">Revenue: <?php echo pjCurrency::getCurrencySign($tpl['option_arr']['o_currency'], false);?><span id="op-driver-rev">0</span></div>
+    		<div class="grid grid-metric" style="margin-top: 20px;">
+    			<div class="card span-3 metric-card" style="border-left-color: #3498db;">
+                    <div class="m-title">Total Distance (Own)</div>
+                    <div class="m-value-container">
+                        <div class="m-value-item">
+                            <span id="op-total-km" style="font-size: 24px;">0</span> 
+                            <small style="font-size: 14px; color: #999;">KM</small>
+                        </div>
+                        
+                        <div class="m-separator"></div>
+                
+                        <div class="m-value-item" style="text-align: right;">
+                            <span id="op-total-fuel-cost" style="font-size: 24px; color: #e67e22;">0</span> 
+                            <small style="font-size: 14px; color: #999;">€</small>
+                            <div style="font-size: 10px; color: #bcc3c7; margin-top: -5px;">Fuel Cost</div>
+                        </div>
+                    </div>
+                    <div class="m-comp">Bookings: <span id="op-total-km-bookings"><?php echo (int)$tpl['data']['total_bookings'];?></span></div>
                 </div>
             
-                <div class="card span-3 metric-card" style="border-left-color: #3498db;">
-                    <div class="m-title">Total Distance (Own)</div>
-                    <div class="m-value"><span id="op-total-km">0</span> <small>KM</small></div>
-                    <div class="m-comp">Bookings: <span id="op-total-km-bookings">0</span></div>
+                <div class="card span-3 metric-card" style="border-left-color: #2ecc71;">
+                    <div class="m-title">Top 3 Drivers Today</div>
+                    <div id="op-driver-container" class="m-list-container">
+                        <div class="m-item-row">
+                            <span class="m-label">-</span>
+                            <span class="m-sub-value"><?php echo pjCurrency::formatPrice(0);?></span>
+                        </div>
+                        <div class="m-item-row">
+                            <span class="m-label">-</span>
+                            <span class="m-sub-value"><?php echo pjCurrency::formatPrice(0);?></span>
+                        </div>
+                        <div class="m-item-row">
+                            <span class="m-label">-</span>
+                            <span class="m-sub-value"><?php echo pjCurrency::formatPrice(0);?></span>
+                        </div>
+                    </div>
+                    <div class="m-comp">Revenue Metrics</div>
                 </div>
             
                 <div class="card span-3 metric-card" style="border-left-color: #9b59b6;">
-                    <div class="m-title">Most Used Vehicle</div>
-                    <div class="m-value" style="font-size: 18px;"><span id="op-veh-id">-</span></div>
-                    <div class="m-comp">Total: <span id="op-veh-km">0</span> KM</div>
+                    <div class="m-title">Top 3 Used Vehicles</div>
+                    <div id="op-veh-container" class="m-list-container">
+                        <div class="m-item-row"><span class="m-label">-</span><span class="m-sub-value">0 KM</span></div>
+                        <div class="m-item-row"><span class="m-label">-</span><span class="m-sub-value">0 KM</span></div>
+                        <div class="m-item-row"><span class="m-label">-</span><span class="m-sub-value">0 KM</span></div>
+                    </div>
+                    <div class="m-comp">Usage Statistics</div>
                 </div>
             
                 <div class="card span-3 metric-card" style="border-left-color: #e74c3c;">
-                    <div class="m-title">Top Destination</div>
-                    <div class="m-value" style="font-size: 16px; line-height: 1.2; height: 40px; overflow: hidden;" id="op-top-dest">-</div>
-                    <div class="m-comp">Bookings: <span id="op-top-dest-bookings">0</span></div>
+                    <div class="m-title">Top 3 Destinations</div>
+                    <div id="op-dest-container" class="m-list-container">
+                        <div class="m-item-row-dest">
+                            <span class="dest-name">-</span>
+                            <span class="dest-count">0</span>
+                        </div>
+                        <div class="m-item-row-dest">
+                            <span class="dest-name">-</span>
+                            <span class="dest-count">0</span>
+                        </div>
+                        <div class="m-item-row-dest">
+                            <span class="dest-name">-</span>
+                            <span class="dest-count">0</span>
+                        </div>
+                    </div>
+                    <div class="m-comp">Popular Routes</div>
                 </div>
+
             </div>
     	</div>
     </div>

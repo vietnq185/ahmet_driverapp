@@ -39,6 +39,7 @@ class pjVehicleModel extends pjAppModel
 	    array('name' => 'is_ski', 'type' => 'tinyint', 'default' => '0'),	 
 	    array('name' => 'is_snowboard', 'type' => 'tinyint', 'default' => '0'),
 		array('name' => 'schedule_status', 'type' => 'enum', 'default' => 'T'),
+	    array('name' => 'fuel_consumption', 'type' => 'decimal', 'default' => '0'),
 	    array('name' => 'status', 'type' => 'enum', 'default' => 'T')
 	);
 	

@@ -71,6 +71,11 @@
 			</div>
 			
 			<div class="form-group">
+				<label class="control-label"><?php __('lblVehicleFuelConsumption');?>:</label>			
+				<input type="text" name="fuel_consumption" class="form-control decimal number text-right" data-msg-number="<?php __('pj_please_enter_valid_number', false, true);?>">
+			</div>
+			
+			<div class="form-group">
 				<label class="control-label"><?php __('lblIsSki');?>:</label>			
 				<div class="clearfix">
 					<div class="switch onoffswitch-data pull-left">

@@ -310,7 +310,8 @@ class pjAdminSchedule extends pjAdmin
             $pjBookingModel->whereIn('t1.vehicle_id', $vehicle_ids_arr);
         }
         $arr = $pjBookingModel
-        ->select("t1.vehicle_id, t1.distance, t1.pickup_lat, t1.pickup_lng, t1.dropoff_lat, t1.dropoff_lng")
+        ->select("t1.vehicle_id, t1.vehicle_order, t1.distance, t1.duration, t1.pickup_lat, t1.pickup_lng, t1.dropoff_lat, t1.dropoff_lng, t2.fuel_consumption")
+        ->join('pjVehicle', 't2.id=t1.vehicle_id', 'inner')
         ->where("DATE(t1.booking_date)='".$date."'")
         ->where("t1.status !='cancelled'")
         ->where('t1.vehicle_id > 0')
@@ -319,50 +320,83 @@ class pjAdminSchedule extends pjAdmin
         
         $bookings = array();
         foreach ($arr as $booking) {
-            $bookings[$booking['vehicle_id']][] = $booking;
+            $bookings[$booking['vehicle_id']][$booking['vehicle_order']][] = $booking;
         }
         $results = [];
-        $lastCoords = []; // Lưu tọa độ điểm kết thúc của xe trước đó
-        
-        foreach ($bookings as $vehId => $val) {
-            $lastBooking = end($val);
-            foreach ($val as $b) {
-                if (!isset($lastCoords[$vehId])) {
-                    $prevLat = $this->vehicle_base_lat; 
-                    $prevLng = $this->vehicle_base_lng;
-                    $results[$vehId]['total_driven_km'] = 0;
-                } else {
-                    $prevLat = $lastCoords[$vehId]['lat'];
-                    $prevLng = $lastCoords[$vehId]['lng'];
+        foreach ($bookings as $vehId => $items) {
+            foreach ($items as $vehOrder => $val) {
+                $lastBooking = end($val);
+                $lastCoords = []; // Lưu tọa độ điểm kết thúc của xe trước đó
+                foreach ($val as $b) {
+                    if (!$lastCoords) {
+                        $prevLat = $this->vehicle_base_lat; 
+                        $prevLng = $this->vehicle_base_lng;
+                        $results[$vehId][$vehOrder]['total_driven_km'] = 0;
+                        $results[$vehId][$vehOrder]['total_time_minutes'] = 0;
+                        $results[$vehId][$vehOrder]['fuel_consumption'] = $b['fuel_consumption'];
+                    } else {
+                        $prevLat = $lastCoords['lat'];
+                        $prevLng = $lastCoords['lng'];
+                    }
+                    
+                    $emptyRunData = pjAppController::calcEmptyRunDistance($prevLat, $prevLng, (float)$b['pickup_lat'], (float)$b['pickup_lng'], $this->option_arr);
+                    $emptyRunDistance = $emptyRunDuration = 0;
+                    if ($emptyRunData) {
+                        $emptyRunDistance = $emptyRunData['distance'] / 1000;
+                        $emptyRunDuration = $emptyRunData['duration'] / 60;
+                    }
+                    
+                    if ((float)$b['distance'] <= 0 || (float)$b['duration'] <= 0) {
+                        $booking_distance = pjAppController::calcEmptyRunDistance((float)$b['pickup_lat'], (float)$b['pickup_lng'], (float)$b['dropoff_lat'], (float)$b['dropoff_lng'], $this->option_arr);
+                        $distance = $booking_distance['distance'] / 1000;
+                        $duration = $booking_distance['duration'] / 60;
+                    } else {
+                        $distance = (float)$b['distance'];
+                        $duration = (float)$b['duration'];
+                    }
+                    
+                    $results[$vehId][$vehOrder]['total_driven_km'] += ($emptyRunDistance + (float)$distance);
+                    $results[$vehId][$vehOrder]['total_time_minutes'] += ($emptyRunDuration + (float)$duration);
+                    
+                    $lastCoords = ['lat' => $b['dropoff_lat'], 'lng' => $b['dropoff_lng']];
                 }
                 
-                $emptyRunData = pjAppController::calcEmptyRunDistance($prevLat, $prevLng, (float)$b['pickup_lat'], (float)$b['pickup_lng'], $this->option_arr);
-                $emptyRun = 0;
-                if ($emptyRunData) {
-                    $emptyRun = $emptyRunData['distance'] / 1000;
+                // Tính khoảng cách đường chim bay từ điểm trả cuối về Base
+                $emptyRunToBase = pjAppController::calcEmptyRunDistance(
+                    (float)$lastBooking['dropoff_lat'],
+                    (float)$lastBooking['dropoff_lng'],
+                    $this->vehicle_base_lat,
+                    $this->vehicle_base_lng,
+                    $this->option_arr
+                );
+                // Nếu khoảng cách lớn hơn 100m mới cần tính thêm chặng về
+                if ($emptyRunToBase && $emptyRunToBase['distance'] > $this->threshold) {
+                    $results[$vehId][$vehOrder]['total_driven_km'] += $emptyRunToBase['distance'] / 1000;
+                    $results[$vehId][$vehOrder]['total_time_minutes'] += $emptyRunToBase['duration'] / 60;
                 }
-                
-                $results[$vehId]['total_driven_km'] += ($emptyRun + (float)$b['distance']);
-                
-                $lastCoords[$vehId] = ['lat' => $b['dropoff_lat'], 'lng' => $b['dropoff_lng']];
-            }
-            
-            // Tính khoảng cách đường chim bay từ điểm trả cuối về Base
-            $distanceToBase = pjAppController::calcEmptyRunDistance(
-                (float)$lastBooking['dropoff_lat'],
-                (float)$lastBooking['dropoff_lng'],
-                $this->vehicle_base_lat,
-                $this->vehicle_base_lng,
-                $this->option_arr
-            );
-            // Nếu khoảng cách lớn hơn 100m mới cần tính thêm chặng về
-            if ($distanceToBase && $distanceToBase['distance'] > $this->threshold) {
-                $results[$vehId]['total_driven_km'] += $distanceToBase['distance'] / 1000;
             }
         }
         if ($results) {
-            foreach ($results as $vehId => $val) {
-                $results[$vehId]['total_driven_km'] = round($val['total_driven_km']);
+            foreach ($results as $vehId => $items) {
+                foreach ($items as $vehOrder => $val) {
+                    $total_driven_km = round($val['total_driven_km']);
+                    $total_time_minutes = round($val['total_time_minutes']);
+                    
+                    $results[$vehId][$vehOrder]['total_driven_km'] = $total_driven_km;
+                    $results[$vehId][$vehOrder]['total_time_minutes'] = $total_time_minutes;
+                    
+                    // calc cost per km (CostPerKm = (Consumption / 100) ​x FuelPrice )
+                    $cost_per_km = 0;
+                    if ((float)$this->option_arr['o_fuel_price'] > 0 && (float)$val['fuel_consumption'] > 0) {
+                        $cost_per_km = round(((float)$val['fuel_consumption']/100)*(float)$this->option_arr['o_fuel_price'], 2);
+                    }
+                    $total_fuel_cost = $total_driven_km * $cost_per_km;
+                    $results[$vehId][$vehOrder]['cost_per_km'] = $cost_per_km;
+                    $results[$vehId][$vehOrder]['vehicle_order'] = $vehOrder;
+                    
+                    // top of the vehcile: km / total fuel cost / total driving time in minutes
+                    $results[$vehId][$vehOrder]['info'] = $total_driven_km.' km / '.pjCurrency::formatPrice($total_fuel_cost).' / '.$total_time_minutes.' minutes';
+                }
             }
         }
         return $results;

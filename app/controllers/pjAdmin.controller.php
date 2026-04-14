@@ -315,9 +315,9 @@ class pjAdmin extends pjAppController
         ->where('t1.status !=', 'cancelled')
         ->groupBy('t1.app_driver_id')
         ->orderBy('total_revenue DESC')
-        ->limit(1)
+        ->limit(3)
         ->findAll()
-        ->getDataIndex(0);
+        ->getData();
         
         $cnt_bookings_arr = pjBookingModel::factory()->reset()->select('COUNT(*) AS cnt_bookings')
         ->join('pjVehicle', 't2.id=t1.vehicle_id', 'inner')
@@ -345,16 +345,15 @@ class pjAdmin extends pjAppController
         ->where('t1.status !=', 'cancelled')
         ->groupBy('1')
         ->orderBy('2 DESC')
-        ->limit(1)
-        ->findAll()->getDataIndex(0);
+        ->limit(3)
+        ->findAll()->getData();
         
         $arr = pjBookingModel::factory()->reset()
-        ->select("t1.vehicle_id, t1.distance, t1.pickup_lat, t1.pickup_lng, t1.dropoff_lat, t1.dropoff_lng, t2.registration_number, t3.content AS vehicle_name")
+        ->select("t1.vehicle_id, t1.distance, t1.pickup_lat, t1.pickup_lng, t1.dropoff_lat, t1.dropoff_lng, t2.registration_number, t2.fuel_consumption")
         ->join('pjVehicle', 't2.id=t1.vehicle_id', 'inner')
-        ->join('pjMultiLang', "t3.model='pjVehicle' AND t3.foreign_id=t2.id AND t3.field='name' AND t3.locale='".$this->getLocaleId()."'", 'left outer')
         ->where("DATE(t1.booking_date)='".$today."'")
         ->where("t1.status !='cancelled'")
-        //->where('t2.type', 'own')
+        ->where('t2.type', 'own')
         ->orderBy("t1.vehicle_id ASC, t1.booking_date ASC")
         ->findAll()->getData();
         $bookings = array();
@@ -371,7 +370,8 @@ class pjAdmin extends pjAppController
                     $prevLat = $this->vehicle_base_lat;
                     $prevLng = $this->vehicle_base_lng;
                     $results[$vehId]['total_driven_km'] = 0;
-                    $results[$vehId]['vehicle_name'] = pjSanitize::clean($b['vehicle_name'].' | '.$b['registration_number']);
+                    $results[$vehId]['vehicle_name'] = pjSanitize::clean($b['registration_number']);
+                    $results[$vehId]['fuel_consumption'] = $b['fuel_consumption'];
                 } else {
                     $prevLat = $lastCoords[$vehId]['lat'];
                     $prevLng = $lastCoords[$vehId]['lng'];
@@ -383,7 +383,14 @@ class pjAdmin extends pjAppController
                     $emptyRun = $emptyRunData['distance'] / 1000;
                 }
                 
-                $results[$vehId]['total_driven_km'] += ($emptyRun + (float)$b['distance']);
+                if ((float)$b['distance'] <= 0) {
+                    $booking_distance = pjAppController::calcEmptyRunDistance((float)$b['pickup_lat'], (float)$b['pickup_lng'], (float)$b['dropoff_lat'], (float)$b['dropoff_lng'], $this->option_arr);
+                    $distance = $booking_distance['distance'] / 1000;
+                } else {
+                    $distance = (float)$b['distance'];
+                }
+                
+                $results[$vehId]['total_driven_km'] += ($emptyRun + (float)$distance);
                 
                 $lastCoords[$vehId] = ['lat' => $b['dropoff_lat'], 'lng' => $b['dropoff_lng']];
             }
@@ -401,7 +408,7 @@ class pjAdmin extends pjAppController
             }
         }
         
-        $total_distance = 0;
+        $total_distance = $total_fuel_cost = 0;
         $max_vehicle = array();
         if ($results) {
             uasort($results, function($a, $b) {
@@ -410,9 +417,15 @@ class pjAdmin extends pjAppController
             $idx = 0;
             foreach ($results as $vehId => $val) {
                 $total_distance += $val['total_driven_km'];
-                if ($idx == 0) {
+                
+                if ((float)$this->option_arr['o_fuel_price'] > 0 && (float)$val['fuel_consumption'] > 0) {
+                    $cost_per_km = round(((float)$val['fuel_consumption']/100)*(float)$this->option_arr['o_fuel_price'], 2);
+                    $total_fuel_cost += $val['total_driven_km'] * $cost_per_km;
+                }
+                
+                if ($idx < 3) {
                     $val['total_driven_km'] = round($val['total_driven_km']);
-                    $max_vehicle = $val;
+                    $max_vehicle[] = $val;
                 }
                 $idx++;
             }
@@ -424,10 +437,11 @@ class pjAdmin extends pjAppController
             'total_bookings' => $cnt_bookings_arr ? $cnt_bookings_arr['cnt_bookings'] : 0,
             'top_destination_arr' => $top_destination_arr ? $top_destination_arr : array(),
             'total_distance' => $total_distance,
+            'total_fuel_cost' => $total_fuel_cost,
             'max_vehicle' => $max_vehicle
         );
         
-        pjAppController::jsonResponse($data);
+        $this->set('data', $data);
     }
     
     public function pjActionSendSms()

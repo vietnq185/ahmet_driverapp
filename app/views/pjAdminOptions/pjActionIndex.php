@@ -146,7 +146,7 @@ $bodies = __('error_bodies', true);
                                                     }
                                                     break;
                                                 case 'float':
-                                                    if(in_array($option['key'], array('o_security_payment'))) {
+                                                    if(in_array($option['key'], array('o_security_payment','o_fuel_price'))) {
                                                         ?>
                                                         <div class="input-group">
                                                             <input type="text" name="value-<?php echo $option['type']; ?>-<?php echo $option['key']; ?>" class="form-control decimal number text-right" value="<?php echo $option['value']; ?>" data-msg-number="<?php __('pj_please_enter_valid_number', false, true);?>">

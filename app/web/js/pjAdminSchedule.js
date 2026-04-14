@@ -975,7 +975,7 @@ var jQuery = jQuery || $.noConflict();
 				                $('#modalCapacityWarning').modal('show');
 			                }
 			                
-			                getVehicleDrivenKm(date, data.vehicle_ids);
+			                getVehicleDrivenKm(date, vehicle_order, data.vehicle_ids);
 			            });
 			        });
 			    },
@@ -989,17 +989,18 @@ var jQuery = jQuery || $.noConflict();
 
 		}
 		
-		function getVehicleDrivenKm($date, $vehicle_ids) {
+		function getVehicleDrivenKm($date, vehicle_order, $vehicle_ids) {
 			$.post("index.php?controller=pjAdminSchedule&action=pjActionGetVehicleDrivenKm", {
                 vehicle_ids: $vehicle_ids, 
                 date: $date
             }).done(function (data) {
-            	$.each(data, function(vehicle_id, info) {
-            	    if (info && info.total_driven_km !== undefined) {
-            	    	$('.pjVehicleDdrivenKm_' + vehicle_id).html(info.total_driven_km + ' km');
-            	    } else {
-            	    	$('.pjVehicleDdrivenKm_' + vehicle_id).html('0 km');
-            	    }
+            	$.each(data, function(veh_id, items) {
+            		$('.pjVehicleDdrivenKm_' + veh_id + '_' + vehicle_order).html('');
+            		$.each(items, function(veh_order, info) {
+	            	    if (info && info.total_driven_km !== undefined) {
+	            	    	$('.pjVehicleDdrivenKm_' + veh_id + '_' + vehicle_order).html(info.info);
+	            	    }
+            		});
             	});
             });
 		}
