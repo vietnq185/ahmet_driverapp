@@ -9,8 +9,8 @@
             <div class="m-separator"></div>
     
             <div class="m-value-item" style="text-align: right;">
-                <span id="op-total-fuel-cost" style="font-size: 24px; color: #e67e22;"><?php echo (int)$tpl['data']['total_fuel_cost'];?></span> 
-                <small style="font-size: 14px; color: #999;">€</small>
+                <span id="op-total-fuel-cost" style="font-size: 24px; color: #e67e22;"><?php echo round($tpl['data']['total_fuel_cost'], 2);?></span> 
+                <small style="font-size: 14px; color: #999;"><?php echo pjCurrency::getCurrencySign($tpl['option_arr']['o_currency'], false);?></small>
                 <div style="font-size: 10px; color: #bcc3c7; margin-top: -5px;">Fuel Cost</div>
             </div>
         </div>
@@ -43,8 +43,8 @@
         	<?php } ?>
         </div>
         <div class="m-comp">Revenue Metrics</div>
-        <?php if ($tpl['data']['top_driver_arr'] && false) { ?>
-        	<div align="center" style="margin-top: 10px;"><a href="" class="btn btn-primary btn-link btn-sm btn-outline">See more</a></div>
+        <?php if ($tpl['data']['top_driver_arr']) { ?>
+        	<div align="center" style="margin-top: 10px;"><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminReports&amp;action=pjActionIndex&amp;tab=performance&amp;type=drivers" class="btn btn-primary btn-link btn-sm btn-outline">See more</a></div>
         <?php } ?>
     </div>
 
@@ -62,8 +62,8 @@
         	<?php } ?>
         </div>
         <div class="m-comp">Usage Statistics</div>
-        <?php if ($tpl['data']['max_vehicle'] && false) { ?>
-        	<div align="center" style="margin-top: 10px;"><a href="" class="btn btn-primary btn-link btn-sm btn-outline">See more</a></div>
+        <?php if ($tpl['data']['max_vehicle']) { ?>
+        	<div align="center" style="margin-top: 10px;"><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminReports&amp;action=pjActionIndex&amp;tab=performance&amp;type=vehicles" class="btn btn-primary btn-link btn-sm btn-outline">See more</a></div>
         <?php } ?>
     </div>
 
@@ -93,7 +93,7 @@
         	<?php } ?>
         </div>
         <div class="m-comp">Popular Routes</div>
-        <?php if ($tpl['data']['top_destination_arr'] && false) { ?>
-        	<div align="center" style="margin-top: 10px;"><a href="" class="btn btn-primary btn-link btn-sm btn-outline">See more</a></div>
+        <?php if ($tpl['data']['top_destination_arr']) { ?>
+        	<div align="center" style="margin-top: 10px;"><a href="<?php echo $_SERVER['PHP_SELF']; ?>?controller=pjAdminReports&amp;action=pjActionIndex&amp;tab=performance&amp;type=destinations" class="btn btn-primary btn-link btn-sm btn-outline">See more</a></div>
         <?php } ?>
     </div>

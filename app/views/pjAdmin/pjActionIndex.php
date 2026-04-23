@@ -192,7 +192,7 @@ $today = pjDateTime::formatDate(date('Y-m-d'), 'Y-m-d', $tpl['option_arr']['o_da
                             <div style="font-size: 10px; color: #bcc3c7; margin-top: -5px;">Fuel Cost</div>
                         </div>
                     </div>
-                    <div class="m-comp">Bookings: <span id="op-total-km-bookings"><?php echo (int)$tpl['data']['total_bookings'];?></span></div>
+                    <div class="m-comp">Bookings: <span id="op-total-km-bookings">0</span></div>
                 </div>
             
                 <div class="card span-3 metric-card" style="border-left-color: #2ecc71;">

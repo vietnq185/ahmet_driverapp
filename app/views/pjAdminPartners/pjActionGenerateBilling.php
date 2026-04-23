@@ -30,8 +30,9 @@ foreach ($tpl['data']['report_arr'] as $val) {
 }
 $commission_pct = (float)$tpl['data']['partner_arr']['commission_pct'];
 $commission = ($total_amount*$commission_pct)/100;
+$paid_bookings_we_made = (float)$tpl['arr']['paid_bookings_we_made'];
 //Billing Amount=(Paid by partner)−(Commission) - (Paid bookings we made)
-$billing_amount = $total_paid + $total_paysafe - $commission;
+$billing_amount = $total_paid + $total_paysafe - $commission - $paid_bookings_we_made;
 ?>
 <div class="billing-summary-box">
     <h3 class="text-warning"><?php __('lblReportBillingTotal');?></h3>
@@ -153,7 +154,7 @@ $billing_amount = $total_paid + $total_paysafe - $commission;
         <div class="calc-row text-primary">
             <span><?php __('lblReportBillingPaidBookingsFromPartnerWemade');?>:</span>
             <div class="input-group width-150">
-                <input type="text" class="form-control text-right calc-trigger" name="paid_bookings_we_made" value="">
+                <input type="text" class="form-control text-right calc-trigger" name="paid_bookings_we_made" value="<?php echo number_format($paid_bookings_we_made, 2, '.', '');?>">
                 <span class="input-group-addon">€</span>
             </div>
         </div>

@@ -419,8 +419,8 @@ class pjAdmin extends pjAppController
                 $total_distance += $val['total_driven_km'];
                 
                 if ((float)$this->option_arr['o_fuel_price'] > 0 && (float)$val['fuel_consumption'] > 0) {
-                    $cost_per_km = round(((float)$val['fuel_consumption']/100)*(float)$this->option_arr['o_fuel_price'], 2);
-                    $total_fuel_cost += $val['total_driven_km'] * $cost_per_km;
+                    $cost_per_km = ((float)$val['fuel_consumption']/100)*(float)$this->option_arr['o_fuel_price'];
+                    $total_fuel_cost += round($val['total_driven_km'] * $cost_per_km, 2);
                 }
                 
                 if ($idx < 3) {
