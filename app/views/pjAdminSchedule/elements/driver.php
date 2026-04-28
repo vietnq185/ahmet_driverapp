@@ -2,17 +2,17 @@
 	<div class="row">
 		<div class="col-lg-3 col-md-4 col-sm-5">
 			<div class="form-group">
-				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format']);?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_today'); ?></button>&nbsp;&nbsp;
+				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format']);?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_today'); ?></button>
 				<button class="btn btn-primary btn-outline btn-print btnFilterOrder" data-date="<?php echo date($tpl['option_arr']['o_date_format'], strtotime('+1 day'));?>" type="button"><i class="fa fa-calendar m-r-xs"></i><?php __('btn_tomorrow'); ?></button>
-							</div>
-						</div>
-						<div class="col-lg-3 col-md-4 col-sm-4 col-xs-7">
-							<div class="form-group">
-								<div class="input-group date"
-                                     data-provide="datepicker"
-                                     data-date-autoclose="true"
-                                     data-date-format="<?php echo $jqDateFormat ?>"
-                                     data-date-week-start="<?php echo (int) $tpl['option_arr']['o_week_start'] ?>">
+			</div>
+		</div>
+		<div class="col-lg-3 col-md-4 col-sm-4 col-xs-7">
+			<div class="form-group">
+				<div class="input-group date"
+                     data-provide="datepicker"
+                     data-date-autoclose="true"
+                     data-date-format="<?php echo $jqDateFormat ?>"
+                     data-date-week-start="<?php echo (int) $tpl['option_arr']['o_week_start'] ?>">
 					<input type="text" name="date" id="date" class="form-control" value="<?php echo date($tpl['option_arr']['o_date_format']); ?>" autocomplete="off">
 					<span class="input-group-addon">
 						<span class="glyphicon glyphicon-calendar"></span>

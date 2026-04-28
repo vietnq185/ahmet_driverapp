@@ -26,6 +26,9 @@ var jQuery = jQuery || $.noConflict();
 			function formatStatusLastBilling(str, obj) {
 				return '<span class="label label-status status-'+obj.status_last_billing+'">'+obj.status_last_billing_formated+'</span>';
 			}
+			function formatAmountLastBilling(str, obj) {
+				return obj.amount_last_billing_formated;
+			}
 			
 			function formatContract(str, obj) {
 				return '<a href="index.php?controller=pjAdminPartners&action=pjActionDownloadContract&id='+obj.id+'"><i class="fa fa-file-pdf-o" aria-hidden="true"></i></a>';
@@ -55,12 +58,13 @@ var jQuery = jQuery || $.noConflict();
 							{text: myLabel.name, type: "text", sortable: true, editable: false},
 							{text: myLabel.vehicles, type: "text", sortable: true, editable: false, renderer: formatVehicles},
 							{text: myLabel.last_billing, type: "text", sortable: true, editable: false, renderer: formatLastBilling},
+							{text: "Last billing amount", type: "text", sortable: true, editable: false, renderer: formatAmountLastBilling},
 							{text: myLabel.status_last_billing, type: "text", sortable: true, editable: false, renderer: formatStatusLastBilling},
 							{text: myLabel.contract, type: "text", sortable: false, editable: false, renderer: formatContract, align: "center"}
 				          ],
 				dataUrl: "index.php?controller=pjAdminPartners&action=pjActionGet" + pjGrid.queryString,
 				dataType: "json",
-				fields: ['name', 'id', 'last_billing', 'status_last_billing', 'id'],
+				fields: ['name', 'id', 'last_billing', 'amount_last_billing', 'status_last_billing', 'id'],
 				paginator: {
 					actions: actions,
 					gotoPage: true,

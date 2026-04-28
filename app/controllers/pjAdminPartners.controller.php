@@ -77,7 +77,8 @@ class pjAdminPartners extends pjAdmin
                 WHERE tpv.partner_id=t1.id LIMIT 1
             ) AS `vehicles`,
             (SELECT CONCAT_WS('~.~', `date_from`, `date_to`) FROM `".$tblPartnerReport."` WHERE `partner_id`=t1.id ORDER BY `created` DESC LIMIT 1) AS last_billing,
-            (SELECT `status` FROM `".$tblPartnerReport."` WHERE `partner_id`=t1.id ORDER BY `created` DESC LIMIT 1) AS status_last_billing
+            (SELECT `status` FROM `".$tblPartnerReport."` WHERE `partner_id`=t1.id ORDER BY `created` DESC LIMIT 1) AS status_last_billing,
+            (SELECT `billing_amount` FROM `".$tblPartnerReport."` WHERE `partner_id`=t1.id ORDER BY `created` DESC LIMIT 1) AS amount_last_billing
         ")
 					->orderBy("$column $direction")
 					->limit($rowCount, $offset)
@@ -91,9 +92,11 @@ class pjAdminPartners extends pjAdmin
     		    $date_to = date($this->option_arr['o_date_format'], strtotime($last_billing_arr[1]));
     		    $v['last_billing_formated'] = $date_from.' - '.$date_to;
     		    $v['status_last_billing_formated'] = @$report_billing_statuses[$v['status_last_billing']];
+    		    $v['amount_last_billing_formated'] = pjCurrency::formatPrice($v['amount_last_billing']);
 		    } else {
 		        $v['last_billing_formated'] = '';
 		        $v['status_last_billing_formated'] = '';
+		        $v['amount_last_billing_formated'] = '';
 		    }
 			$data[$k] = $v;
 		}	

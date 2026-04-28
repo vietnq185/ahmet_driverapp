@@ -34,8 +34,20 @@ var jQuery = jQuery || $.noConflict();
 	        	months: myLabel.months.split("_"),
 	        	monthsShort: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     		}
-			
-			$('.date', $('.pjSbScheduleForm')).datepicker().on('changeDate', function(e) {
+
+			if (myLabel.isDriver) {
+				var $objDatePicker = $('.date', $('.pjSbScheduleForm')).datepicker({
+					autoclose: true,
+				    todayHighlight: true,
+				    // Ngày bắt đầu: Hôm nay trừ đi số ngày giới hạn (ví dụ: -7d)
+				    startDate: '-' + myLabel.limitDays + 'd', 
+				    // Ngày kết thúc: Hôm nay (không cho chọn ngày tương lai)
+				    //endDate: '0d'
+				});
+			} else {
+				var $objDatePicker = $('.date', $('.pjSbScheduleForm')).datepicker();
+			}
+			$objDatePicker.on('changeDate', function(e) {
 	        	if (e && e.preventDefault) {
 					e.preventDefault();
 				}

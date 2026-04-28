@@ -333,6 +333,7 @@ if((strpos($tpl['option_arr']['o_time_format'], 'a') > -1 || strpos($tpl['option
 	myLabel.isDriver = <?php echo $controller->isDriver() ? 'true' : 'false';?>;
 	myLabel.show_popup = "<?php echo isset($tpl['popup_message']) && !empty($tpl['popup_message']) ? 1 : 0; ?>";
 	myLabel.showperiod = <?php echo $show_period; ?>;
+	myLabel.limitDays = "<?php echo (int)$tpl['option_arr']['o_driver_past_booking_days']?>";
 
 	myLabel.order_transfer_time = "<?php __('lblScheduleTransferTime');?>";
 	myLabel.order_client = "<?php __('lblScheduleOrderClient');?>";
